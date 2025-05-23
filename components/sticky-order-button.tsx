@@ -1,36 +1,40 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ArrowUp } from "lucide-react"
-import { motion } from "framer-motion"
-import { useTheme } from "./theme-provider"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUp } from "lucide-react";
+import { motion } from "framer-motion";
 
-export default function StickyOrderButton() {
-  const [isVisible, setIsVisible] = useState(false)
-  const { theme } = useTheme()
+interface StickyOrderButtonProps {
+  redirectLink: string;
+}
+
+export default function StickyOrderButton({
+  redirectLink,
+}: StickyOrderButtonProps) {
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.pageYOffset > 300) {
-        setIsVisible(true)
+        setIsVisible(true);
       } else {
-        setIsVisible(false)
+        setIsVisible(false);
       }
-    }
+    };
 
-    window.addEventListener("scroll", toggleVisibility)
-    return () => window.removeEventListener("scroll", toggleVisibility)
-  }, [])
+    window.addEventListener("scroll", toggleVisibility);
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
-    })
-  }
+    });
+  };
 
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
   return (
     <div className="fixed bottom-3 md:bottom-6 right-3 md:right-6 z-40 flex gap-2 md:gap-3">
@@ -48,12 +52,19 @@ export default function StickyOrderButton() {
       >
         <Button
           className="relative overflow-hidden group bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 py-1.5 md:py-3 px-2 md:px-6 rounded-full transition-all duration-300 shadow-lg shadow-black/30 border border-indigo-400/20 text-[10px] md:text-base"
-          onClick={() => window.open("https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander")}
+          onClick={() =>
+            window.open(
+              redirectLink ??
+                "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+            )
+          }
         >
-          <span className="relative z-10 font-bold tracking-wider text-white">ORDER NOW</span>
+          <span className="relative z-10 font-bold tracking-wider text-white">
+            ORDER NOW
+          </span>
           <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
         </Button>
       </motion.div>
     </div>
-  )
+  );
 }

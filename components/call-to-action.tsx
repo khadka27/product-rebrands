@@ -1,11 +1,15 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Check } from "lucide-react"
-import Image from "next/image"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Check } from "lucide-react";
+import Image from "next/image";
 
-export default function CallToAction() {
+interface CallToActionProps {
+  redirectLink: string;
+}
+
+export default function CallToAction({ redirectLink }: CallToActionProps) {
   return (
     <section className="mb-8 md:mb-20">
       <motion.div
@@ -27,8 +31,8 @@ export default function CallToAction() {
               </h2>
 
               <p className="text-sm md:text-xl mb-3 md:mb-8 text-white/95 drop-shadow-sm">
-                Limited stock available. Don't miss out on this opportunity to transform your performance and
-                confidence!
+                Limited stock available. Don't miss out on this opportunity to
+                transform your performance and confidence!
               </p>
 
               <ul className="mb-3 md:mb-8 space-y-1 md:space-y-3">
@@ -36,13 +40,17 @@ export default function CallToAction() {
                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
-                  <span className="drop-shadow-sm">Free Shipping on All Orders</span>
+                  <span className="drop-shadow-sm">
+                    Free Shipping on All Orders
+                  </span>
                 </li>
                 <li className="flex items-center text-white text-xs md:text-base">
                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
-                  <span className="drop-shadow-sm">60-Day Money Back Guarantee</span>
+                  <span className="drop-shadow-sm">
+                    60-Day Money Back Guarantee
+                  </span>
                 </li>
                 <li className="flex items-center text-white text-xs md:text-base">
                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
@@ -59,12 +67,11 @@ export default function CallToAction() {
               >
                 <Button
                   className="relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-xs md:text-lg py-3 md:py-7 px-3 md:px-10 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20 w-full sm:w-auto"
-                  onClick={() =>
-                    window.open("https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander")
-                  }
+                  onClick={() => window.open(redirectLink)}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl flex items-center text-black">
-                    ORDER NOW <ArrowRight className="ml-1 w-3 h-3 md:w-5 md:h-5" />
+                    ORDER NOW{" "}
+                    <ArrowRight className="ml-1 w-3 h-3 md:w-5 md:h-5" />
                   </span>
                   <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
                 </Button>
@@ -87,5 +94,5 @@ export default function CallToAction() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

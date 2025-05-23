@@ -1,131 +1,198 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getProductWithDetails, updateProduct, deleteProduct, recordVisit } from "@/lib/models/product"
-import { validateProduct } from "@/lib/utils"
-import { processImage, ensureDirectoryExists } from "@/lib/utils"
-import path from "path"
+import { type NextRequest, NextResponse } from "next/server";
+import db from "@/lib/db";
+import { generateSlug } from "@/lib/utils";
+import { processImage } from "@/lib/server-utils";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const product = await getProductWithDetails(params.id)
+    const connection = await db.getConnection();
 
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    try {
+      // Get product
+      const [rows]: any = await connection.query(
+        "SELECT * FROM products WHERE id = ?",
+        [params.id]
+      );
+
+      if (rows.length === 0) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
+
+      const product = rows[0];
+
+      // Get ingredients
+      const [ingredients]: any = await connection.query(
+        "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
+        [product.id]
+      );
+
+      // Get why_choose items
+      const [whyChoose]: any = await connection.query(
+        "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
+        [product.id]
+      );
+
+      // Parse theme if it exists and is stored as JSON
+      if (product.theme && typeof product.theme === "string") {
+        try {
+          product.theme = JSON.parse(product.theme);
+        } catch (e) {
+          console.error("Error parsing theme:", e);
+        }
+      }
+
+      return NextResponse.json({
+        ...product,
+        ingredients,
+        whyChoose,
+      });
+    } finally {
+      connection.release();
     }
-
-    // Record visit if not an API call
-    const url = new URL(req.url)
-    if (!url.pathname.startsWith("/api/")) {
-      const headers = req.headers
-      await recordVisit(
-        product.id!,
-        headers.get("x-forwarded-for") || req.ip,
-        headers.get("user-agent"),
-        headers.get("referer"),
-      )
-    }
-
-    return NextResponse.json(product)
   } catch (error) {
-    console.error("Error fetching product:", error)
-    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 })
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch product" },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Parse the form data
-    const formData = await req.formData()
+    // Parse form data
+    const formData = await req.formData();
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const redirect_link = formData.get("redirect_link") as string;
+    const money_back_days = Number.parseInt(
+      formData.get("money_back_days") as string
+    );
+    const imageFile = formData.get("image") as File | null;
 
-    // Extract product data
-    const name = formData.get("name") as string
-    const description = formData.get("description") as string
-    const redirect_link = formData.get("redirect_link") as string
-    const money_back_days = Number.parseInt(formData.get("money_back_days") as string)
+    const connection = await db.getConnection();
 
-    // Validate product data
-    const validation = validateProduct({
-      name,
-      description,
-      redirect_link,
-      money_back_days,
-    })
+    try {
+      // Get existing product
+      const [rows]: any = await connection.query(
+        "SELECT * FROM products WHERE id = ?",
+        [params.id]
+      );
 
-    if (!validation.valid) {
-      return NextResponse.json({ errors: validation.errors }, { status: 400 })
+      if (rows.length === 0) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
+
+      const existingProduct = rows[0];
+
+      // Generate slug if name changed
+      const slug =
+        name !== existingProduct.name
+          ? generateSlug(name)
+          : existingProduct.slug;
+
+      // Process image if provided
+      let imagePath = existingProduct.product_image;
+      if (imageFile) {
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        const file = {
+          buffer,
+          originalname: imageFile.name,
+          mimetype: imageFile.type,
+        } as Express.Multer.File;
+
+        imagePath = await processImage(file, "public/images/products", slug);
+      }
+
+      // Update product in database
+      const [result]: any = await connection.query(
+        `UPDATE products SET 
+          name = ?, 
+          description = ?, 
+          slug = ?,
+          redirect_link = ?,
+          money_back_days = ?,
+          product_image = ?
+        WHERE id = ?`,
+        [
+          name,
+          description,
+          slug,
+          redirect_link,
+          money_back_days,
+          imagePath,
+          params.id,
+        ]
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json(
+          { error: "Failed to update product" },
+          { status: 500 }
+        );
+      }
+
+      // Get updated product
+      const [updatedProducts]: any = await connection.query(
+        "SELECT * FROM products WHERE id = ?",
+        [params.id]
+      );
+
+      return NextResponse.json(updatedProducts[0]);
+    } finally {
+      connection.release();
     }
-
-    // Get existing product
-    const existingProduct = await getProductWithDetails(Number.parseInt(params.id))
-    if (!existingProduct) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
-    }
-
-    // Process product image if provided
-    let product_image = existingProduct.product_image
-    const productImageFile = formData.get("product_image") as File
-    if (productImageFile && productImageFile.size > 0) {
-      const buffer = Buffer.from(await productImageFile.arrayBuffer())
-      const filename = `product_${Date.now()}`
-      const targetDir = path.join(process.cwd(), "public", "images", "products")
-
-      ensureDirectoryExists(targetDir)
-      product_image = await processImage(
-        { buffer, originalname: productImageFile.name } as Express.Multer.File,
-        targetDir,
-        filename,
-      )
-    }
-
-    // Process badge image if provided
-    let product_badge = existingProduct.product_badge
-    const badgeImageFile = formData.get("product_badge") as File
-    if (badgeImageFile && badgeImageFile.size > 0) {
-      const buffer = Buffer.from(await badgeImageFile.arrayBuffer())
-      const filename = `badge_${Date.now()}`
-      const targetDir = path.join(process.cwd(), "public", "images", "badges")
-
-      ensureDirectoryExists(targetDir)
-      product_badge = await processImage(
-        { buffer, originalname: badgeImageFile.name } as Express.Multer.File,
-        targetDir,
-        filename,
-      )
-    }
-
-    // Update the product
-    const updated = await updateProduct(Number.parseInt(params.id), {
-      name,
-      description,
-      redirect_link,
-      product_image,
-      product_badge,
-      money_back_days,
-    })
-
-    if (!updated) {
-      return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
-    }
-
-    // Get the updated product
-    const updatedProduct = await getProductWithDetails(Number.parseInt(params.id))
-    return NextResponse.json(updatedProduct)
   } catch (error) {
-    console.error("Error updating product:", error)
-    return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
+    console.error("Error updating product:", error);
+    return NextResponse.json(
+      { error: "Failed to update product" },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const deleted = await deleteProduct(Number.parseInt(params.id))
+    const connection = await db.getConnection();
 
-    if (!deleted) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    try {
+      // Delete product from database
+      const [result]: any = await connection.query(
+        "DELETE FROM products WHERE id = ?",
+        [params.id]
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ success: true });
+    } finally {
+      connection.release();
     }
-
-    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting product:", error)
-    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
+    console.error("Error deleting product:", error);
+    return NextResponse.json(
+      { error: "Failed to delete product" },
+      { status: 500 }
+    );
   }
 }

@@ -1,11 +1,15 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Check, ArrowRight } from "lucide-react"
-import Image from "next/image"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Check, ArrowRight } from "lucide-react";
+import Image from "next/image";
 
-export default function NewCta() {
+interface NewCtaProps {
+  redirectLink: string;
+}
+
+export default function NewCta({ redirectLink }: NewCtaProps) {
   return (
     <section className="mb-12 md:mb-20">
       <motion.div
@@ -21,7 +25,10 @@ export default function NewCta() {
         <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6 drop-shadow-md">
-              Experience <span className="text-yellow-300 font-extrabold">Tribal Force X</span>
+              Experience{" "}
+              <span className="text-yellow-300 font-extrabold">
+                Tribal Force X
+              </span>
             </h2>
 
             <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
@@ -30,8 +37,11 @@ export default function NewCta() {
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
                 <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
-                  <span className="font-bold text-white">Premium Quality Formula</span> - Made in FDA registered
-                  facility with 100% natural ingredients
+                  <span className="font-bold text-white">
+                    Premium Quality Formula
+                  </span>{" "}
+                  - Made in FDA registered facility with 100% natural
+                  ingredients
                 </p>
               </div>
 
@@ -40,8 +50,9 @@ export default function NewCta() {
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
                 <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
-                  <span className="font-bold text-white">Proven Results</span> - Thousands of satisfied customers report
-                  significant improvements
+                  <span className="font-bold text-white">Proven Results</span> -
+                  Thousands of satisfied customers report significant
+                  improvements
                 </p>
               </div>
 
@@ -50,8 +61,11 @@ export default function NewCta() {
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
                 <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
-                  <span className="font-bold text-white">Risk-Free Guarantee</span> - 60-day money back guarantee if
-                  you're not completely satisfied
+                  <span className="font-bold text-white">
+                    Risk-Free Guarantee
+                  </span>{" "}
+                  - 60-day money back guarantee if you're not completely
+                  satisfied
                 </p>
               </div>
             </div>
@@ -59,8 +73,12 @@ export default function NewCta() {
             <div className="bg-indigo-600 dark:bg-indigo-700 p-3 md:p-4 rounded-lg md:rounded-xl mb-4 md:mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-300 font-bold drop-shadow-sm text-sm md:text-base">LIMITED TIME OFFER</p>
-                  <p className="text-white text-xs md:text-sm drop-shadow-sm">Order now and save up to $600</p>
+                  <p className="text-yellow-300 font-bold drop-shadow-sm text-sm md:text-base">
+                    LIMITED TIME OFFER
+                  </p>
+                  <p className="text-white text-xs md:text-sm drop-shadow-sm">
+                    Order now and save up to $600
+                  </p>
                 </div>
                 <div className="bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg px-2 py-1 md:px-3 md:py-1 font-bold text-xs md:text-base">
                   30% OFF
@@ -75,12 +93,11 @@ export default function NewCta() {
             >
               <Button
                 className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-4 md:py-6 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
-                onClick={() =>
-                  window.open("https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander")
-                }
+                onClick={() => window.open(redirectLink)}
               >
                 <span className="relative z-10 font-bold tracking-wider text-black flex items-center text-base md:text-lg">
-                  ORDER NOW <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
+                  ORDER NOW{" "}
+                  <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
                 </span>
                 <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
               </Button>
@@ -112,5 +129,5 @@ export default function NewCta() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

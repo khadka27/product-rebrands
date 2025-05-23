@@ -1,11 +1,23 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
-import CountdownTimer from "./countdown-timer"
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import CountdownTimer from "./countdown-timer";
 
-export default function ProductHero() {
+interface ProductHeroProps {
+  productName: string;
+  productImage: string;
+  description: string;
+  redirectLink?: string;
+}
+
+export default function ProductHero({
+  productName,
+  productImage,
+  description,
+  redirectLink,
+}: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
       <div className="relative backdrop-blur-sm bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)]">
@@ -22,8 +34,13 @@ export default function ProductHero() {
               className="space-y-3 md:space-y-6"
             >
               <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
-                Now rebranded as <span className="font-bold text-red-600">Tribal Force X</span> – our premium male
-                enhancement formula with powerful natural ingredients for maximum performance.
+                {description || "Now rebranded as "}
+                <span className="font-bold text-red-600">
+                  {productName || "Tribal Force X"}
+                </span>
+                {description
+                  ? ""
+                  : " – our premium male enhancement formula with powerful natural ingredients for maximum performance."}
               </p>
 
               <CountdownTimer />
@@ -32,7 +49,10 @@ export default function ProductHero() {
                 <Button
                   className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
                   onClick={() =>
-                    window.open("https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander")
+                    window.open(
+                      redirectLink ??
+                        "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+                    )
                   }
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl text-black">
@@ -45,10 +65,14 @@ export default function ProductHero() {
                   variant="outline"
                   className="w-full relative overflow-hidden group bg-[var(--button-secondary-bg)] border-2 border-yellow-400/30 hover:bg-yellow-50/10 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 text-[var(--button-secondary-text)]"
                   onClick={() => {
-                    document.getElementById("rename-info-modal")?.classList.remove("hidden")
+                    document
+                      .getElementById("rename-info-modal")
+                      ?.classList.remove("hidden");
                   }}
                 >
-                  <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl">LEARN MORE</span>
+                  <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl">
+                    LEARN MORE
+                  </span>
                   <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine" />
                 </Button>
               </div>
@@ -66,8 +90,8 @@ export default function ProductHero() {
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                 <Image
-                  src="/images/TRIBAL_FORCE_X.png"
-                  alt="Tribal Force X Product"
+                  src={productImage || "/images/TRIBAL_FORCE_X.png"}
+                  alt={`${productName || "Tribal Force X"} Product`}
                   fill
                   className="object-contain z-10"
                 />
@@ -86,5 +110,5 @@ export default function ProductHero() {
         </div>
       </div>
     </section>
-  )
+  );
 }

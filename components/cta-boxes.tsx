@@ -1,14 +1,18 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Shield, TrendingUp, Award } from "lucide-react"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Shield, TrendingUp, Award } from "lucide-react";
 
 interface CtaBoxesProps {
-  position: "top" | "middle" | "bottom"
+  position?: "top" | "middle" | "bottom";
+  redirectLink: string;
 }
 
-export default function CtaBoxes({ position }: CtaBoxesProps) {
+export default function CtaBoxes({
+  position = "bottom",
+  redirectLink,
+}: CtaBoxesProps) {
   const ctaBoxes = {
     top: [
       {
@@ -39,18 +43,20 @@ export default function CtaBoxes({ position }: CtaBoxesProps) {
       },
     ],
     bottom: [],
-  }
+  };
 
-  const boxes = ctaBoxes[position]
+  const boxes = ctaBoxes[position];
 
-  if (boxes.length === 0) return null
+  if (boxes.length === 0) return null;
 
   return (
     <section className="mb-8 md:mb-12">
       <div className="grid sm:grid-cols-2 gap-3 md:gap-6">
         {boxes.map((box, index) => (
           <motion.div
-            key={index}
+            key={`cta-box-${box.title
+              .replace(/\s+/g, "-")
+              .toLowerCase()}-${index}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -61,10 +67,16 @@ export default function CtaBoxes({ position }: CtaBoxesProps) {
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
             <div className="flex items-start gap-2 md:gap-4">
-              <div className="p-1.5 md:p-3 bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm">{box.icon}</div>
+              <div className="p-1.5 md:p-3 bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm">
+                {box.icon}
+              </div>
               <div className="flex-1">
-                <h3 className="text-base md:text-xl font-bold text-white mb-0.5 md:mb-1">{box.title}</h3>
-                <p className="text-white/90 mb-2 md:mb-4 text-xs md:text-base">{box.description}</p>
+                <h3 className="text-base md:text-xl font-bold text-white mb-0.5 md:mb-1">
+                  {box.title}
+                </h3>
+                <p className="text-white/90 mb-2 md:mb-4 text-xs md:text-base">
+                  {box.description}
+                </p>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -73,7 +85,9 @@ export default function CtaBoxes({ position }: CtaBoxesProps) {
                   <Button
                     className="relative overflow-hidden group bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1 md:py-2 px-2 md:px-4 rounded-lg transition-all duration-300 text-xs md:text-base"
                     onClick={() =>
-                      window.open("https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander")
+                      window.open(
+                        "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+                      )
                     }
                   >
                     <span className="relative z-10">{box.buttonText}</span>
@@ -86,5 +100,5 @@ export default function CtaBoxes({ position }: CtaBoxesProps) {
         ))}
       </div>
     </section>
-  )
+  );
 }

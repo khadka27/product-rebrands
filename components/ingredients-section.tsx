@@ -1,71 +1,118 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import Image from "next/image"
+import { motion } from "framer-motion";
+import Image from "next/image";
 
-export default function IngredientsSection() {
-  const ingredients = [
-    {
-      name: "L-Arginine",
-      description:
-        "An amino acid that helps improve blood flow by producing nitric oxide, which relaxes blood vessels and enhances circulation throughout the body for better performance.",
-      image: "/images/ingredients/l-arginine.png",
-    },
-    {
-      name: "Horny Goat Weed",
-      description:
-        "A traditional Chinese herb that contains icariin, which helps to increase testosterone levels naturally and improve energy levels and stamina.",
-      image: "/images/ingredients/horny-goat-weed.png",
-    },
-    {
-      name: "Maca Root",
-      description:
-        "A Peruvian plant that has been used for centuries to boost energy, endurance, and libido. It helps balance hormone levels and increase vitality.",
-      image: "/images/ingredients/maca-root.png",
-    },
-    {
-      name: "Tribulus Terrestris",
-      description:
-        "A plant extract that supports muscle growth and strength by potentially increasing testosterone levels and improving protein synthesis in the body.",
-      image: "/images/ingredients/tribulus-terrestris.png",
-    },
-    {
-      name: "Saw Palmetto",
-      description:
-        "A natural extract that supports prostate health and helps maintain proper hormone balance, contributing to overall male wellness and vitality.",
-      image: "/images/ingredients/saw-palmetto.png",
-    },
-    {
-      name: "Ginseng",
-      description:
-        "An adaptogenic herb that helps the body resist stressors and increases energy levels. It improves mental clarity and physical performance.",
-      image: "/images/ingredients/ginseng.png",
-    },
-    {
-      name: "Zinc",
-      description:
-        "An essential mineral that plays a crucial role in testosterone production, immune function, and protein synthesis for muscle development.",
-      image: "/images/ingredients/zinc.png",
-    },
-    {
-      name: "Tongkat Ali",
-      description:
-        "Also known as Longjack, this Southeast Asian herb helps increase free testosterone levels and reduce cortisol, improving muscle mass and reducing stress.",
-      image: "/images/ingredients/tongkat-ali.png",
-    },
-    {
-      name: "Fenugreek",
-      description:
-        "A herb that helps boost testosterone levels naturally while also improving insulin function, which can help with muscle growth and recovery.",
-      image: "/images/ingredients/fenugreek.png",
-    },
-    {
-      name: "Boron",
-      description:
-        "A trace mineral that helps the body metabolize testosterone more efficiently and reduces the amount that gets converted to estrogen.",
-      image: "/images/ingredients/boron.png",
-    },
-  ]
+import { type Ingredient as DBIngredient } from "@/lib/models/ingredient";
+
+// For backward compatibility with hardcoded data
+interface LegacyIngredient {
+  name: string;
+  description: string;
+  image: string;
+}
+
+type IngredientType = DBIngredient | LegacyIngredient;
+
+interface IngredientsSectionProps {
+  ingredients: IngredientType[];
+}
+
+// Helper functions to handle both ingredient formats
+function getIngredientTitle(ingredient: IngredientType): string {
+  if ("title" in ingredient) return ingredient.title;
+  if ("name" in ingredient) return ingredient.name;
+  return "Ingredient";
+}
+
+function getIngredientImage(ingredient: IngredientType): string {
+  if ("image" in ingredient) return ingredient.image ?? "/placeholder.svg";
+  return "/placeholder.svg";
+}
+
+// Function to generate a stable key for ingredients
+function getIngredientKey(ingredient: IngredientType, index: number): string {
+  if ("id" in ingredient && ingredient.id) return `ingredient-${ingredient.id}`;
+  if ("title" in ingredient)
+    return `ingredient-${ingredient.title
+      .replace(/\s+/g, "-")
+      .toLowerCase()}-${index}`;
+  if ("name" in ingredient)
+    return `ingredient-${ingredient.name
+      .replace(/\s+/g, "-")
+      .toLowerCase()}-${index}`;
+  return `ingredient-${index}`;
+}
+
+export default function IngredientsSection({
+  ingredients,
+}: IngredientsSectionProps) {
+  // Use provided ingredients or fallback to default
+  const displayIngredients =
+    ingredients.length > 0
+      ? ingredients
+      : [
+          {
+            name: "L-Arginine",
+            description:
+              "An amino acid that helps improve blood flow by producing nitric oxide, which relaxes blood vessels and enhances circulation throughout the body for better performance.",
+            image: "/images/ingredients/l-arginine.png",
+          },
+          {
+            name: "Horny Goat Weed",
+            description:
+              "A traditional Chinese herb that contains icariin, which helps to increase testosterone levels naturally and improve energy levels and stamina.",
+            image: "/images/ingredients/horny-goat-weed.png",
+          },
+          {
+            name: "Maca Root",
+            description:
+              "A Peruvian plant that has been used for centuries to boost energy, endurance, and libido. It helps balance hormone levels and increase vitality.",
+            image: "/images/ingredients/maca-root.png",
+          },
+          {
+            name: "Tribulus Terrestris",
+            description:
+              "A plant extract that supports muscle growth and strength by potentially increasing testosterone levels and improving protein synthesis in the body.",
+            image: "/images/ingredients/tribulus-terrestris.png",
+          },
+          {
+            name: "Saw Palmetto",
+            description:
+              "A natural extract that supports prostate health and helps maintain proper hormone balance, contributing to overall male wellness and vitality.",
+            image: "/images/ingredients/saw-palmetto.png",
+          },
+          {
+            name: "Ginseng",
+            description:
+              "An adaptogenic herb that helps the body resist stressors and increases energy levels. It improves mental clarity and physical performance.",
+            image: "/images/ingredients/ginseng.png",
+          },
+          {
+            name: "Zinc",
+            description:
+              "An essential mineral that plays a crucial role in testosterone production, immune function, and protein synthesis for muscle development.",
+            image: "/images/ingredients/zinc.png",
+          },
+          {
+            name: "Tongkat Ali",
+            description:
+              "Also known as Longjack, this Southeast Asian herb helps increase free testosterone levels and reduce cortisol, improving muscle mass and reducing stress.",
+            image: "/images/ingredients/tongkat-ali.png",
+          },
+          {
+            name: "Fenugreek",
+            description:
+              "A herb that helps boost testosterone levels naturally while also improving insulin function, which can help with muscle growth and recovery.",
+            image: "/images/ingredients/fenugreek.png",
+          },
+          {
+            name: "Boron",
+            description:
+              "A trace mineral that helps the body metabolize testosterone more efficiently and reduces the amount that gets converted to estrogen.",
+            image: "/images/ingredients/boron.png",
+          },
+        ];
 
   return (
     <section className="mb-12 md:mb-20">
@@ -89,9 +136,9 @@ export default function IngredientsSection() {
           </div>
 
           <div className="space-y-3 md:space-y-6">
-            {ingredients.map((ingredient, index) => (
+            {displayIngredients.map((ingredient, index) => (
               <motion.div
-                key={index}
+                key={getIngredientKey(ingredient, index)}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
@@ -102,8 +149,8 @@ export default function IngredientsSection() {
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-[var(--ingredient-border)] shadow-lg shadow-blue-900/20 dark-theme:shadow-blue-900/20 light-theme:shadow-blue-500/10">
                       <Image
-                        src={ingredient.image || "/placeholder.svg"}
-                        alt={ingredient.name}
+                        src={getIngredientImage(ingredient)}
+                        alt={getIngredientTitle(ingredient)}
                         width={96}
                         height={96}
                         className="w-full h-full object-cover"
@@ -112,7 +159,7 @@ export default function IngredientsSection() {
                   </div>
                   <div className="text-center sm:text-left">
                     <h3 className="text-base md:text-xl font-bold text-[var(--ingredient-title)] group-hover:opacity-80 transition-colors duration-300 mb-1 md:mb-2">
-                      {ingredient.name}
+                      {getIngredientTitle(ingredient)}
                     </h3>
                     <p className="text-xs md:text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors duration-300">
                       {ingredient.description}
@@ -125,5 +172,5 @@ export default function IngredientsSection() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

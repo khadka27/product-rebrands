@@ -1,64 +1,56 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getProductTheme, upsertProductTheme, deleteProductTheme } from "@/lib/models/theme"
+import { type NextRequest, NextResponse } from "next/server";
+import db from "@/lib/db";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const theme = await getProductTheme(Number.parseInt(params.id))
+    const { theme } = await req.json();
+    const connection = await db.getConnection();
 
-    if (!theme) {
-      return NextResponse.json({ error: "Theme not found" }, { status: 404 })
+    try {
+      // Get existing product
+      const [rows]: any = await connection.query(
+        "SELECT * FROM products WHERE id = ?",
+        [params.id]
+      );
+
+      if (rows.length === 0) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
+
+      // Update product theme in database
+      const [result]: any = await connection.query(
+        "UPDATE products SET theme = ? WHERE id = ?",
+        [JSON.stringify(theme), params.id]
+      );
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json(
+          { error: "Failed to update theme" },
+          { status: 500 }
+        );
+      }
+
+      // Get updated product
+      const [updatedProduct]: any = await connection.query(
+        "SELECT * FROM products WHERE id = ?",
+        [params.id]
+      );
+
+      return NextResponse.json(updatedProduct[0]);
+    } finally {
+      connection.release();
     }
-
-    return NextResponse.json(theme)
   } catch (error) {
-    console.error("Error fetching theme:", error)
-    return NextResponse.json({ error: "Failed to fetch theme" }, { status: 500 })
-  }
-}
-
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const themeData = await req.json()
-
-    const theme = await upsertProductTheme({
-      product_id: Number.parseInt(params.id),
-      ...themeData,
-    })
-
-    return NextResponse.json(theme, { status: 201 })
-  } catch (error) {
-    console.error("Error saving theme:", error)
-    return NextResponse.json({ error: "Failed to save theme" }, { status: 500 })
-  }
-}
-
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const themeData = await req.json()
-
-    const theme = await upsertProductTheme({
-      product_id: Number.parseInt(params.id),
-      ...themeData,
-    })
-
-    return NextResponse.json(theme)
-  } catch (error) {
-    console.error("Error updating theme:", error)
-    return NextResponse.json({ error: "Failed to update theme" }, { status: 500 })
-  }
-}
-
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const deleted = await deleteProductTheme(Number.parseInt(params.id))
-
-    if (!deleted) {
-      return NextResponse.json({ error: "Theme not found" }, { status: 404 })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("Error deleting theme:", error)
-    return NextResponse.json({ error: "Failed to delete theme" }, { status: 500 })
+    console.error("Error updating product theme:", error);
+    return NextResponse.json(
+      { error: "Failed to update product theme" },
+      { status: 500 }
+    );
   }
 }

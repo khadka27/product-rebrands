@@ -1,4 +1,4 @@
-import ProductForm from "../components/product-form"
+import {ProductForm} from "@/app/dashboard/products/components/product-form";
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
   return (
