@@ -136,6 +136,7 @@ export default async function PreviewPage({
                 productImage={product.product_image}
                 description={product.description}
                 redirectLink={product.redirect_link}
+                product_badge={product.product_badge}
               />
             </div>
 
@@ -149,7 +150,7 @@ export default async function PreviewPage({
             )}
 
             <div id="benefits">
-              <NewCta redirectLink={product.redirect_link} />
+              <NewCta product={product} />
               <CtaBoxes position="top" redirectLink={product.redirect_link} />
               {product.why_choose && product.why_choose.length > 0 && (
                 <BenefitsSection
@@ -169,7 +170,7 @@ export default async function PreviewPage({
             </div>
 
             <div id="features">
-              <ProductFeatures productImage={product.product_image} />
+              <ProductFeatures product={product} />
               <CtaBoxes
                 position="middle"
                 redirectLink={product.redirect_link}
@@ -181,7 +182,7 @@ export default async function PreviewPage({
             </div>
 
             <div id="order">
-              <CallToAction redirectLink={product.redirect_link} />
+              <CallToAction product={product} />
             </div>
           </div>
         </div>

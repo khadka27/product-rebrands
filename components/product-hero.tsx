@@ -10,6 +10,7 @@ interface ProductHeroProps {
   productImage: string;
   description: string;
   redirectLink?: string;
+  product_badge?: string;
 }
 
 export default function ProductHero({
@@ -17,6 +18,7 @@ export default function ProductHero({
   productImage,
   description,
   redirectLink,
+  product_badge,
 }: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
@@ -99,7 +101,7 @@ export default function ProductHero({
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src="/images/New-and-Improved-Badge.png"
+                  src={product_badge || "/images/New-and-Improved-Badge.png"}
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"

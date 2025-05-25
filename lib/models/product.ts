@@ -309,7 +309,6 @@ export async function getProductWithDetails(
       const [productRows] = await connection.query(
         `SELECT 
           p.*,
-          t.theme_id,
           t.primary_bg_color,
           t.secondary_bg_color,
           t.accent_bg_color,
@@ -395,10 +394,13 @@ export async function getProductWithDetails(
         [product.product_id]
       );
 
-      const theme = product.theme_id
+      // Check if any theme data exists before constructing the theme object
+      const hasThemeData =
+        product.primary_bg_color !== null &&
+        product.primary_bg_color !== undefined;
+      const theme = hasThemeData
         ? {
             // Map fetched flat data to ProductTheme structure
-            theme_id: product.theme_id,
             product_id: product.product_id, // Include product_id
             primary_bg_color: product.primary_bg_color,
             secondary_bg_color: product.secondary_bg_color,
@@ -448,7 +450,6 @@ export async function getProductWithDetails(
 
       const {
         // Destructure out theme-related fields from the flat product object
-        theme_id,
         primary_bg_color,
         secondary_bg_color,
         accent_bg_color,
@@ -502,7 +503,7 @@ export async function getProductWithDetails(
         why_choose: whyChooseRows || [],
       };
     } catch (error) {
-      console.error("Error in getProductWithDetails:", error);
+      console.error("Error fetching product with details:", error);
       throw error;
     }
   });

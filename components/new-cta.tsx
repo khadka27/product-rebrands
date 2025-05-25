@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import type { Product } from "@/lib/models/product";
 
 interface NewCtaProps {
-  redirectLink: string;
+  product: Product;
 }
 
-export default function NewCta({ redirectLink }: NewCtaProps) {
+export default function NewCta({ product }: NewCtaProps) {
   return (
     <section className="mb-12 md:mb-20">
       <motion.div
@@ -27,7 +28,7 @@ export default function NewCta({ redirectLink }: NewCtaProps) {
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6 drop-shadow-md">
               Experience{" "}
               <span className="text-yellow-300 font-extrabold">
-                Tribal Force X
+                {product?.name.toUpperCase()}
               </span>
             </h2>
 
@@ -64,8 +65,8 @@ export default function NewCta({ redirectLink }: NewCtaProps) {
                   <span className="font-bold text-white">
                     Risk-Free Guarantee
                   </span>{" "}
-                  - 60-day money back guarantee if you're not completely
-                  satisfied
+                  - {product?.money_back_days}-day money back guarantee if
+                  you're not completely satisfied
                 </p>
               </div>
             </div>
@@ -93,7 +94,7 @@ export default function NewCta({ redirectLink }: NewCtaProps) {
             >
               <Button
                 className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-4 md:py-6 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
-                onClick={() => window.open(redirectLink)}
+                onClick={() => window.open(product?.redirect_link)}
               >
                 <span className="relative z-10 font-bold tracking-wider text-black flex items-center text-base md:text-lg">
                   ORDER NOW{" "}
@@ -110,16 +111,16 @@ export default function NewCta({ redirectLink }: NewCtaProps) {
               <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src="/images/TRIBAL_FORCE_X.png"
-                  alt="Tribal Force X Product"
+                  src={product?.product_image || "/images/placeholder.png"}
+                  alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
                 />
               </div>
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src="/images/New-and-Improved-Badge.png"
-                  alt="New and Improved Badge"
+                  src={product?.product_badge || "/images/new-badge.png"}
+                  alt="New Product Badge"
                   fill
                   className="object-contain"
                 />

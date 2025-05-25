@@ -3,14 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Check } from "lucide-react";
+import type { Product } from "@/lib/models/product";
 
 interface ProductFeaturesProps {
-  productImage: string;
+  product: Product;
 }
 
-export default function ProductFeatures({
-  productImage,
-}: ProductFeaturesProps) {
+export default function ProductFeatures({ product }: ProductFeaturesProps) {
   return (
     <section className="mb-12 md:mb-20">
       <motion.div
@@ -28,7 +27,7 @@ export default function ProductFeatures({
             <div className="h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent w-full max-w-xs hidden md:block dark:via-indigo-400"></div>
             {/* Responsive text size */}
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center text-[var(--text-primary)] mx-0 md:mx-6 whitespace-normal md:whitespace-nowrap">
-              The Tribal Force X Difference
+              The {product?.name} Difference
             </h2>
             <div className="h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent w-full max-w-xs hidden md:block dark:via-indigo-400"></div>
           </div>
@@ -46,7 +45,7 @@ export default function ProductFeatures({
                   Premium Quality Formula
                 </h3>
                 <p className="text-sm md:text-lg text-[var(--text-secondary)]">
-                  Tribal Force X is manufactured in state-of-the-art facilities
+                  {product?.name} is manufactured in state-of-the-art facilities
                   under strict quality control standards. Our formula has been
                   perfected over years of research to deliver maximum results
                   with no side effects.
@@ -100,7 +99,7 @@ export default function ProductFeatures({
                 <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                   <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                   <Image
-                    src={productImage || "/placeholder.svg"}
+                    src={product?.product_image || "/placeholder.svg"}
                     alt="Product Image"
                     fill
                     className="object-contain z-10"

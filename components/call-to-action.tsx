@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
+import type { Product } from "@/lib/models/product";
 
 interface CallToActionProps {
-  redirectLink: string;
+  product: Product;
 }
 
-export default function CallToAction({ redirectLink }: CallToActionProps) {
+export default function CallToAction({ product }: CallToActionProps) {
   return (
     <section className="mb-8 md:mb-20">
       <motion.div
@@ -27,7 +28,7 @@ export default function CallToAction({ redirectLink }: CallToActionProps) {
           <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center">
             <div className="max-w-xl">
               <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-6 text-white drop-shadow-md">
-                Experience Tribal Force X
+                {product?.name}
               </h2>
 
               <p className="text-sm md:text-xl mb-3 md:mb-8 text-white/95 drop-shadow-sm">
@@ -67,7 +68,7 @@ export default function CallToAction({ redirectLink }: CallToActionProps) {
               >
                 <Button
                   className="relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-xs md:text-lg py-3 md:py-7 px-3 md:px-10 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20 w-full sm:w-auto"
-                  onClick={() => window.open(redirectLink)}
+                  onClick={() => window.open(product?.redirect_link)}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl flex items-center text-black">
                     ORDER NOW{" "}
@@ -83,8 +84,8 @@ export default function CallToAction({ redirectLink }: CallToActionProps) {
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src="/images/TRIBAL_FORCE_X.png"
-                  alt="Tribal Force X Product"
+                  src={product?.product_image || "/images/placeholder.png"}
+                  alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
                 />
