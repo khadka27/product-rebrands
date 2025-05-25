@@ -12,7 +12,7 @@ export async function PUT(
     try {
       // Get existing product
       const [rows]: any = await connection.query(
-        "SELECT * FROM products WHERE id = ?",
+        "SELECT product_id FROM products WHERE id = ?",
         [params.id]
       );
 
@@ -23,10 +23,20 @@ export async function PUT(
         );
       }
 
-      // Update product theme in database
+      const product_id = rows[0].product_id;
+
+      // Update or insert theme in product_themes table
       const [result]: any = await connection.query(
-        "UPDATE products SET theme = ? WHERE id = ?",
-        [JSON.stringify(theme), params.id]
+        `INSERT INTO product_themes (product_id, ${Object.keys(theme).join(
+          ", "
+        )})
+         VALUES (?, ${Object.keys(theme)
+           .map(() => "?")
+           .join(", ")})
+         ON DUPLICATE KEY UPDATE ${Object.keys(theme)
+           .map((key) => `${key} = ?`)
+           .join(", ")}`,
+        [product_id, ...Object.values(theme), ...Object.values(theme)]
       );
 
       if (result.affectedRows === 0) {
@@ -36,13 +46,13 @@ export async function PUT(
         );
       }
 
-      // Get updated product
-      const [updatedProduct]: any = await connection.query(
-        "SELECT * FROM products WHERE id = ?",
-        [params.id]
+      // Get updated theme
+      const [updatedTheme]: any = await connection.query(
+        "SELECT * FROM product_themes WHERE product_id = ?",
+        [product_id]
       );
 
-      return NextResponse.json(updatedProduct[0]);
+      return NextResponse.json(updatedTheme[0]);
     } finally {
       connection.release();
     }

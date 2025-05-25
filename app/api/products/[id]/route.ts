@@ -188,18 +188,27 @@ export async function PUT(
       if (themeData) {
         try {
           const theme = JSON.parse(themeData);
-          await connection.query(
-            `INSERT INTO product_themes (product_id, ${Object.keys(theme).join(
-              ", "
-            )})
-             VALUES (?, ${Object.keys(theme)
-               .map(() => "?")
-               .join(", ")})
-             ON DUPLICATE KEY UPDATE ${Object.keys(theme)
-               .map((key) => `${key} = ?`)
-               .join(", ")}`,
-            [params.id, ...Object.values(theme), ...Object.values(theme)]
+          // Get the product_id from the products table
+          const [productRows]: any = await connection.query(
+            "SELECT product_id FROM products WHERE id = ?",
+            [params.id]
           );
+
+          if (productRows.length > 0) {
+            const product_id = productRows[0].product_id;
+            await connection.query(
+              `INSERT INTO product_themes (product_id, ${Object.keys(
+                theme
+              ).join(", ")})
+               VALUES (?, ${Object.keys(theme)
+                 .map(() => "?")
+                 .join(", ")})
+               ON DUPLICATE KEY UPDATE ${Object.keys(theme)
+                 .map((key) => `${key} = ?`)
+                 .join(", ")}`,
+              [product_id, ...Object.values(theme), ...Object.values(theme)]
+            );
+          }
         } catch (e) {
           console.error("Error processing theme:", e);
         }

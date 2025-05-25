@@ -94,7 +94,7 @@ export default async function PreviewPage({
         --gradient-end: ${product.theme.gradient_end};
         --shadow-color: ${product.theme.shadow_color};
       }
-      
+
       ${product.theme.custom_css ?? ""}
     `;
   };
