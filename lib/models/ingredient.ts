@@ -5,7 +5,8 @@ export interface Ingredient {
   product_id: number;
   title: string;
   description: string;
-  image: string;
+  image: string | File;
+  image_preview?: string;
   display_order: number;
 }
 

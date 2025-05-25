@@ -1,35 +1,41 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Check } from "lucide-react"
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 
-export default function BenefitsSection() {
-  const benefits = [
-    {
-      title: "Enhanced Performance",
-      description: "Increases energy and stamina for better performance in all activities, day and night.",
-    },
-    {
-      title: "Muscle Development",
-      description: "Supports muscle growth and enhances physical endurance for a stronger, more defined physique.",
-    },
-    {
-      title: "Improved Circulation",
-      description: "Boosts blood flow throughout the body for better overall health and enhanced results.",
-    },
-    {
-      title: "Hormone Optimization",
-      description: "Naturally supports healthy testosterone levels for improved vitality and masculine energy.",
-    },
-    {
-      title: "All-Natural Formula",
-      description: "Made with 100% natural ingredients with no side effects or harmful chemicals.",
-    },
-    {
-      title: "Rapid Results",
-      description: "Delivers noticeable improvements within days, with optimal results in just a few weeks.",
-    },
-  ]
+interface WhyChooseItem {
+  id: string;
+  title: string;
+  description: string;
+  display_order?: number;
+}
+
+interface BenefitsSectionProps {
+  productName: string;
+  whyChoose: WhyChooseItem[];
+}
+
+// Function to generate a stable key for whyChoose items
+function getWhyChooseKey(item: WhyChooseItem, index: number): string {
+  // Use item.id if it exists and is not null/undefined, converting to string
+  if (item.id !== null && item.id !== undefined)
+    return `whychoose-${item.id.toString()}`;
+  // Fallback using title and index if id is not available
+  return `whychoose-${item.title.replace(/\s+/g, "-").toLowerCase()}-${index}`;
+}
+
+export default function BenefitsSection({
+  productName,
+  whyChoose,
+}: BenefitsSectionProps) {
+  // Sort whyChoose items by display_order if available
+  const sortedWhyChoose = [...(whyChoose || [])].sort(
+    (a, b) => (a.display_order || 0) - (b.display_order || 0)
+  );
+
+  if (!sortedWhyChoose || sortedWhyChoose.length === 0) {
+    return null;
+  }
 
   return (
     <section className="mb-8 md:mb-20">
@@ -47,15 +53,15 @@ export default function BenefitsSection() {
           <div className="flex items-center justify-center mb-4 md:mb-10">
             <div className="h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent w-full max-w-xs hidden md:block dark:via-indigo-400"></div>
             <h2 className="text-lg sm:text-xl md:text-3xl font-bold text-center text-[var(--text-primary)] mx-0 md:mx-6">
-              Why Choose Tribal Force X
+              Why Choose {productName.toUpperCase()}
             </h2>
             <div className="h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent w-full max-w-xs hidden md:block dark:via-indigo-400"></div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-2 md:gap-6">
-            {benefits.map((benefit, index) => (
+            {sortedWhyChoose.map((item, index) => (
               <motion.div
-                key={index}
+                key={getWhyChooseKey(item, index)}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
@@ -67,10 +73,10 @@ export default function BenefitsSection() {
                 </div>
                 <div>
                   <h3 className="text-xs md:text-lg font-bold text-[var(--benefit-title)] mb-0.5 md:mb-1">
-                    {benefit.title}
+                    {item.title}
                   </h3>
                   <p className="text-[10px] md:text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors duration-300">
-                    {benefit.description}
+                    {item.description}
                   </p>
                 </div>
               </motion.div>
@@ -79,5 +85,5 @@ export default function BenefitsSection() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

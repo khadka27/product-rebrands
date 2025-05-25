@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { ProductTheme } from "@/lib/models/product"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ProductTheme } from "@/lib/models/product";
 
 const defaultTheme: ProductTheme = {
-  primaryColor: "#ff5722",
+  primaryColor: "#ffffff",
   secondaryColor: "#f44336",
   accentColor: "#ffc107",
-  backgroundColor: "#ffffff",
   textColor: "#333333",
   headingColor: "#111111",
   buttonColor: "#ff5722",
   buttonTextColor: "#ffffff",
   fontFamily: "Inter, sans-serif",
   borderRadius: "8px",
-  customCSS: "",
-}
+  customCss: "",
+  linkColor: "#3182ce",
+};
 
 const presetThemes = [
   {
@@ -40,7 +46,8 @@ const presetThemes = [
       buttonTextColor: "#ffffff",
       fontFamily: "Inter, sans-serif",
       borderRadius: "8px",
-      customCSS: "",
+      customCss: "",
+      linkColor: "#3182ce",
     },
   },
   {
@@ -49,14 +56,14 @@ const presetThemes = [
       primaryColor: "#2196f3",
       secondaryColor: "#1976d2",
       accentColor: "#03a9f4",
-      backgroundColor: "#ffffff",
       textColor: "#333333",
       headingColor: "#111111",
       buttonColor: "#2196f3",
       buttonTextColor: "#ffffff",
       fontFamily: "Inter, sans-serif",
       borderRadius: "8px",
-      customCSS: "",
+      customCss: "",
+      linkColor: "#3182ce",
     },
   },
   {
@@ -65,42 +72,49 @@ const presetThemes = [
       primaryColor: "#4caf50",
       secondaryColor: "#388e3c",
       accentColor: "#8bc34a",
-      backgroundColor: "#ffffff",
       textColor: "#333333",
       headingColor: "#111111",
       buttonColor: "#4caf50",
       buttonTextColor: "#ffffff",
       fontFamily: "Inter, sans-serif",
       borderRadius: "8px",
-      customCSS: "",
+      customCss: "",
+      linkColor: "#3182ce",
     },
   },
-]
+];
 
 interface ThemeCustomizerProps {
-  initialTheme?: ProductTheme
-  onChange: (theme: ProductTheme) => void
+  initialTheme?: ProductTheme;
+  onChange: (theme: ProductTheme) => void;
 }
 
-export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: ThemeCustomizerProps) {
-  const [theme, setTheme] = useState<ProductTheme>(initialTheme || defaultTheme)
+export function ThemeCustomizer({
+  initialTheme = defaultTheme,
+  onChange,
+}: ThemeCustomizerProps) {
+  const [theme, setTheme] = useState<ProductTheme>(
+    initialTheme || defaultTheme
+  );
 
   const handleChange = (key: keyof ProductTheme, value: string) => {
-    const updatedTheme = { ...theme, [key]: value }
-    setTheme(updatedTheme)
-    onChange(updatedTheme)
-  }
+    const updatedTheme = { ...theme, [key]: value };
+    setTheme(updatedTheme);
+    onChange(updatedTheme);
+  };
 
   const applyPreset = (presetTheme: ProductTheme) => {
-    setTheme(presetTheme)
-    onChange(presetTheme)
-  }
+    setTheme(presetTheme);
+    onChange(presetTheme);
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Theme Customization</CardTitle>
-        <CardDescription>Customize the appearance of your product page</CardDescription>
+        <CardDescription>
+          Customize the appearance of your product page
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="presets">
@@ -121,12 +135,18 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                   onClick={() => applyPreset(preset.theme)}
                 >
                   <div className="flex gap-1">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.theme.primaryColor }}></div>
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: preset.theme.primaryColor }}
+                    ></div>
                     <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: preset.theme.secondaryColor }}
                     ></div>
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.theme.accentColor }}></div>
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: preset.theme.accentColor }}
+                    ></div>
                   </div>
                   <span>{preset.name}</span>
                 </Button>
@@ -143,13 +163,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="primaryColor"
                     type="color"
                     value={theme.primaryColor}
-                    onChange={(e) => handleChange("primaryColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.primaryColor}
-                    onChange={(e) => handleChange("primaryColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -161,13 +185,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="secondaryColor"
                     type="color"
                     value={theme.secondaryColor}
-                    onChange={(e) => handleChange("secondaryColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("secondaryColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.secondaryColor}
-                    onChange={(e) => handleChange("secondaryColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("secondaryColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -179,13 +207,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="accentColor"
                     type="color"
                     value={theme.accentColor}
-                    onChange={(e) => handleChange("accentColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("accentColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.accentColor}
-                    onChange={(e) => handleChange("accentColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("accentColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -196,14 +228,18 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                   <Input
                     id="backgroundColor"
                     type="color"
-                    value={theme.backgroundColor}
-                    onChange={(e) => handleChange("backgroundColor", e.target.value)}
+                    value={theme.primaryColor}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
-                    value={theme.backgroundColor}
-                    onChange={(e) => handleChange("backgroundColor", e.target.value)}
+                    value={theme.primaryColor}
+                    onChange={(e) =>
+                      handleChange("primaryColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -233,13 +269,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="headingColor"
                     type="color"
                     value={theme.headingColor}
-                    onChange={(e) => handleChange("headingColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("headingColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.headingColor}
-                    onChange={(e) => handleChange("headingColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("headingColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -251,13 +291,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="buttonColor"
                     type="color"
                     value={theme.buttonColor}
-                    onChange={(e) => handleChange("buttonColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("buttonColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.buttonColor}
-                    onChange={(e) => handleChange("buttonColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("buttonColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -269,13 +313,17 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                     id="buttonTextColor"
                     type="color"
                     value={theme.buttonTextColor}
-                    onChange={(e) => handleChange("buttonTextColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("buttonTextColor", e.target.value)
+                    }
                     className="w-12 h-10 p-1"
                   />
                   <Input
                     type="text"
                     value={theme.buttonTextColor}
-                    onChange={(e) => handleChange("buttonTextColor", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("buttonTextColor", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -299,7 +347,9 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
                   <option value="'Poppins', sans-serif">Poppins</option>
                   <option value="'Lato', sans-serif">Lato</option>
                   <option value="'Oswald', sans-serif">Oswald</option>
-                  <option value="'Playfair Display', serif">Playfair Display</option>
+                  <option value="'Playfair Display', serif">
+                    Playfair Display
+                  </option>
                 </select>
               </div>
 
@@ -319,11 +369,11 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
           <TabsContent value="advanced">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="customCSS">Custom CSS</Label>
+                <Label htmlFor="customCss">Custom CSS</Label>
                 <textarea
-                  id="customCSS"
-                  value={theme.customCSS || ""}
-                  onChange={(e) => handleChange("customCSS", e.target.value)}
+                  id="customCss"
+                  value={theme.customCss || ""}
+                  onChange={(e) => handleChange("customCss", e.target.value)}
                   className="w-full h-32 p-2 border rounded-md font-mono text-sm"
                   placeholder="/* Add your custom CSS here */"
                 />
@@ -337,20 +387,32 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
           <div
             className="p-4 rounded-md"
             style={{
-              backgroundColor: theme.backgroundColor as React.CSSProperties['backgroundColor'],
-              color: theme.textColor as React.CSSProperties['color'],
-              fontFamily: theme.fontFamily as React.CSSProperties['fontFamily'],
-              borderRadius: theme.borderRadius as React.CSSProperties['borderRadius'],
+              backgroundColor:
+                theme.primaryColor as React.CSSProperties["backgroundColor"],
+              color: theme.textColor as React.CSSProperties["color"],
+              fontFamily: theme.fontFamily as React.CSSProperties["fontFamily"],
+              borderRadius:
+                theme.borderRadius as React.CSSProperties["borderRadius"],
             }}
           >
-            <h1 style={{ color: theme.headingColor as React.CSSProperties['color'] }}>Sample Heading</h1>
-            <p>This is how your text will look with the current theme settings.</p>
+            <h1
+              style={{
+                color: theme.headingColor as React.CSSProperties["color"],
+              }}
+            >
+              Sample Heading
+            </h1>
+            <p>
+              This is how your text will look with the current theme settings.
+            </p>
             <button
               className="px-4 py-2 mt-2 rounded-md"
               style={{
-                backgroundColor: theme.buttonColor as React.CSSProperties['backgroundColor'],
-                color: theme.buttonTextColor as React.CSSProperties['color'],
-                borderRadius: theme.borderRadius as React.CSSProperties['borderRadius'],
+                backgroundColor:
+                  theme.buttonColor as React.CSSProperties["backgroundColor"],
+                color: theme.buttonTextColor as React.CSSProperties["color"],
+                borderRadius:
+                  theme.borderRadius as React.CSSProperties["borderRadius"],
               }}
             >
               Sample Button
@@ -359,5 +421,5 @@ export function ThemeCustomizer({ initialTheme = defaultTheme, onChange }: Theme
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

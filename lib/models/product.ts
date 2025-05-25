@@ -1,39 +1,63 @@
-import pool from "../db";
+import db from "@/lib/db";
 import { generateSlug } from "../utils";
-import { getProductTheme } from "./theme";
-
-// Generate a unique product ID (3-6 digits)
-function generateProductId(): string {
-  return Math.floor(100 + Math.random() * 900000).toString();
-}
-
-// Import the ProductTheme from theme.ts to ensure consistency
-import type { ProductTheme } from "./theme";
-
-// Import related types
+import { generateProductId } from "../server-utils";
 import type { Ingredient } from "./ingredient";
 import type { WhyChoose } from "./why-choose";
 
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  slug: string;
-  productId: string;
-  redirect_link: string;
-  money_back_days: number;
-  image: string;
-  product_badge?: string;
-  theme?: ProductTheme;
-  createdAt: Date;
-  updatedAt: Date;
+export interface ProductTheme {
+  primaryColor: string;
+  secondaryColor: string;
+  textColor: string;
+  accentColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  headingColor: string;
+  linkColor: string;
+  fontFamily: string;
+  borderRadius: string;
+  customCss?: string;
 }
 
-// Extended type for product with related items
-export interface ProductWithDetails extends Product {
+export const defaultTheme: ProductTheme = {
+  primaryColor: "#ffffff",
+  secondaryColor: "#f8fafc",
+  textColor: "#1a202c",
+  accentColor: "#3182ce",
+  buttonColor: "#3182ce",
+  buttonTextColor: "#ffffff",
+  headingColor: "#1a202c",
+  linkColor: "#3182ce",
+  fontFamily: "Inter, sans-serif",
+  borderRadius: "0.5rem",
+};
+
+export interface Product {
+  id?: number;
+  product_id: string;
+  name: string;
+  slug: string;
+  description: string;
+  redirect_link: string;
+  generated_link?: string;
+  product_image: string;
+  product_badge: string;
+  money_back_days: number;
+  created_at?: Date;
+  updated_at?: Date;
   ingredients?: Ingredient[];
-  whyChoose?: WhyChoose[];
-  why_choose?: any[]; // For backward compatibility
+  why_choose?: WhyChoose[];
+  theme?: ProductTheme;
+}
+
+async function withConnection<T>(
+  operation: (connection: any) => Promise<T>
+): Promise<T> {
+  const connection = await db.getConnection();
+  try {
+    return await operation(connection);
+  } finally {
+    connection.release();
+  }
 }
 
 export async function createProduct(
@@ -42,27 +66,31 @@ export async function createProduct(
     "id" | "product_id" | "slug" | "created_at" | "updated_at"
   >
 ): Promise<Product> {
-  const connection = await pool.getConnection();
-
-  try {
-    // Generate a unique product ID (3-6 digits)
+  return withConnection(async (connection) => {
     const productId = generateProductId();
+    console.log("Generated product_id for new product:", productId);
 
-    // Generate slug from product name
     const slug = generateSlug(product.name);
+    console.log("Generated slug for new product:", slug);
 
-    // Insert product
+    console.log("Inserting new product into database:", {
+      name: product.name,
+      slug,
+      productId,
+    });
+
     const [result]: any = await connection.query(
       `INSERT INTO products 
-       (product_id, name, slug, description, redirect_link, product_image, product_badge, money_back_days) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (product_id, name, slug, description, redirect_link, generated_link, product_image, product_badge, money_back_days) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         productId,
         product.name,
         slug,
         product.description,
         product.redirect_link,
-        product.image,
+        product.generated_link,
+        product.product_image,
         product.product_badge,
         product.money_back_days,
       ]
@@ -70,112 +98,32 @@ export async function createProduct(
 
     return {
       id: result.insertId,
-      // Map database fields to TypeScript interface
-      name: product.name,
-      description: product.description,
+      product_id: productId,
       slug,
-      productId, // Using the right property name instead of product_id
-      redirect_link: product.redirect_link,
-      money_back_days: product.money_back_days,
-      image: product.image,
-      product_badge: product.product_badge,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      ...product,
     };
-  } finally {
-    connection.release();
-  }
+  });
 }
 
 export async function getProductBySlug(slug: string) {
-  const connection = await pool.getConnection();
-
-  try {
-    // Get product
-    const [products]: any = await connection.query(
+  return withConnection(async (connection) => {
+    const [rows]: any = await connection.query(
       "SELECT * FROM products WHERE slug = ?",
       [slug]
     );
-
-    if (products.length === 0) {
-      return null;
-    }
-
-    const product = products[0];
-
-    // Get ingredients
-    const [ingredients]: any = await connection.query(
-      "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
-      [product.id]
-    );
-
-    // Get why_choose items
-    const [whyChoose]: any = await connection.query(
-      "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
-      [product.id]
-    );
-
-    // Parse theme if it exists and is stored as JSON
-    if (product.theme && typeof product.theme === "string") {
-      try {
-        product.theme = JSON.parse(product.theme);
-      } catch (e) {
-        console.error("Error parsing theme:", e);
-      }
-    }
-
-    return {
-      ...product,
-      ingredients,
-      whyChoose,
-    };
-  } finally {
-    connection.release();
-  }
+    return rows.length === 0 ? null : rows[0];
+  });
 }
 
-export async function getProductById(id: string) {
-  const connection = await pool.getConnection();
-
+export async function getProductById(id: string | number) {
+  const connection = await db.getConnection();
   try {
-    // Get product
-    const [products]: any = await connection.query(
+    const [rows]: any = await connection.query(
       "SELECT * FROM products WHERE id = ?",
       [id]
     );
-
-    if (products.length === 0) {
-      return null;
-    }
-
-    const product = products[0];
-
-    // Get ingredients
-    const [ingredients]: any = await connection.query(
-      "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
-      [product.id]
-    );
-
-    // Get why_choose items
-    const [whyChoose]: any = await connection.query(
-      "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
-      [product.id]
-    );
-
-    // Parse theme if it exists and is stored as JSON
-    if (product.theme && typeof product.theme === "string") {
-      try {
-        product.theme = JSON.parse(product.theme);
-      } catch (e) {
-        console.error("Error parsing theme:", e);
-      }
-    }
-
-    return {
-      ...product,
-      ingredients,
-      whyChoose,
-    };
+    if (rows.length === 0) return null;
+    return rows[0];
   } finally {
     connection.release();
   }
@@ -184,51 +132,41 @@ export async function getProductById(id: string) {
 export async function getProductByProductId(
   productId: string
 ): Promise<Product | null> {
-  const connection = await pool.getConnection();
-
-  try {
+  return withConnection(async (connection) => {
+    console.log("Attempting to fetch product with product_id:", productId);
     const [rows]: any = await connection.query(
       "SELECT * FROM products WHERE product_id = ?",
       [productId]
     );
 
     if (rows.length === 0) {
+      console.log("No product found with product_id:", productId);
       return null;
     }
 
+    console.log("Found product by product_id:", rows[0]);
     return rows[0] as Product;
-  } finally {
-    connection.release();
-  }
+  });
 }
 
 export async function getAllProducts() {
-  const connection = await pool.getConnection();
-
-  try {
-    const [products]: any = await connection.query(
+  return withConnection(async (connection) => {
+    const [rows]: any = await connection.query(
       "SELECT * FROM products ORDER BY created_at DESC"
     );
-
-    return products;
-  } finally {
-    connection.release();
-  }
+    return rows;
+  });
 }
 
 export async function updateProduct(
   id: number,
   product: Partial<Product>
 ): Promise<boolean> {
-  const connection = await pool.getConnection();
-
-  try {
-    // If name is being updated, update the slug as well
+  return withConnection(async (connection) => {
     if (product.name) {
       product.slug = generateSlug(product.name);
     }
 
-    // Build the SET part of the query dynamically
     const setClause = Object.entries(product)
       .filter(
         ([key]) =>
@@ -250,7 +188,6 @@ export async function updateProduct(
       )
       .map(([, value]) => value);
 
-    // Add the ID to the values array
     values.push(id);
 
     const [result]: any = await connection.query(
@@ -259,72 +196,173 @@ export async function updateProduct(
     );
 
     return result.affectedRows > 0;
-  } finally {
-    connection.release();
-  }
+  });
 }
 
 export async function deleteProduct(id: number): Promise<boolean> {
-  const connection = await pool.getConnection();
-
-  try {
+  return withConnection(async (connection) => {
     const [result]: any = await connection.query(
       "DELETE FROM products WHERE id = ?",
       [id]
     );
-
     return result.affectedRows > 0;
+  });
+}
+
+async function getProductTheme(
+  productId: number
+): Promise<ProductTheme | null> {
+  const connection = await db.getConnection();
+
+  try {
+    const [rows]: any = await connection.query(
+      "SELECT * FROM product_themes WHERE product_id = ?",
+      [productId]
+    );
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows[0] as ProductTheme;
   } finally {
     connection.release();
   }
 }
 
-export async function getProductWithDetails(
-  productId: number | string
-): Promise<ProductWithDetails | null> {
-  const connection = await pool.getConnection();
-
-  try {
-    let product: Product | null;
-
-    if (typeof productId === "number") {
-      product = await getProductById(productId.toString());
-    } else {
-      // Check if it's a slug or product_id
-      product =
-        productId.length <= 6 && /^\d+$/.test(productId)
-          ? await getProductByProductId(productId)
-          : await getProductBySlug(productId);
-    }
-
-    if (!product) {
-      return null;
-    }
-
-    // Get ingredients
-    const [ingredientRows]: any = await connection.query(
-      "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
-      [product.id]
+async function fixNullProductIds() {
+  return withConnection(async (connection) => {
+    const [rows]: any = await connection.query(
+      "SELECT * FROM products WHERE product_id IS NULL"
     );
 
-    // Get why choose points
-    const [whyChooseRows]: any = await connection.query(
-      "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
-      [product.id]
-    );
+    console.log("Found products with null product_id:", rows.length);
 
-    // Get theme
-    const theme = await getProductTheme(parseInt(product.id.toString()));
+    for (const product of rows) {
+      const productId = generateProductId();
+      await connection.query(
+        "UPDATE products SET product_id = ? WHERE id = ?",
+        [productId, product.id]
+      );
+      console.log(
+        `Updated product ${product.name} with product_id: ${productId}`
+      );
+    }
+  });
+}
 
-    return {
-      ...product,
-      ingredients: ingredientRows,
-      why_choose: whyChooseRows,
-      theme: theme ?? undefined,
-    };
-  } finally {
-    connection.release();
-  }
+export async function getProductWithDetails(slug: string) {
+  return withConnection(async (connection) => {
+    try {
+      console.log("Fetching product details for slug:", slug);
+
+      await fixNullProductIds();
+
+      const [productRows] = await connection.query(
+        `SELECT p.*, t.* 
+         FROM products p 
+         LEFT JOIN product_themes t ON p.product_id = t.product_id 
+         WHERE p.slug = ?`,
+        [slug]
+      );
+
+      if (!productRows || productRows.length === 0) {
+        console.log("No product found with slug:", slug);
+        return null;
+      }
+
+      const product = productRows[0];
+      console.log("Product found by slug:", {
+        product_id: product.product_id,
+        slug: product.slug,
+        name: product.name,
+      });
+
+      if (!product.product_id) {
+        const productId = generateProductId();
+        await connection.query(
+          "UPDATE products SET product_id = ? WHERE slug = ?",
+          [productId, slug]
+        );
+        product.product_id = productId;
+        console.log(
+          `Generated new product_id ${productId} for product ${product.name}`
+        );
+      }
+
+      const [ingredientRows] = await connection.query(
+        `SELECT id, product_id, title, description, image, display_order 
+         FROM ingredients 
+         WHERE product_id = ? 
+         ORDER BY display_order ASC`,
+        [product.product_id]
+      );
+
+      const [whyChooseRows] = await connection.query(
+        `SELECT id, product_id, title, description, display_order 
+         FROM why_choose 
+         WHERE product_id = ? 
+         ORDER BY display_order ASC`,
+        [product.product_id]
+      );
+
+      return {
+        ...product,
+        theme: product.primary_bg_color
+          ? {
+              primary_bg_color: product.primary_bg_color,
+              secondary_bg_color: product.secondary_bg_color,
+              accent_bg_color: product.accent_bg_color,
+              primary_text_color: product.primary_text_color,
+              secondary_text_color: product.secondary_text_color,
+              accent_text_color: product.accent_text_color,
+              link_color: product.link_color,
+              link_hover_color: product.link_hover_color,
+              primary_button_bg: product.primary_button_bg,
+              primary_button_text: product.primary_button_text,
+              primary_button_hover_bg: product.primary_button_hover_bg,
+              secondary_button_bg: product.secondary_button_bg,
+              secondary_button_text: product.secondary_button_text,
+              secondary_button_hover_bg: product.secondary_button_hover_bg,
+              card_bg_color: product.card_bg_color,
+              card_border_color: product.card_border_color,
+              card_shadow_color: product.card_shadow_color,
+              header_bg_color: product.header_bg_color,
+              header_text_color: product.header_text_color,
+              footer_bg_color: product.footer_bg_color,
+              footer_text_color: product.footer_text_color,
+              font_family: product.font_family,
+              h1_font_size: product.h1_font_size,
+              h1_font_weight: product.h1_font_weight,
+              h2_font_size: product.h2_font_size,
+              h2_font_weight: product.h2_font_weight,
+              h3_font_size: product.h3_font_size,
+              h3_font_weight: product.h3_font_weight,
+              body_font_size: product.body_font_size,
+              body_line_height: product.body_line_height,
+              section_padding: product.section_padding,
+              card_padding: product.card_padding,
+              button_padding: product.button_padding,
+              border_radius_sm: product.border_radius_sm,
+              border_radius_md: product.border_radius_md,
+              border_radius_lg: product.border_radius_lg,
+              border_radius_xl: product.border_radius_xl,
+              max_width: product.max_width,
+              container_padding: product.container_padding,
+              gradient_start: product.gradient_start,
+              gradient_end: product.gradient_end,
+              shadow_color: product.shadow_color,
+              custom_css: product.custom_css,
+            }
+          : null,
+        ingredients: ingredientRows || [],
+        why_choose: whyChooseRows || [],
+      };
+    } catch (error) {
+      console.error("Error in getProductWithDetails:", error);
+      throw error;
+    }
+  });
 }
 
 export async function recordVisit(
@@ -333,46 +371,36 @@ export async function recordVisit(
   userAgent?: string,
   referrer?: string
 ): Promise<void> {
-  const connection = await pool.getConnection();
-
-  try {
+  return withConnection(async (connection) => {
     await connection.query(
       "INSERT INTO visits (product_id, ip_address, user_agent, referrer) VALUES (?, ?, ?, ?)",
       [productId, ipAddress, userAgent, referrer]
     );
-  } finally {
-    connection.release();
-  }
+  });
 }
 
 export async function getProductStats(): Promise<any> {
-  const connection = await pool.getConnection();
-
-  try {
-    // Get total products
+  return withConnection(async (connection) => {
     const [totalProductsResult]: any = await connection.query(
       "SELECT COUNT(*) as total FROM products"
     );
 
-    // Get total visits
     const [totalVisitsResult]: any = await connection.query(
       "SELECT COUNT(*) as total FROM visits"
     );
 
-    // Get visits by product
     const [productVisitsResult]: any = await connection.query(`
       SELECT p.name, p.product_id, COUNT(v.id) as visit_count 
       FROM products p
-      LEFT JOIN visits v ON p.id = v.product_id
-      GROUP BY p.id
+      LEFT JOIN visits v ON p.product_id = v.product_id
+      GROUP BY p.product_id, p.name
       ORDER BY visit_count DESC
     `);
 
-    // Get recent visits
     const [recentVisitsResult]: any = await connection.query(`
-      SELECT v.*, p.name as product_name 
+      SELECT v.*, p.name as product_name, p.product_id
       FROM visits v
-      JOIN products p ON v.product_id = p.id
+      JOIN products p ON v.product_id = p.product_id
       ORDER BY v.visit_date DESC
       LIMIT 10
     `);
@@ -383,7 +411,5 @@ export async function getProductStats(): Promise<any> {
       productVisits: productVisitsResult,
       recentVisits: recentVisitsResult,
     };
-  } finally {
-    connection.release();
-  }
+  });
 }

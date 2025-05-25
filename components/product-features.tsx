@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { Check } from "lucide-react"
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { Check } from "lucide-react";
 
-export default function ProductFeatures() {
+interface ProductFeaturesProps {
+  productImage: string;
+}
+
+export default function ProductFeatures({
+  productImage,
+}: ProductFeaturesProps) {
   return (
     <section className="mb-12 md:mb-20">
       <motion.div
@@ -36,17 +42,23 @@ export default function ProductFeatures() {
                 viewport={{ once: true, amount: 0.1 }}
                 className="space-y-3 md:space-y-6"
               >
-                <h3 className="text-lg md:text-2xl font-bold text-[var(--feature-title)]">Premium Quality Formula</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-[var(--feature-title)]">
+                  Premium Quality Formula
+                </h3>
                 <p className="text-sm md:text-lg text-[var(--text-secondary)]">
-                  Tribal Force X is manufactured in state-of-the-art facilities under strict quality control standards.
-                  Our formula has been perfected over years of research to deliver maximum results with no side effects.
+                  Tribal Force X is manufactured in state-of-the-art facilities
+                  under strict quality control standards. Our formula has been
+                  perfected over years of research to deliver maximum results
+                  with no side effects.
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-center">
                     <div className="w-5 h-5 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-xs md:text-base">FDA Registered Facility</span>
+                    <span className="text-[var(--text-secondary)] text-xs md:text-base">
+                      FDA Registered Facility
+                    </span>
                   </li>
                   <li className="flex items-center">
                     <div className="w-5 h-5 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mr-2">
@@ -68,7 +80,9 @@ export default function ProductFeatures() {
                     <div className="w-5 h-5 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-xs md:text-base">Made in the USA</span>
+                    <span className="text-[var(--text-secondary)] text-xs md:text-base">
+                      Made in the USA
+                    </span>
                   </li>
                 </ul>
               </motion.div>
@@ -86,8 +100,8 @@ export default function ProductFeatures() {
                 <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                   <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                   <Image
-                    src="/images/TRIBAL_FORCE_X.png"
-                    alt="Tribal Force X Product"
+                    src={productImage || "/placeholder.svg"}
+                    alt="Product Image"
                     fill
                     className="object-contain z-10"
                   />
@@ -98,5 +112,5 @@ export default function ProductFeatures() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

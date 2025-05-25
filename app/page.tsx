@@ -1,17 +1,17 @@
-import ProductHero from "@/components/product-hero"
-import BenefitsSection from "@/components/benefits-section"
-import IngredientsSection from "@/components/ingredients-section"
-import TestimonialsSection from "@/components/testimonials-section"
-import CallToAction from "@/components/call-to-action"
-import StickyOrderButton from "@/components/sticky-order-button"
-import CtaBoxes from "@/components/cta-boxes"
-import ProductFeatures from "@/components/product-features"
-import RenameInfoModal from "@/components/rename-info-modal"
-import ThemeNavigation from "@/components/theme-navigation"
-import NewCta from "@/components/new-cta"
-import Footer from "@/components/footer"
-import BuyNotification from "@/components/buy-notification"
-import BuyerAlert from "@/components/buyer-alert"
+import ProductHero from "@/components/product-hero";
+import BenefitsSection from "@/components/benefitsSection";
+import IngredientsSection from "@/components/ingredientsSection";
+import TestimonialsSection from "@/components/testimonials-section";
+import CallToAction from "@/components/call-to-action";
+import StickyOrderButton from "@/components/sticky-order-button";
+import CtaBoxes from "@/components/cta-boxes";
+import ProductFeatures from "@/components/product-features";
+import RenameInfoModal from "@/components/rename-info-modal";
+import ThemeNavigation from "@/components/theme-navigation";
+import NewCta from "@/components/new-cta";
+import Footer from "@/components/footer";
+import BuyNotification from "@/components/buy-notification";
+import BuyerAlert from "@/components/buyer-alert";
 
 export default function Home() {
   return (
@@ -44,32 +44,32 @@ export default function Home() {
           </div>
 
           <div id="product">
-            <ProductHero />
+            <ProductHero productName={""} productImage={""} description={""} />
           </div>
           <div id="ingredients">
-            <IngredientsSection />
+            <IngredientsSection ingredients={[]} productImage={""} />
           </div>
           <div id="benefits">
-            <NewCta />
-            <CtaBoxes position="top" />
-            <BenefitsSection />
+            <NewCta redirectLink={""} />
+            <CtaBoxes position="top" redirectLink={""} />
+            <BenefitsSection productName={""} whyChoose={[]} />
           </div>
           <div id="features">
-            <ProductFeatures />
-            <CtaBoxes position="middle" />
+            <ProductFeatures productImage={""} />
+            <CtaBoxes position="middle" redirectLink={""} />
           </div>
           <div id="testimonials">
             <TestimonialsSection />
           </div>
           <div id="order">
-            <CallToAction />
+            <CallToAction redirectLink={""} />
           </div>
         </div>
       </div>
-      <StickyOrderButton />
+      <StickyOrderButton redirectLink={""} />
       <RenameInfoModal />
       <BuyNotification />
       <Footer />
     </main>
-  )
+  );
 }

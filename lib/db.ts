@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise"
+import mysql from "mysql2/promise";
 
 // Create a connection pool
 const pool = mysql.createPool({
@@ -9,73 +9,104 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-})
+});
+
+// Test the connection
+pool
+  .getConnection()
+  .then((connection) => {
+    console.log("Database connection successful");
+    connection.release();
+  })
+  .catch((err) => {
+    console.error("Error connecting to the database:", err);
+  });
 
 // Initialize database tables if they don't exist
 export async function initDatabase() {
-  const connection = await pool.getConnection()
+  const connection = await pool.getConnection();
 
   try {
+    console.log("Starting database initialization...");
+
+    // Create database if it doesn't exist
+    await connection.query(`
+      CREATE DATABASE IF NOT EXISTS ${
+        process.env.DB_NAME || "product_management"
+      }
+    `);
+    console.log("Database created/verified");
+
+    // Use the database
+    await connection.query(`
+      USE ${process.env.DB_NAME || "product_management"}
+    `);
+    console.log("Using database:", process.env.DB_NAME || "product_management");
+
     // Create products table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS products (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(6) NOT NULL UNIQUE,
+        product_id VARCHAR(6) NOT NULL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         slug VARCHAR(255) NOT NULL UNIQUE,
         description TEXT,
         redirect_link VARCHAR(255) NOT NULL,
+        generated_link VARCHAR(255),
         product_image VARCHAR(255),
         product_badge VARCHAR(255),
         money_back_days INT DEFAULT 60,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
-    `)
+    `);
+    console.log("Products table created/verified");
 
     // Create ingredients table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS ingredients (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id INT NOT NULL,
+        product_id VARCHAR(6) NOT NULL,
         title VARCHAR(255) NOT NULL,
         description TEXT,
         image VARCHAR(255),
         display_order INT DEFAULT 0,
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       )
-    `)
+    `);
+    console.log("Ingredients table created/verified");
 
     // Create why_choose table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS why_choose (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id INT NOT NULL,
+        product_id VARCHAR(6) NOT NULL,
         title VARCHAR(255) NOT NULL,
         description TEXT,
         display_order INT DEFAULT 0,
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       )
-    `)
+    `);
+    console.log("Why Choose table created/verified");
 
     // Create visits table for tracking
     await connection.query(`
       CREATE TABLE IF NOT EXISTS visits (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id INT NOT NULL,
+        product_id VARCHAR(6) NOT NULL,
         visit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ip_address VARCHAR(45),
         user_agent TEXT,
         referrer VARCHAR(255),
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       )
-    `)
+    `);
+    console.log("Visits table created/verified");
 
     // Create product_themes table for custom styling
     await connection.query(`
       CREATE TABLE IF NOT EXISTS product_themes (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id INT NOT NULL UNIQUE,
+        product_id VARCHAR(6) NOT NULL UNIQUE,
         
         -- Background Colors
         primary_bg_color VARCHAR(7) DEFAULT '#ffffff',
@@ -100,7 +131,7 @@ export async function initDatabase() {
         -- Card/Section Colors
         card_bg_color VARCHAR(7) DEFAULT '#ffffff',
         card_border_color VARCHAR(7) DEFAULT '#e2e8f0',
-        card_shadow_color VARCHAR(7) DEFAULT '#00000010',
+        card_shadow_color VARCHAR(7) DEFAULT '#000000',
         
         -- Header Colors
         header_bg_color VARCHAR(7) DEFAULT '#2d3748',
@@ -139,7 +170,7 @@ export async function initDatabase() {
         -- Special Effects
         gradient_start VARCHAR(7) DEFAULT '#667eea',
         gradient_end VARCHAR(7) DEFAULT '#764ba2',
-        shadow_color VARCHAR(7) DEFAULT '#00000020',
+        shadow_color VARCHAR(7) DEFAULT '#000000',
         
         -- Custom CSS
         custom_css TEXT,
@@ -147,20 +178,117 @@ export async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       )
-    `)
+    `);
+    console.log("Product Themes table created/verified");
 
-    console.log("Database initialized successfully")
+    // Verify tables exist
+    const [tables] = await connection.query<any[]>("SHOW TABLES");
+    console.log("Existing tables:", tables);
+
+    // Check if we have any data
+    const [productCount] = await connection.query<any[]>(
+      "SELECT COUNT(*) as count FROM products"
+    );
+    console.log("Current product count:", productCount[0].count);
+
+    console.log("Database initialization completed successfully");
   } catch (error) {
-    console.error("Error initializing database:", error)
-    throw error
+    console.error("Error initializing database:", error);
+    throw error;
   } finally {
-    connection.release()
+    connection.release();
   }
 }
 
-// Execute the database initialization
-initDatabase().catch(console.error)
+// Add test data if tables are empty
+export async function addTestData() {
+  const connection = await pool.getConnection();
+  try {
+    // Check if we have any products
+    const [productCount] = await connection.query<any[]>(
+      "SELECT COUNT(*) as count FROM products"
+    );
+    console.log("Current product count:", productCount[0].count);
 
-export default pool
+    if (productCount[0].count === 0) {
+      console.log("Adding test data...");
+
+      // Insert test product
+      const [result] = await connection.query<any[]>(
+        `INSERT INTO products (product_id, name, slug, description, redirect_link, product_image) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          "TEST01",
+          "Test Product",
+          "test-product",
+          "Test product description",
+          "https://example.com",
+          "/placeholder.svg",
+        ]
+      );
+
+      const productId = (result as any).insertId;
+      console.log("Created product with ID:", productId);
+
+      // Insert test ingredients
+      const [ingredientResult] = await connection.query<any[]>(
+        `INSERT INTO ingredients (product_id, title, description, image, display_order) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          productId,
+          "Test Ingredient 1",
+          "Description for ingredient 1",
+          "/placeholder.svg",
+          1,
+        ]
+      );
+      console.log("Added ingredient:", ingredientResult);
+
+      // Insert test why_choose points
+      const [whyChooseResult] = await connection.query<any[]>(
+        `INSERT INTO why_choose (product_id, title, description, display_order) 
+         VALUES (?, ?, ?, ?)`,
+        [productId, "Test Benefit 1", "Description for benefit 1", 1]
+      );
+      console.log("Added why_choose point:", whyChooseResult);
+
+      // Verify data was inserted
+      const [ingredients] = await connection.query<any[]>(
+        "SELECT * FROM ingredients WHERE product_id = ?",
+        [productId]
+      );
+      console.log("Verification - Ingredients:", ingredients);
+
+      const [whyChoose] = await connection.query<any[]>(
+        "SELECT * FROM why_choose WHERE product_id = ?",
+        [productId]
+      );
+      console.log("Verification - Why Choose:", whyChoose);
+
+      console.log("Test data added successfully");
+    } else {
+      console.log("Products already exist, skipping test data insertion");
+    }
+  } catch (error) {
+    console.error("Error adding test data:", error);
+  } finally {
+    connection.release();
+  }
+}
+
+// Initialize database and add test data
+initDatabase()
+  .then(() => {
+    console.log("Database initialization completed");
+    return addTestData();
+  })
+  .then(() => {
+    console.log("Test data addition completed");
+  })
+  .catch((err) => {
+    console.error("Error during database setup:", err);
+  });
+
+export default pool;
