@@ -26,16 +26,16 @@ export async function GET(req: NextRequest) {
     // Otherwise, return all products
     const connection = await db.getConnection();
     try {
-      const [rows] = await connection.query<any[]>(`
-        SELECT p.*, 
+      const [rows] = await connection.query(`
+        SELECT p.*,
           GROUP_CONCAT(DISTINCT i.id, ':', i.title, ':', i.description, ':', i.image, ':', i.display_order) as ingredients,
           GROUP_CONCAT(DISTINCT w.id, ':', w.title, ':', w.description, ':', w.display_order) as why_choose,
           t.*
         FROM products p
-        LEFT JOIN ingredients i ON p.id = i.product_id
-        LEFT JOIN why_choose w ON p.id = w.product_id
-        LEFT JOIN product_themes t ON p.id = t.product_id
-        GROUP BY p.id
+        LEFT JOIN ingredients i ON p.product_id = i.product_id
+        LEFT JOIN why_choose w ON p.product_id = w.product_id
+        LEFT JOIN product_themes t ON p.product_id = t.product_id
+        GROUP BY p.product_id
         ORDER BY p.created_at DESC
       `);
 
@@ -215,11 +215,11 @@ export async function POST(req: NextRequest) {
           GROUP_CONCAT(DISTINCT w.id, ':', w.title, ':', w.description, ':', w.display_order) as why_choose,
           t.*
         FROM products p
-        LEFT JOIN ingredients i ON p.id = i.product_id
-        LEFT JOIN why_choose w ON p.id = w.product_id
-        LEFT JOIN product_themes t ON p.id = t.product_id
-        WHERE p.id = ?
-        GROUP BY p.id`,
+        LEFT JOIN ingredients i ON p.product_id = i.product_id
+        LEFT JOIN why_choose w ON p.product_id = w.product_id
+        LEFT JOIN product_themes t ON p.product_id = t.product_id
+        WHERE p.product_id = ?
+        GROUP BY p.product_id`,
         [insertedId]
       );
 

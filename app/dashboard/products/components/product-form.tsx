@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeCustomizer } from "./theme-customizer";
-import type { ProductTheme } from "@/lib/models/product";
+import type { ProductTheme } from "@/lib/models/product-theme";
 import { Plus, Trash2 } from "lucide-react";
 
 interface IngredientWithPreview {

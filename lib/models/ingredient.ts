@@ -1,24 +1,48 @@
-import pool from "../db";
+import db from "@/lib/db";
 
 export interface Ingredient {
-  id?: number;
-  product_id: number;
+  id: string;
+  product_id: string;
   title: string;
   description: string;
-  image: string | File;
-  image_preview?: string;
+  image: string;
   display_order: number;
 }
 
-export async function addIngredient(
-  ingredient: Omit<Ingredient, "id">
-): Promise<Ingredient> {
-  const connection = await pool.getConnection();
-
+async function withConnection<T>(
+  operation: (connection: any) => Promise<T>
+): Promise<T> {
+  const connection = await db.getConnection();
   try {
-    const [result]: any = await connection.query(
-      `INSERT INTO ingredients 
-       (product_id, title, description, image, display_order) 
+    return await operation(connection);
+  } finally {
+    connection.release();
+  }
+}
+
+export async function getIngredientsByProductId(
+  productId: string
+): Promise<Ingredient[]> {
+  return withConnection(async (connection) => {
+    const [rows] = await connection.query(
+      `SELECT id, product_id, title, description, image, display_order 
+       FROM ingredients 
+       WHERE product_id = ? 
+       ORDER BY display_order ASC`,
+      [productId]
+    );
+    return rows as Ingredient[];
+  });
+}
+
+export async function createIngredient(
+  ingredient: Omit<Ingredient, "id">,
+  connection: any // Allow passing connection for transactions
+): Promise<Ingredient> {
+  const conn = connection || (await db.getConnection());
+  try {
+    const [result]: any = await conn.query(
+      `INSERT INTO ingredients (product_id, title, description, image, display_order)
        VALUES (?, ?, ?, ?, ?)`,
       [
         ingredient.product_id,
@@ -30,39 +54,19 @@ export async function addIngredient(
     );
 
     return {
-      id: result.insertId,
+      id: result.insertId.toString(),
       ...ingredient,
     };
   } finally {
-    connection.release();
-  }
-}
-
-export async function getIngredientsByProductId(
-  productId: number
-): Promise<Ingredient[]> {
-  const connection = await pool.getConnection();
-
-  try {
-    const [rows]: any = await connection.query(
-      "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
-      [productId]
-    );
-
-    return rows as Ingredient[];
-  } finally {
-    connection.release();
+    if (!connection) conn.release(); // Only release if connection was obtained here
   }
 }
 
 export async function updateIngredient(
-  id: number,
+  id: string,
   ingredient: Partial<Ingredient>
 ): Promise<boolean> {
-  const connection = await pool.getConnection();
-
-  try {
-    // Build the SET part of the query dynamically
+  return withConnection(async (connection) => {
     const setClause = Object.entries(ingredient)
       .filter(([key]) => key !== "id" && key !== "product_id")
       .map(([key]) => `${key} = ?`)
@@ -72,7 +76,6 @@ export async function updateIngredient(
       .filter(([key]) => key !== "id" && key !== "product_id")
       .map(([, value]) => value);
 
-    // Add the ID to the values array
     values.push(id);
 
     const [result]: any = await connection.query(
@@ -81,39 +84,37 @@ export async function updateIngredient(
     );
 
     return result.affectedRows > 0;
-  } finally {
-    connection.release();
-  }
+  });
 }
 
-export async function deleteIngredient(id: number): Promise<boolean> {
-  const connection = await pool.getConnection();
-
+export async function deleteIngredient(
+  id: string,
+  connection?: any // Allow passing connection for transactions
+): Promise<boolean> {
+  const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await connection.query(
+    const [result]: any = await conn.query(
       "DELETE FROM ingredients WHERE id = ?",
       [id]
     );
-
     return result.affectedRows > 0;
   } finally {
-    connection.release();
+    if (!connection) conn.release();
   }
 }
 
-export async function deleteIngredientsByProductId(
-  productId: number
+export async function deleteIngredientByProductId(
+  productId: string,
+  connection?: any // Allow passing connection for transactions
 ): Promise<boolean> {
-  const connection = await pool.getConnection();
-
+  const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await connection.query(
+    const [result]: any = await conn.query(
       "DELETE FROM ingredients WHERE product_id = ?",
       [productId]
     );
-
-    return true;
+    return result.affectedRows > 0; // Or return true if successful
   } finally {
-    connection.release();
+    if (!connection) conn.release();
   }
 }

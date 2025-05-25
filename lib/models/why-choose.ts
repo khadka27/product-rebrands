@@ -1,92 +1,126 @@
-import pool from "../db"
+import db from "@/lib/db";
 
 export interface WhyChoose {
-  id?: number
-  product_id: number
-  title: string
-  description: string
-  display_order: number
+  id: string;
+  product_id: string;
+  title: string;
+  description: string;
+  display_order: number;
 }
 
-export async function addWhyChoose(whyChoose: Omit<WhyChoose, "id">): Promise<WhyChoose> {
-  const connection = await pool.getConnection()
-
+async function withConnection<T>(
+  operation: (connection: any) => Promise<T>
+): Promise<T> {
+  const connection = await db.getConnection();
   try {
-    const [result]: any = await connection.query(
-      `INSERT INTO why_choose 
-       (product_id, title, description, display_order) 
+    return await operation(connection);
+  } finally {
+    connection.release();
+  }
+}
+
+export async function getWhyChooseByProductId(
+  productId: string,
+  connection?: any
+): Promise<WhyChoose[]> {
+  const conn = connection || (await db.getConnection());
+  try {
+    const [rows]: any = await conn.query(
+      `SELECT id, product_id, title, description, display_order 
+       FROM why_choose 
+       WHERE product_id = ? 
+       ORDER BY display_order ASC`,
+      [productId]
+    );
+    return rows as WhyChoose[];
+  } finally {
+    if (!connection) conn.release();
+  }
+}
+
+export async function createWhyChoose(
+  whyChoose: Omit<WhyChoose, "id">,
+  connection?: any
+): Promise<WhyChoose> {
+  const conn = connection || (await db.getConnection());
+  try {
+    const [result]: any = await conn.query(
+      `INSERT INTO why_choose (product_id, title, description, display_order)
        VALUES (?, ?, ?, ?)`,
-      [whyChoose.product_id, whyChoose.title, whyChoose.description, whyChoose.display_order],
-    )
+      [
+        whyChoose.product_id,
+        whyChoose.title,
+        whyChoose.description,
+        whyChoose.display_order,
+      ]
+    );
 
     return {
-      id: result.insertId,
+      id: result.insertId.toString(),
       ...whyChoose,
-    }
+    };
   } finally {
-    connection.release()
+    if (!connection) conn.release();
   }
 }
 
-export async function getWhyChooseByProductId(productId: number): Promise<WhyChoose[]> {
-  const connection = await pool.getConnection()
-
+export async function updateWhyChoose(
+  id: string,
+  whyChoose: Partial<WhyChoose>,
+  connection?: any
+): Promise<boolean> {
+  const conn = connection || (await db.getConnection());
   try {
-    const [rows]: any = await connection.query("SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order", [
-      productId,
-    ])
-
-    return rows as WhyChoose[]
-  } finally {
-    connection.release()
-  }
-}
-
-export async function updateWhyChoose(id: number, whyChoose: Partial<WhyChoose>): Promise<boolean> {
-  const connection = await pool.getConnection()
-
-  try {
-    // Build the SET part of the query dynamically
     const setClause = Object.entries(whyChoose)
       .filter(([key]) => key !== "id" && key !== "product_id")
       .map(([key]) => `${key} = ?`)
-      .join(", ")
+      .join(", ");
 
     const values = Object.entries(whyChoose)
       .filter(([key]) => key !== "id" && key !== "product_id")
-      .map(([, value]) => value)
+      .map(([, value]) => value);
 
-    // Add the ID to the values array
-    values.push(id)
+    values.push(id);
 
-    const [result]: any = await connection.query(`UPDATE why_choose SET ${setClause} WHERE id = ?`, values)
+    const [result]: any = await conn.query(
+      `UPDATE why_choose SET ${setClause} WHERE id = ?`,
+      values
+    );
 
-    return result.affectedRows > 0
+    return result.affectedRows > 0;
   } finally {
-    connection.release()
+    if (!connection) conn.release();
   }
 }
 
-export async function deleteWhyChoose(id: number): Promise<boolean> {
-  const connection = await pool.getConnection()
-
+export async function deleteWhyChoose(
+  id: string,
+  connection?: any
+): Promise<boolean> {
+  const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await connection.query("DELETE FROM why_choose WHERE id = ?", [id])
-
-    return result.affectedRows > 0
+    const [result]: any = await conn.query(
+      "DELETE FROM why_choose WHERE id = ?",
+      [id]
+    );
+    return result.affectedRows > 0;
   } finally {
-    connection.release()
+    if (!connection) conn.release();
   }
 }
 
-export async function deleteWhyChooseByProductId(productId: number): Promise<boolean> {
-  const connection = await pool.getConnection()
-
+export async function deleteWhyChooseByProductId(
+  productId: string,
+  connection?: any
+): Promise<boolean> {
+  const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await connection.query("DELETE FROM why_choose WHERE product_id = ?", [productId])
-
-    return true
+    const [result]: any = await conn.query(
+      "DELETE FROM why_choose WHERE product_id = ?",
+      [productId]
+    );
+    return result.affectedRows > 0;
   } finally {
-    connection.release()
+    if (!connection) conn.release();
   }
 }

@@ -22,6 +22,14 @@ import {
   ReactPortal,
 } from "react";
 
+// Helper to generate a robust key
+const generateItemKey = (item: any, index: number): string => {
+  // Use item.id if it exists and is a string/number, otherwise use index
+  return item && (typeof item.id === "string" || typeof item.id === "number")
+    ? item.id.toString()
+    : `item-${index}`;
+};
+
 export default async function PreviewPage({
   params,
 }: {
@@ -147,12 +155,9 @@ export default async function PreviewPage({
                 <BenefitsSection
                   productName={product.name}
                   whyChoose={product.why_choose.map(
-                    (item: {
-                      id: string;
-                      title: string;
-                      description: string;
-                      display_order?: number;
-                    }) => ({
+                    (item: any, index: number) => ({
+                      // Use generateItemKey for robust key generation
+                      key: generateItemKey(item, index),
                       id: item.id,
                       title: item.title,
                       description: item.description,
