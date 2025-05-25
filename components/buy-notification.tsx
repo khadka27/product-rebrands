@@ -4,7 +4,13 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ShoppingBag, X } from "lucide-react"
 
-export default function BuyNotification() {
+import type { Product } from "@/lib/models/product";
+
+interface BuyNotificationProps {
+  product: Product;
+}
+
+export default function BuyNotification({ product }: BuyNotificationProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [notification, setNotification] = useState({
     name: "",
@@ -132,8 +138,7 @@ export default function BuyNotification() {
                 {notification.name} from {notification.location}
               </p>
               <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
-                just purchased {notification.quantity} {notification.quantity === 1 ? "bottle" : "bottles"} of TRIBAL
-                FORCE X
+                just purchased {notification.quantity} {notification.quantity === 1 ? "bottle" : "bottles"} of {product?.name}
               </p>
               <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1">Just now</p>
             </div>

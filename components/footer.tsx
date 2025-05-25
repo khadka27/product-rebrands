@@ -1,10 +1,15 @@
-export default function Footer() {
+import type { Product } from "@/lib/models/product";
+
+interface FooterProps {
+  product: Product;
+}
+export default function Footer({ product }: FooterProps) {
   return (
     <footer className="bg-black text-white dark:bg-white dark:text-black py-4 md:py-12">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           <div>
-            <h3 className="text-sm md:text-lg font-bold mb-2 md:mb-4">Tribal Force X</h3>
+            <h3 className="text-sm md:text-lg font-bold mb-2 md:mb-4">{product?.name}</h3>
             <p className="text-[10px] md:text-sm text-gray-400 dark:text-gray-600 mb-3 md:mb-4">
               The premium male enhancement formula designed to help you achieve peak performance and confidence.
             </p>
@@ -83,7 +88,7 @@ export default function Footer() {
               <strong>FDA Disclaimer:</strong> These statements have not been evaluated by the Food and Drug
               Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.
             </p>
-            <p>© {new Date().getFullYear()} Tribal Force X. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {product?.name}. All rights reserved.</p>
           </div>
         </div>
       </div>

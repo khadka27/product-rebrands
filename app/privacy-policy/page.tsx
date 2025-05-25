@@ -1,7 +1,13 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
-export default function PrivacyPolicy() {
+import type { Product } from "@/lib/models/product";
+
+interface PrivacyPolicyProps {
+  product: Product;
+}
+
+export default function PrivacyPolicy({ product }: PrivacyPolicyProps) {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[var(--bg-gradient-from)] via-[var(--bg-gradient-via)] to-[var(--bg-gradient-to)] text-[var(--text-primary)] py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -18,7 +24,7 @@ export default function PrivacyPolicy() {
 
             <h2 className="text-xl font-semibold mt-6 mb-3">1. Introduction</h2>
             <p>
-              Welcome to Tribal Force X ("we," "our," or "us"). We are committed to protecting your privacy and handling
+              Welcome to {product?.name}("we," "our," or "us"). We are committed to protecting your privacy and handling
               your personal information with transparency and care. This Privacy Policy explains how we collect, use,
               disclose, and safeguard your information when you visit our website, purchase our products, or interact
               with us in any way.
@@ -116,7 +122,7 @@ export default function PrivacyPolicy() {
               please contact us at:
             </p>
             <p className="mt-2">
-              Email: privacy@tribalforcex.com
+              Email: privacy@{product?.name}.com
               <br />
               Address: 123 Supplement Ave, Health City, CA 90210
               <br />

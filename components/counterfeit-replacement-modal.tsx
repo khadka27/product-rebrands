@@ -6,7 +6,13 @@ import { useState } from "react"
 import { X, Upload, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function CounterfeitReplacementModal() {
+import type { Product } from "@/lib/models/product";
+
+interface CounterfeitReplacementModalProps {
+  product: Product;
+}
+
+export default function CounterfeitReplacementModal({ product }: CounterfeitReplacementModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -107,7 +113,7 @@ export default function CounterfeitReplacementModal() {
                 <>
                   <p className="mb-4 text-gray-700 dark:text-gray-300">
                     We're sorry you may have purchased a counterfeit product. To help us verify and replace it with an
-                    authentic Tribal Force X, please provide the following information:
+                    authentic {product?.name}, please provide the following information:
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -296,7 +302,7 @@ export default function CounterfeitReplacementModal() {
                         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 flex-shrink-0" />
                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
                           Our team will review your submission and contact you within 2-3 business days. If approved,
-                          we'll send you an authentic Tribal Force X at no cost.
+                          we'll send you an authentic {product?.name} at no cost.
                         </p>
                       </div>
                     </div>

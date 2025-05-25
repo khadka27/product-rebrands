@@ -5,7 +5,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import { AlertTriangle } from "lucide-react"
 import CounterfeitReplacementModal from "./counterfeit-replacement-modal"
 
-export default function BuyerAlert() {
+import type { Product } from "@/lib/models/product";
+
+interface BuyerAlertProps {
+  product: Product;
+}
+
+export default function BuyerAlert({ product }: BuyerAlertProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -37,13 +43,13 @@ export default function BuyerAlert() {
             <p className="text-[10px] md:text-base lg:text-lg">
               Due to the popularity of our product, counterfeit versions are being sold under our old name. To protect
               our customers, we have officially renamed our authentic formula to{" "}
-              <span className="font-bold">TRIBAL FORCE X</span>. Only purchase from authorized retailers to ensure you
+              <span className="font-bold">{product?.name}</span>. Only purchase from authorized retailers to ensure you
               receive the genuine product.
             </p>
 
             {/* Counterfeit replacement button */}
             <div className="mt-1 md:mt-4 flex justify-center px-2 md:px-0">
-              <CounterfeitReplacementModal />
+              <CounterfeitReplacementModal product={product} />
             </div>
           </div>
         </motion.div>

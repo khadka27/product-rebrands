@@ -120,7 +120,7 @@ export default async function PreviewPage({
             <ThemeNavigation />
 
             <div className="text-center mb-6 md:mb-12 pt-4 md:pt-8">
-              <BuyerAlert />
+              <BuyerAlert product={product} />
 
               <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 text-black dark:text-white text-center">
                 THIS PRODUCT HAS BEEN RENAMED TO
@@ -132,11 +132,7 @@ export default async function PreviewPage({
 
             <div id="product">
               <ProductHero
-                productName={product.name}
-                productImage={product.product_image}
-                description={product.description}
-                redirectLink={product.redirect_link}
-                product_badge={product.product_badge}
+                product={product}
               />
             </div>
 
@@ -151,7 +147,7 @@ export default async function PreviewPage({
 
             <div id="benefits">
               <NewCta product={product} />
-              <CtaBoxes position="top" redirectLink={product.redirect_link} />
+              <CtaBoxes position="top" product={product} />
               {product.why_choose && product.why_choose.length > 0 && (
                 <BenefitsSection
                   productName={product.name}
@@ -173,7 +169,7 @@ export default async function PreviewPage({
               <ProductFeatures product={product} />
               <CtaBoxes
                 position="middle"
-                redirectLink={product.redirect_link}
+                product={product}
               />
             </div>
 
@@ -187,10 +183,10 @@ export default async function PreviewPage({
           </div>
         </div>
 
-        <StickyOrderButton redirectLink={product.redirect_link} />
+        <StickyOrderButton product={product} />
         <RenameInfoModal />
-        <BuyNotification />
-        <Footer />
+        <BuyNotification product={product} />
+        <Footer product={product} />
       </main>
     </>
   );

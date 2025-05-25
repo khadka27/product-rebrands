@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Clock, Package } from "lucide-react";
 
+
 interface PricingSectionProps {
   productName: string;
   moneyBackDays: number;

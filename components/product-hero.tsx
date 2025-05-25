@@ -4,21 +4,17 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import CountdownTimer from "./countdown-timer";
+import type { Product } from "@/lib/models/product";
 
 interface ProductHeroProps {
-  productName: string;
-  productImage: string;
-  description: string;
-  redirectLink?: string;
-  product_badge?: string;
+
+  product?: Product;
+
 }
 
 export default function ProductHero({
-  productName,
-  productImage,
-  description,
-  redirectLink,
-  product_badge,
+  product,
+
 }: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
@@ -36,11 +32,11 @@ export default function ProductHero({
               className="space-y-3 md:space-y-6"
             >
               <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
-                {description || "Now rebranded as "}
+                {product?.description || "Now rebranded as "}
                 <span className="font-bold text-red-600">
-                  {productName || "Tribal Force X"}
+                  {product?.name || "Product Name"}
                 </span>
-                {description
+                {product?.description
                   ? ""
                   : " – our premium male enhancement formula with powerful natural ingredients for maximum performance."}
               </p>
@@ -52,8 +48,7 @@ export default function ProductHero({
                   className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
                   onClick={() =>
                     window.open(
-                      redirectLink ??
-                        "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+                      product?.redirect_link
                     )
                   }
                 >
@@ -92,8 +87,8 @@ export default function ProductHero({
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                 <Image
-                  src={productImage || "/images/TRIBAL_FORCE_X.png"}
-                  alt={`${productName || "Tribal Force X"} Product`}
+                  src={product?.product_image || "/images/product.png"}
+                  alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
                 />
@@ -101,7 +96,7 @@ export default function ProductHero({
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={product_badge || "/images/New-and-Improved-Badge.png"}
+                  src={product?.product_badge || "/images/New-and-Improved-Badge.png"}
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"

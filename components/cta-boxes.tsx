@@ -3,15 +3,16 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Shield, TrendingUp, Award } from "lucide-react";
+import { Product } from "@/lib/models/product";
 
 interface CtaBoxesProps {
   position?: "top" | "middle" | "bottom";
-  redirectLink: string;
+  product: Product;
 }
 
 export default function CtaBoxes({
   position = "bottom",
-  redirectLink,
+  product,
 }: CtaBoxesProps) {
   const ctaBoxes = {
     top: [
@@ -86,7 +87,8 @@ export default function CtaBoxes({
                     className="relative overflow-hidden group bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1 md:py-2 px-2 md:px-4 rounded-lg transition-all duration-300 text-xs md:text-base"
                     onClick={() =>
                       window.open(
-                        "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+                        product?.redirect_link || "#",
+                        "_blank",
                       )
                     }
                   >

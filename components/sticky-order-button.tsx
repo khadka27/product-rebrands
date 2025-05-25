@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Product } from "@/lib/models/product";
+
 
 interface StickyOrderButtonProps {
-  redirectLink: string;
+  product: Product;
 }
 
 export default function StickyOrderButton({
-  redirectLink,
+  product,
 }: StickyOrderButtonProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -54,8 +56,7 @@ export default function StickyOrderButton({
           className="relative overflow-hidden group bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 py-1.5 md:py-3 px-2 md:px-6 rounded-full transition-all duration-300 shadow-lg shadow-black/30 border border-indigo-400/20 text-[10px] md:text-base"
           onClick={() =>
             window.open(
-              redirectLink ??
-                "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
+              product?.redirect_link
             )
           }
         >
