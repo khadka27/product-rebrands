@@ -72,12 +72,12 @@ export async function POST(
 
     // Add the ingredient
     const ingredient = await createIngredient({
-      product_id: Number.parseInt(params.id),
+      product_id: params.id,
       title,
       description,
       image,
       display_order,
-    });
+    }, null);
 
     return NextResponse.json(ingredient, { status: 201 });
   } catch (error) {
@@ -95,7 +95,7 @@ export async function DELETE(
 ) {
   try {
     const deleted = await deleteIngredientByProductId(
-      Number.parseInt(params.id)
+      params.id
     );
     return NextResponse.json({ success: true });
   } catch (error) {
