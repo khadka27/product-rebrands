@@ -182,7 +182,9 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Link href={`/dashboard/products/${product.id}`}>
+                          <Link
+                            href={`/dashboard/products/${product.product_id}`}
+                          >
                             <Button variant="outline" size="sm">
                               Edit
                             </Button>

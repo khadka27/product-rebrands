@@ -131,9 +131,7 @@ export default async function PreviewPage({
             </div>
 
             <div id="product">
-              <ProductHero
-                product={product}
-              />
+              <ProductHero product={product} />
             </div>
 
             {product.ingredients && product.ingredients.length > 0 && (
@@ -167,10 +165,7 @@ export default async function PreviewPage({
 
             <div id="features">
               <ProductFeatures product={product} />
-              <CtaBoxes
-                position="middle"
-                product={product}
-              />
+              <CtaBoxes position="middle" product={product} />
             </div>
 
             <div id="testimonials">
@@ -184,7 +179,7 @@ export default async function PreviewPage({
         </div>
 
         <StickyOrderButton product={product} />
-        <RenameInfoModal />
+        <RenameInfoModal product={product} />
         <BuyNotification product={product} />
         <Footer product={product} />
       </main>
