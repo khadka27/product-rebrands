@@ -169,7 +169,7 @@ export default async function PreviewPage({
             </div>
 
             <div id="testimonials">
-              <TestimonialsSection />
+              <TestimonialsSection product={product} />
             </div>
 
             <div id="order">

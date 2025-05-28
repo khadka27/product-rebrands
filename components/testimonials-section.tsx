@@ -1,13 +1,18 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Star, Quote } from "lucide-react"
-import Image from "next/image"
+import { motion } from "framer-motion";
+import { Star, Quote } from "lucide-react";
+import Image from "next/image";
+import { Product } from "@/lib/models/product";
 
-export default function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  product?: Product;
+}
+
+export default function TestimonialsSection({ product }: TestimonialsSectionProps) {
   const testimonials = [
     {
-      text: "I've been using Goliath XL10 for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed. My workouts are more productive and I feel stronger than ever.",
+      text: `I've been using ${product?.name} for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed. My workouts are more productive and I feel stronger than ever.`,
       name: "Michael R.",
       age: 42,
       location: "New York, NY",
@@ -15,7 +20,7 @@ export default function TestimonialsSection() {
       image: "/images/testimonials/michael.png",
     },
     {
-      text: "I'm amazed by how quickly I felt the difference. My workouts are better, and my energy levels have skyrocketed! I've tried other supplements before, but nothing compares to Goliath XL10.",
+      text:  `I'm amazed by how quickly I felt the difference. My workouts are better, and my energy levels have skyrocketed! I've tried other supplements before, but nothing compares to  ${product?.name}.`,
       name: "David T.",
       age: 38,
       location: "Los Angeles, CA",
@@ -23,14 +28,14 @@ export default function TestimonialsSection() {
       image: "/images/testimonials/david.png",
     },
     {
-      text: "After trying several products, Goliath XL10 is the only one that delivered real results. Highly recommended! I've noticed significant improvements in just two weeks of use.",
+      text: `After trying several products, ${product?.name} is the only one that delivered real results. Highly recommended! I've noticed significant improvements in just two weeks of use.`,
       name: "James K.",
       age: 45,
       location: "Chicago, IL",
       rating: 4,
       image: "/images/testimonials/james.png",
     },
-  ]
+  ];
 
   return (
     <section className="mb-12 md:mb-20">
@@ -76,7 +81,9 @@ export default function TestimonialsSection() {
                     />
                   </div>
                   <div>
-                    <p className="font-bold text-[var(--text-primary)] text-xs md:text-base">{testimonial.name}</p>
+                    <p className="font-bold text-[var(--text-primary)] text-xs md:text-base">
+                      {testimonial.name}
+                    </p>
                     <p className="text-[0.65rem] md:text-sm text-[var(--text-secondary)]">
                       {testimonial.age}, {testimonial.location}
                     </p>
@@ -105,5 +112,5 @@ export default function TestimonialsSection() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }
