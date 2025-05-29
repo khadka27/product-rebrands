@@ -28,7 +28,6 @@ export default function ProductHero({ product }: ProductHeroProps) {
             >
               <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
                 {product?.paragraph || "Now rebranded as "}
-                {product?.paragraph || "Now rebranded as "}
 
                 {product?.paragraph
                   ? ""
