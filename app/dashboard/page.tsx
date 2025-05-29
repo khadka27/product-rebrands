@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -48,6 +48,7 @@ import { toast } from "sonner";
 
 export default function Dashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -58,6 +59,11 @@ export default function Dashboard() {
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -72,13 +78,16 @@ export default function Dashboard() {
         setFilteredProducts(productsResponse.data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        toast.error("Failed to fetch dashboard data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    if (status === "authenticated") {
+      fetchData();
+    }
+  }, [status, router]);
 
   useEffect(() => {
     const filtered = products.filter((product) =>
@@ -138,7 +147,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
@@ -146,6 +155,10 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Will be redirected by middleware
   }
 
   return (
