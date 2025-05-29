@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -29,6 +31,7 @@ import {
   Trash2,
   Copy,
   Check,
+  LogOut,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,6 +47,7 @@ import {
 import { toast } from "sonner";
 
 export default function Dashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -124,6 +128,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push("/login");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Error logging out");
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -138,12 +152,18 @@ export default function Dashboard() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Product Dashboard</h1>
-        <Link href="/dashboard/products/new">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Product
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/products/new">
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add New Product
+            </Button>
+          </Link>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
           </Button>
-        </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
