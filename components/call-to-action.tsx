@@ -50,7 +50,7 @@ export default function CallToAction({ product }: CallToActionProps) {
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
                   <span className="drop-shadow-sm">
-                    60-Day Money Back Guarantee
+                    {product?.money_back_days}-Day Money Back Guarantee
                   </span>
                 </li>
                 <li className="flex items-center text-white text-xs md:text-base">

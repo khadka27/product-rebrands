@@ -7,15 +7,10 @@ import CountdownTimer from "./countdown-timer";
 import type { Product } from "@/lib/models/product";
 
 interface ProductHeroProps {
-
   product?: Product;
-
 }
 
-export default function ProductHero({
-  product,
-
-}: ProductHeroProps) {
+export default function ProductHero({ product }: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
       <div className="relative backdrop-blur-sm bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)]">
@@ -33,9 +28,7 @@ export default function ProductHero({
             >
               <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
                 {product?.description || "Now rebranded as "}
-                <span className="font-bold text-red-600">
-                  {product?.name || "Product Name"}
-                </span>
+
                 {product?.description
                   ? ""
                   : " – our premium male enhancement formula with powerful natural ingredients for maximum performance."}
@@ -46,11 +39,7 @@ export default function ProductHero({
               <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
                 <Button
                   className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
-                  onClick={() =>
-                    window.open(
-                      product?.redirect_link
-                    )
-                  }
+                  onClick={() => window.open(product?.redirect_link)}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl text-black">
                     ORDER NOW
@@ -96,7 +85,10 @@ export default function ProductHero({
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={product?.product_badge || "/images/New-and-Improved-Badge.png"}
+                  src={
+                    product?.product_badge ||
+                    "/images/New-and-Improved-Badge.png"
+                  }
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"
