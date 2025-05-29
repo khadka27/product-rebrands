@@ -27,12 +27,26 @@ export default function ProductHero({ product }: ProductHeroProps) {
               className="space-y-3 md:space-y-6"
             >
               <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
-                {product?.description || "Now rebranded as "}
+                {product?.paragraph || "Now rebranded as "}
+                {product?.paragraph || "Now rebranded as "}
 
-                {product?.description
+                {product?.paragraph
                   ? ""
                   : " – our premium male enhancement formula with powerful natural ingredients for maximum performance."}
               </p>
+
+              {product?.bullet_points && product.bullet_points.length > 0 && (
+                <ul className="space-y-2 md:space-y-3">
+                  {product.bullet_points.map((point, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-yellow-500 mt-1">•</span>
+                      <span className="text-sm md:text-base text-[var(--text-primary)]">
+                        {point}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               <CountdownTimer />
 

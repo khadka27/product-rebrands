@@ -15,7 +15,8 @@ export interface Product {
   product_id: string;
   name: string;
   slug: string;
-  description: string;
+  paragraph: string;
+  bullet_points: string[];
   redirect_link: string;
   generated_link?: string;
   product_image: string;
@@ -56,6 +57,8 @@ export async function createProduct(
       name: product.name,
       slug,
       productId,
+      paragraph: product.paragraph,
+      bullet_points: product.bullet_points,
     });
 
     // Use transaction to ensure atomicity
@@ -64,13 +67,14 @@ export async function createProduct(
     try {
       const [result]: any = await connection.query(
         `INSERT INTO products 
-         (product_id, name, slug, description, redirect_link, generated_link, product_image, product_badge, money_back_days) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           productId,
           product.name,
           slug,
-          product.description,
+          product.paragraph,
+          JSON.stringify(product.bullet_points),
           product.redirect_link,
           product.generated_link,
           product.product_image,
@@ -132,27 +136,29 @@ export async function createProduct(
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   return withConnection(async (connection) => {
     const [rows]: any = await connection.query(
-      "SELECT * FROM products WHERE slug = ?",
+      "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products WHERE slug = ?",
       [slug]
     );
-    return rows.length === 0 ? null : rows[0];
+    if (rows.length === 0) return null;
+    if (rows[0].bullet_points && typeof rows[0].bullet_points === "string") {
+      try {
+        rows[0].bullet_points = JSON.parse(rows[0].bullet_points);
+      } catch (e) {
+        console.error(
+          "Failed to parse bullet_points JSON in getProductBySlug:",
+          e
+        );
+        rows[0].bullet_points = [];
+      }
+    }
+    return rows[0];
   });
 }
 
 export async function getProductById(
   id: string | number
 ): Promise<Product | null> {
-  const connection = await db.getConnection();
-  try {
-    const [rows]: any = await connection.query(
-      "SELECT * FROM products WHERE id = ?",
-      [id]
-    );
-    if (rows.length === 0) return null;
-    return rows[0];
-  } finally {
-    connection.release();
-  }
+  return getProductByProductId(id as string);
 }
 
 export async function getProductByProductId(
@@ -161,7 +167,7 @@ export async function getProductByProductId(
   return withConnection(async (connection) => {
     console.log("Attempting to fetch product with product_id:", productId);
     const [rows]: any = await connection.query(
-      "SELECT * FROM products WHERE product_id = ?",
+      "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products WHERE product_id = ?",
       [productId]
     );
 
@@ -171,6 +177,18 @@ export async function getProductByProductId(
     }
 
     console.log("Found product by product_id:", rows[0]);
+    if (rows[0].bullet_points && typeof rows[0].bullet_points === "string") {
+      try {
+        rows[0].bullet_points = JSON.parse(rows[0].bullet_points);
+      } catch (e) {
+        console.error(
+          "Failed to parse bullet_points JSON in getProductByProductId:",
+          e
+        );
+        rows[0].bullet_points = [];
+      }
+    }
+
     return rows[0] as Product;
   });
 }
@@ -178,15 +196,31 @@ export async function getProductByProductId(
 export async function getAllProducts(): Promise<Product[]> {
   return withConnection(async (connection) => {
     const [rows]: any = await connection.query(
-      "SELECT * FROM products ORDER BY created_at DESC"
+      "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products ORDER BY created_at DESC"
     );
-    return rows;
+    const products = rows.map((row: any) => {
+      if (row.bullet_points && typeof row.bullet_points === "string") {
+        try {
+          row.bullet_points = JSON.parse(row.bullet_points);
+        } catch (e) {
+          console.error(
+            "Failed to parse bullet_points JSON in getAllProducts:",
+            e
+          );
+          row.bullet_points = [];
+        }
+      }
+      return row;
+    });
+    return products;
   });
 }
 
 export async function updateProduct(
   productId: string,
-  product: Partial<Product>
+  product: Partial<
+    Omit<Product, "id" | "product_id" | "slug" | "created_at" | "updated_at">
+  >
 ): Promise<boolean> {
   return withConnection(async (connection) => {
     await connection.beginTransaction();
@@ -196,51 +230,63 @@ export async function updateProduct(
       const updateFields: string[] = [];
       const updateValues: any[] = [];
 
-      if (product.name) {
-        updateFields.push("name = ?", "slug = ?");
-        updateValues.push(product.name, generateSlug(product.name));
+      if (product.name !== undefined) {
+        updateFields.push("name = ?");
+        updateValues.push(product.name);
+        if (product.name.trim() !== "") {
+          updateFields.push("slug = ?");
+          updateValues.push(generateSlug(product.name));
+        }
       }
-      if (product.description !== undefined) {
-        updateFields.push("description = ?");
-        updateValues.push(product.description);
+
+      if (product.paragraph !== undefined) {
+        updateFields.push("paragraph = ?");
+        updateValues.push(product.paragraph);
       }
+
+      if (product.bullet_points !== undefined) {
+        updateFields.push("bullet_points = ?");
+        updateValues.push(JSON.stringify(product.bullet_points));
+      }
+
       if (product.redirect_link !== undefined) {
         updateFields.push("redirect_link = ?");
         updateValues.push(product.redirect_link);
       }
+
       if (product.generated_link !== undefined) {
         updateFields.push("generated_link = ?");
         updateValues.push(product.generated_link);
       }
+
       if (product.product_image !== undefined) {
         updateFields.push("product_image = ?");
         updateValues.push(product.product_image);
       }
+
       if (product.product_badge !== undefined) {
         updateFields.push("product_badge = ?");
         updateValues.push(product.product_badge);
       }
+
       if (product.money_back_days !== undefined) {
         updateFields.push("money_back_days = ?");
         updateValues.push(product.money_back_days);
       }
 
       if (updateFields.length > 0) {
-        const setClause = updateFields.join(", ");
+        updateValues.push(productId);
         await connection.query(
-          `UPDATE products SET ${setClause} WHERE product_id = ?`,
-          [...updateValues, productId]
+          `UPDATE products SET ${updateFields.join(", ")} WHERE product_id = ?`,
+          updateValues
         );
       }
 
       // Update Ingredients (Delete existing and insert new)
       if (product.ingredients !== undefined) {
-        // Check if ingredients prop was provided
-        // Pass the connection to deleteIngredientByProductId
         await deleteIngredientByProductId(productId, connection);
         if (product.ingredients && product.ingredients.length > 0) {
           for (const ingredient of product.ingredients) {
-            // Pass the connection to createIngredient
             await createIngredient(
               { ...ingredient, product_id: productId },
               connection
@@ -251,12 +297,9 @@ export async function updateProduct(
 
       // Update Why Choose items (Delete existing and insert new)
       if (product.why_choose !== undefined) {
-        // Check if why_choose prop was provided
-        // Pass the connection to deleteWhyChooseByProductId
         await deleteWhyChooseByProductId(productId, connection);
         if (product.why_choose && product.why_choose.length > 0) {
           for (const whyChooseItem of product.why_choose) {
-            // Pass the connection to createWhyChoose
             await createWhyChoose(
               { ...whyChooseItem, product_id: productId },
               connection
@@ -267,8 +310,6 @@ export async function updateProduct(
 
       // Update Theme (Create or Update)
       if (product.theme !== undefined) {
-        // Check if theme prop was provided
-        // Pass the connection to createOrUpdateProductTheme
         await createOrUpdateProductTheme(
           {
             ...product.theme,
@@ -276,6 +317,8 @@ export async function updateProduct(
           },
           connection
         );
+      } else {
+        await deleteProductThemeByProductId(productId, connection);
       }
 
       await connection.commit();
@@ -289,13 +332,25 @@ export async function updateProduct(
   });
 }
 
-export async function deleteProduct(id: number): Promise<boolean> {
+export async function deleteProduct(productId: string): Promise<boolean> {
   return withConnection(async (connection) => {
-    const [result]: any = await connection.query(
-      "DELETE FROM products WHERE id = ?",
-      [id]
-    );
-    return result.affectedRows > 0;
+    await connection.beginTransaction();
+    try {
+      await deleteProductThemeByProductId(productId, connection);
+      await deleteIngredientByProductId(productId, connection);
+      await deleteWhyChooseByProductId(productId, connection);
+
+      const [result]: any = await connection.query(
+        "DELETE FROM products WHERE product_id = ?",
+        [productId]
+      );
+      await connection.commit();
+      return result.affectedRows > 0;
+    } catch (error) {
+      await connection.rollback();
+      console.error("Error deleting product:", error);
+      throw error;
+    }
   });
 }
 
@@ -370,12 +425,11 @@ export async function getProductWithDetails(
         name: product.name,
       });
 
-      // The fixNullProductIds should handle this, but a fallback here might still be useful
       if (!product.product_id) {
         console.error(
           `Product found with slug ${slug} has a null product_id after fixNullProductIds attempt.`
         );
-        return null; // Or handle this case more robustly
+        return null;
       }
 
       const [ingredientRows] = await connection.query(
@@ -394,14 +448,12 @@ export async function getProductWithDetails(
         [product.product_id]
       );
 
-      // Check if any theme data exists before constructing the theme object
       const hasThemeData =
         product.primary_bg_color !== null &&
         product.primary_bg_color !== undefined;
       const theme = hasThemeData
         ? {
-            // Map fetched flat data to ProductTheme structure
-            product_id: product.product_id, // Include product_id
+            product_id: product.product_id,
             primary_bg_color: product.primary_bg_color,
             secondary_bg_color: product.secondary_bg_color,
             accent_bg_color: product.accent_bg_color,
@@ -446,10 +498,9 @@ export async function getProductWithDetails(
             shadow_color: product.shadow_color,
             custom_css: product.custom_css,
           }
-        : undefined; // Use undefined if no theme found
+        : undefined;
 
       const {
-        // Destructure out theme-related fields from the flat product object
         primary_bg_color,
         secondary_bg_color,
         accent_bg_color,
@@ -510,14 +561,14 @@ export async function getProductWithDetails(
 }
 
 export async function recordVisit(
-  productId: string, // Changed to string
+  productId: string,
   ipAddress?: string,
   userAgent?: string,
   referrer?: string
 ): Promise<void> {
   return withConnection(async (connection) => {
     await connection.query(
-      "INSERT INTO visits (product_id, ip_address, user_agent, referrer) VALUES (?, ?, ?, ?)",
+      `INSERT INTO visits (product_id, ip_address, user_agent, referrer) VALUES (?, ?, ?, ?)`,
       [productId, ipAddress, userAgent, referrer]
     );
   });
@@ -525,35 +576,40 @@ export async function recordVisit(
 
 export async function getProductStats(): Promise<any> {
   return withConnection(async (connection) => {
-    const [totalProductsResult] = await connection.query(
-      "SELECT COUNT(*) as total FROM products"
-    );
+    try {
+      // Get total number of products
+      const [productCountResult] = await connection.query(
+        "SELECT COUNT(*) as total FROM products"
+      );
+      const totalProducts = (productCountResult as any[])[0]?.total || 0;
 
-    const [totalVisitsResult] = await connection.query(
-      "SELECT COUNT(*) as total FROM visits"
-    );
+      // Get total visits (example - assuming a visits table exists)
+      // NOTE: Ensure your database has a 'visits' table with a 'created_at' column
+      const [totalVisitsResult] = await connection.query(
+        "SELECT COUNT(*) as total FROM visits"
+      );
+      const totalVisits = (totalVisitsResult as any[])[0]?.total || 0;
 
-    const [productVisitsResult] = await connection.query(`
-      SELECT p.name, p.product_id, COUNT(v.id) as visit_count 
-      FROM products p
-      LEFT JOIN visits v ON p.product_id = v.product_id
-      GROUP BY p.product_id, p.name
-      ORDER BY visit_count DESC
-    `);
+      // Get recent visits (example - assuming a visits table exists)
+      const [recentVisitsResult] = await connection.query(`
+        SELECT v.*, p.name as product_name, p.product_id
+        FROM visits v
+        JOIN products p ON v.product_id = p.product_id
+        ORDER BY v.created_at DESC
+        LIMIT 10
+      `);
+      const recentVisits = recentVisitsResult as any[];
 
-    const [recentVisitsResult] = await connection.query(`
-      SELECT v.*, p.name as product_name, p.product_id
-      FROM visits v
-      JOIN products p ON v.product_id = p.product_id
-      ORDER BY v.visit_date DESC
-      LIMIT 10
-    `);
+      // You can add more stats here if needed
 
-    return {
-      totalProducts: totalProductsResult[0].total,
-      totalVisits: totalVisitsResult[0].total,
-      productVisits: productVisitsResult,
-      recentVisits: recentVisitsResult,
-    };
+      return {
+        totalProducts,
+        totalVisits,
+        recentVisits,
+      };
+    } catch (error) {
+      console.error("Error fetching product stats:", error);
+      throw error; // Re-throw the error to be caught by the API route
+    }
   });
 }

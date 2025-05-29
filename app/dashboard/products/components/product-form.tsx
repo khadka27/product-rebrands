@@ -17,9 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeCustomizer } from "./theme-customizer";
 import type { ProductTheme } from "@/lib/models/product-theme";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface IngredientWithPreview {
   id?: string;
@@ -41,7 +42,8 @@ interface ProductFormProps {
   productId?: string;
   initialData?: {
     name: string;
-    description: string;
+    paragraph: string;
+    bullet_points: string[];
     redirect_link: string;
     generated_link: string;
     money_back_days: number;
@@ -67,7 +69,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
-    description: initialData?.description || "",
+    paragraph: initialData?.paragraph || "",
+    bullet_points: initialData?.bullet_points || [],
     redirect_link: initialData?.redirect_link || "",
     generated_link: initialData?.generated_link || "",
     money_back_days: initialData?.money_back_days || 60,
@@ -94,6 +97,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [nameError, setNameError] = useState("");
   const [isCheckingName, setIsCheckingName] = useState(false);
   const debouncedName = useDebounce(formData.name, 500);
+
+  const [descriptionError, setDescriptionError] = useState("");
+  const [paragraphError, setParagraphError] = useState("");
+  const [bulletPointsError, setBulletPointsError] = useState("");
 
   // Add name validation effect
   useEffect(() => {
@@ -161,7 +168,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       const fieldName = e.target.name;
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         setImageError("Please upload an image file");
         return;
       }
@@ -326,35 +333,119 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
-  // Update validateCurrentStep to include image validation
+  // Handle paragraph changes - New function
+  const handleParagraphChange = (value: string) => {
+    if (value.length <= 160) {
+      setFormData((prev) => ({ ...prev, paragraph: value }));
+      // Validate paragraph on change
+      if (!value.trim()) {
+        setParagraphError("Introduction paragraph is required");
+      } else {
+        setParagraphError("");
+      }
+    }
+  };
+
+  // Handle bullet point changes - Update to use formData.bullet_points
+  const handleBulletPointChange = (index: number, value: string) => {
+    const newBulletPoints = [...formData.bullet_points];
+    newBulletPoints[index] = value;
+    setFormData((prev) => ({ ...prev, bullet_points: newBulletPoints }));
+
+    // Validate bullet points on change
+    validateBulletPoints(newBulletPoints);
+  };
+
+  const addBulletPoint = () => {
+    if (formData.bullet_points.length < 7) {
+      setFormData((prev) => ({
+        ...prev,
+        bullet_points: [...prev.bullet_points, ""],
+      }));
+    }
+  };
+
+  const removeBulletPoint = (index: number) => {
+    const newBulletPoints = formData.bullet_points.filter(
+      (_, i) => i !== index
+    );
+    setFormData((prev) => ({ ...prev, bullet_points: newBulletPoints }));
+
+    // Validate bullet points after removing
+    validateBulletPoints(newBulletPoints);
+  };
+
+  // Update validateBulletPoints function
+  const validateBulletPoints = (points: string[]) => {
+    if (points.length < 4) {
+      setBulletPointsError("Minimum 4 bullet points are required");
+      return false;
+    }
+    if (points.length > 7) {
+      setBulletPointsError("Maximum 7 bullet points are allowed");
+      return false;
+    }
+    if (points.some((point) => !point.trim())) {
+      setBulletPointsError("All bullet points must be filled");
+      return false;
+    }
+    setBulletPointsError("");
+    return true;
+  };
+
+  // Update validateCurrentStep to check paragraph and bullet_points separately
   const validateCurrentStep = () => {
     const newErrors: Record<string, string> = {};
+    let isValid = true;
 
     switch (currentStep) {
       case "general":
         if (!formData.name.trim()) {
           newErrors.name = "Product name is required";
+          isValid = false;
         }
-        if (!formData.description.trim()) {
-          newErrors.description = "Description is required";
+
+        // Validate paragraph
+        if (!formData.paragraph.trim()) {
+          setParagraphError("Introduction paragraph is required");
+          isValid = false;
+        } else {
+          setParagraphError("");
         }
+
+        // Validate bullet points
+        if (!validateBulletPoints(formData.bullet_points)) {
+          newErrors.bullet_points = bulletPointsError; // Use the specific bullet points error
+          isValid = false;
+        }
+
         if (!formData.redirect_link.trim()) {
           newErrors.redirect_link = "Redirect link is required";
+          isValid = false;
         } else if (!isValidUrl(formData.redirect_link)) {
           newErrors.redirect_link = "Invalid URL format";
+          isValid = false;
         }
         if (!formData.generated_link.trim()) {
           newErrors.generated_link = "Generated link is required";
+          isValid = false;
         } else if (!isValidUrl(formData.generated_link)) {
           newErrors.generated_link = "Invalid URL format";
+          isValid = false;
         }
-        if (!formData.money_back_days || isNaN(Number(formData.money_back_days))) {
-          newErrors.money_back_days = "Money back guarantee days must be a number";
+        if (
+          !formData.money_back_days ||
+          isNaN(Number(formData.money_back_days))
+        ) {
+          newErrors.money_back_days =
+            "Money back guarantee days must be a number";
+          isValid = false;
         }
         // Add image validation
         if (!productId && !formData.image && !imagePreview) {
           newErrors.image = "Product image is required";
           setImageError("Product image is required");
+          isValid = false;
         }
         break;
 
@@ -362,10 +453,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         ingredients.forEach((ingredient, index) => {
           if (!ingredient.title.trim()) {
             newErrors[`ingredient_${index}_title`] = "Title is required";
+            isValid = false;
           }
           if (!ingredient.description.trim()) {
             newErrors[`ingredient_${index}_description`] =
               "Description is required";
+            isValid = false;
           }
         });
         break;
@@ -374,17 +467,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         whyChoose.forEach((item, index) => {
           if (!item.title.trim()) {
             newErrors[`why_choose_${index}_title`] = "Title is required";
+            isValid = false;
           }
           if (!item.description.trim()) {
             newErrors[`why_choose_${index}_description`] =
               "Description is required";
+            isValid = false;
           }
         });
         break;
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
 
   // Handle step navigation
@@ -466,7 +561,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     };
   }
 
-  // Handle form submission
+  // Handle form submission - Update to send paragraph and bullet_points separately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -476,16 +571,44 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
 
     if (!validateCurrentStep()) {
+      // Scroll to the first tab with an error if necessary
+      const steps = ["general", "ingredients", "why-choose", "appearance"];
+      for (const step of steps) {
+        const stepErrors = Object.keys(errors).filter((key) =>
+          step === "general"
+            ? !key.startsWith("ingredient_") && !key.startsWith("why_choose_")
+            : step === "ingredients"
+            ? key.startsWith("ingredient_")
+            : step === "why-choose"
+            ? key.startsWith("why_choose_")
+            : false
+        );
+        if (
+          stepErrors.length > 0 ||
+          (step === "general" && (paragraphError || bulletPointsError))
+        ) {
+          setCurrentStep(step);
+          break;
+        }
+      }
+      toast.error("Please fix the errors before submitting");
       return;
     }
 
     setIsLoading(true);
-    setErrors({});
+    setErrors({}); // Clear form errors before submitting
+    setParagraphError(""); // Clear paragraph error
+    setBulletPointsError(""); // Clear bullet points error
 
     try {
       const submitData = new FormData();
       submitData.append("name", formData.name);
-      submitData.append("description", formData.description);
+      // Append paragraph and bullet_points separately
+      submitData.append("paragraph", formData.paragraph);
+      submitData.append(
+        "bullet_points",
+        JSON.stringify(formData.bullet_points)
+      );
       submitData.append("redirect_link", formData.redirect_link);
       submitData.append("generated_link", formData.generated_link);
       submitData.append("money_back_days", formData.money_back_days.toString());
@@ -508,6 +631,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         "ingredients",
         JSON.stringify(
           ingredients.map((ing) => ({
+            id: ing.id, // Include ID for existing ingredients
             title: ing.title,
             description: ing.description,
             display_order: ing.display_order,
@@ -520,6 +644,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       ingredients.forEach((ingredient, index) => {
         if (ingredient.image instanceof File) {
           submitData.append(`ingredient_image_${index}`, ingredient.image);
+        } else if (typeof ingredient.image === "string") {
+          // If it's an existing image path, send it back
+          submitData.append(
+            `ingredient_image_${index}_existing`,
+            ingredient.image
+          );
         }
       });
 
@@ -528,6 +658,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         "why_choose",
         JSON.stringify(
           whyChoose.map((wc) => ({
+            id: wc.id, // Include ID for existing why choose points
             title: wc.title,
             description: wc.description,
             display_order: wc.display_order,
@@ -546,16 +677,54 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrors(data.errors || { general: "Something went wrong" });
+        // Check for specific validation errors from backend
+        if (data.errors) {
+          setErrors(data.errors);
+          // Also check for paragraph/bullet points specific errors if sent by backend
+          if (data.errors.paragraph) setParagraphError(data.errors.paragraph);
+          if (data.errors.bullet_points)
+            setBulletPointsError(data.errors.bullet_points);
+          // Scroll to the first tab with an error if necessary
+          const steps = ["general", "ingredients", "why-choose", "appearance"];
+          for (const step of steps) {
+            const stepErrors = Object.keys(data.errors).filter(
+              (key) =>
+                step === "general"
+                  ? !key.startsWith("ingredient_") &&
+                    !key.startsWith("why_choose_") &&
+                    key !== "paragraph" &&
+                    key !== "bullet_points" // General errors excluding paragraph/bullet_points
+                  : step === "ingredients"
+                  ? key.startsWith("ingredient_") // Ingredient errors
+                  : step === "why-choose"
+                  ? key.startsWith("why_choose_")
+                  : false // Why Choose errors
+            );
+            // Check if the current step has errors or if it's the general step with paragraph/bullet point errors
+            if (
+              stepErrors.length > 0 ||
+              (step === "general" &&
+                (data.errors.paragraph || data.errors.bullet_points))
+            ) {
+              setCurrentStep(step);
+              break;
+            }
+          }
+        } else {
+          setErrors({ general: data.error || "Something went wrong" });
+        }
+        toast.error(data.error || "Failed to save product");
         return;
       }
 
+      toast.success(productId ? "Product updated!" : "Product created!");
       // Redirect to product page or dashboard
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
       console.error("Error submitting form:", error);
       setErrors({ general: "Failed to submit form" });
+      toast.error("Failed to submit form");
     } finally {
       setIsLoading(false);
     }
@@ -610,19 +779,101 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Enter product description"
-                  rows={5}
-                  required
-                />
-                {errors.description && (
-                  <p className="text-red-500 text-sm">{errors.description}</p>
-                )}
+                <Label htmlFor="description">Product Description</Label>
+                <div className="space-y-6">
+                  {/* Paragraph Section */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label
+                        htmlFor="paragraph"
+                        className="text-sm font-medium"
+                      >
+                        Introduction Paragraph
+                      </Label>
+                      <span
+                        className={`text-sm ${
+                          formData.paragraph.length > 160
+                            ? "text-red-500"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.paragraph.length}/160 characters
+                      </span>
+                    </div>
+                    <Textarea
+                      id="paragraph"
+                      name="paragraph"
+                      value={formData.paragraph}
+                      onChange={(e) => handleParagraphChange(e.target.value)}
+                      placeholder="Enter a detailed introduction paragraph about your product (max 160 characters)"
+                      rows={4}
+                      maxLength={160}
+                      className={paragraphError ? "border-red-500" : ""}
+                    />
+                    {paragraphError && (
+                      <p className="text-sm text-red-500">{paragraphError}</p>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Write a compelling introduction paragraph that describes
+                      your product. Maximum 160 characters allowed.
+                    </p>
+                  </div>
+
+                  {/* Bullet Points Section */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      Key Features (4-7 bullet points)
+                    </Label>
+                    <div className="space-y-2">
+                      {formData.bullet_points.map((point, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            value={point}
+                            onChange={(e) =>
+                              handleBulletPointChange(index, e.target.value)
+                            }
+                            placeholder={`Feature ${index + 1}`}
+                            className={
+                              bulletPointsError ? "border-red-500" : ""
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => removeBulletPoint(index)}
+                            disabled={formData.bullet_points.length <= 4}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {formData.bullet_points.length < 7 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addBulletPoint}
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Feature Point
+                      </Button>
+                    )}
+
+                    {bulletPointsError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{bulletPointsError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <p className="text-sm text-gray-500">
+                      Add 4-7 key features or benefits of your product. Each
+                      point should be clear and concise.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -710,7 +961,11 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                     <div className="mt-2">
                       <p className="text-sm text-gray-500 mb-1">Preview:</p>
                       <img
-                        src={imagePreview.startsWith("data:") ? imagePreview : `/${imagePreview}`}
+                        src={
+                          imagePreview.startsWith("data:")
+                            ? imagePreview
+                            : `/${imagePreview}`
+                        }
                         alt="Product preview"
                         className="max-w-xs max-h-40 object-contain border rounded-md"
                       />
@@ -998,25 +1253,34 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           )}
 
           {currentStep !== "appearance" ? (
-            <Button 
-              type="button" 
-              onClick={handleNextStep} 
+            <Button
+              type="button"
+              onClick={handleNextStep}
               disabled={
-                isLoading || 
-                nameError !== "" || 
-                isCheckingName || 
-                (currentStep === "general" && !productId && !formData.image && !imagePreview)
+                isLoading ||
+                nameError !== "" ||
+                isCheckingName ||
+                paragraphError !== "" || // Disable if paragraph has errors
+                bulletPointsError !== "" || // Disable if bullet points have errors
+                // Check for image only on create and if on general tab
+                (currentStep === "general" &&
+                  !productId &&
+                  !formData.image &&
+                  !imagePreview)
               }
             >
               Next
             </Button>
           ) : (
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={
-                isLoading || 
-                nameError !== "" || 
-                isCheckingName || 
+                isLoading ||
+                nameError !== "" ||
+                isCheckingName ||
+                paragraphError !== "" || // Disable if paragraph has errors
+                bulletPointsError !== "" || // Disable if bullet points have errors
+                // Check for image only on create
                 (!productId && !formData.image && !imagePreview)
               }
             >
