@@ -114,6 +114,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
         if (data.exists) {
           setNameError("A product with this name already exists");
+          toast.error("A product with this name already exists");
         } else {
           setNameError("");
         }
@@ -979,11 +980,18 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           )}
 
           {currentStep !== "appearance" ? (
-            <Button type="button" onClick={handleNextStep} disabled={isLoading}>
+            <Button 
+              type="button" 
+              onClick={handleNextStep} 
+              disabled={isLoading || nameError !== "" || isCheckingName}
+            >
               Next
             </Button>
           ) : (
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading || nameError !== "" || isCheckingName}
+            >
               {isLoading
                 ? "Saving..."
                 : productId
