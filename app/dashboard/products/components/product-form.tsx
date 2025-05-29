@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeCustomizer } from "./theme-customizer";
 import type { ProductTheme } from "@/lib/models/product-theme";
 import { Plus, Trash2 } from "lucide-react";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+import { toast } from "sonner";
 
 interface IngredientWithPreview {
   id?: string;
@@ -88,6 +90,43 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [whyChoose, setWhyChoose] = useState<WhyChoose[]>(
     initialData?.why_choose || []
   );
+
+  const [nameError, setNameError] = useState("");
+  const [isCheckingName, setIsCheckingName] = useState(false);
+  const debouncedName = useDebounce(formData.name, 500);
+
+  // Add name validation effect
+  useEffect(() => {
+    const checkProductName = async () => {
+      if (!debouncedName) {
+        setNameError("");
+        return;
+      }
+
+      setIsCheckingName(true);
+      try {
+        const response = await fetch(
+          `/api/products/check-name?name=${encodeURIComponent(debouncedName)}${
+            productId ? `&excludeId=${productId}` : ""
+          }`
+        );
+        const data = await response.json();
+
+        if (data.exists) {
+          setNameError("A product with this name already exists");
+        } else {
+          setNameError("");
+        }
+      } catch (error) {
+        console.error("Error checking product name:", error);
+        toast.error("Failed to check product name");
+      } finally {
+        setIsCheckingName(false);
+      }
+    };
+
+    checkProductName();
+  }, [debouncedName, productId]);
 
   // Handle form input changes
   const handleChange = (
@@ -413,6 +452,11 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (nameError) {
+      toast.error("Please fix the product name error before submitting");
+      return;
+    }
+
     if (!validateCurrentStep()) {
       return;
     }
@@ -524,16 +568,26 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Product Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter product name"
-                  required
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm">{errors.name}</p>
+                <div className="relative">
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter product name"
+                    required
+                    className={`mt-1 block w-full rounded-md border ${
+                      nameError ? "border-red-500" : "border-gray-300"
+                    } shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                  />
+                  {isCheckingName && (
+                    <div className="absolute right-2 top-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  )}
+                </div>
+                {nameError && (
+                  <p className="mt-1 text-sm text-red-500">{nameError}</p>
                 )}
               </div>
 

@@ -20,8 +20,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, BarChart, Package, Eye, Search } from "lucide-react";
+import {
+  PlusCircle,
+  BarChart,
+  Package,
+  Eye,
+  Search,
+  Trash2,
+  Copy,
+  Check,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -29,6 +49,9 @@ export default function Dashboard() {
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +82,47 @@ export default function Dashboard() {
     );
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
+
+  const handleDelete = async (product: any) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await axios.delete(`/api/products/${productToDelete.product_id}`);
+      setProducts(
+        products.filter((p) => p.product_id !== productToDelete.product_id)
+      );
+      setFilteredProducts(
+        filteredProducts.filter(
+          (p) => p.product_id !== productToDelete.product_id
+        )
+      );
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product");
+    } finally {
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const copyToClipboard = async (productId: string) => {
+    const url = `${window.location.origin}/preview/${productId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedProductId(productId);
+      toast.success("Link copied to clipboard");
+      setTimeout(() => setCopiedProductId(null), 2000);
+    } catch (error) {
+      console.error("Error copying to clipboard:", error);
+      toast.error("Failed to copy link");
+    }
+  };
 
   if (loading) {
     return (
@@ -197,6 +261,24 @@ export default function Dashboard() {
                               View
                             </Button>
                           </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(product.product_id)}
+                          >
+                            {copiedProductId === product.product_id ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(product)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -310,6 +392,24 @@ export default function Dashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              product "{productToDelete?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

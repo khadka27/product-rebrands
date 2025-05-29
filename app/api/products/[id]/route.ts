@@ -583,23 +583,20 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const connection = await db.getConnection();
   try {
-    const connection = await db.getConnection();
-
-    try {
-      // Delete product from database
-      await connection.query("DELETE FROM products WHERE product_id = ?", [
-        params.id,
-      ]);
-      return NextResponse.json({ success: true });
-    } finally {
-      connection.release();
-    }
+    // Delete product from database
+    await connection.query("DELETE FROM products WHERE product_id = ?", [
+      params.id,
+    ]);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting product:", error);
     return NextResponse.json(
       { error: "Failed to delete product" },
       { status: 500 }
     );
+  } finally {
+    connection.release();
   }
 }
