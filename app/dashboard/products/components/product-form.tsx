@@ -129,6 +129,9 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     checkProductName();
   }, [debouncedName, productId]);
 
+  // Add image validation state
+  const [imageError, setImageError] = useState("");
+
   // Handle form input changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -151,12 +154,25 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     });
   };
 
-  // Handle image changes
+  // Update handleImageChange to include validation
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const fieldName = e.target.name;
 
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setImageError("Please upload an image file");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setImageError("Image size should be less than 5MB");
+        return;
+      }
+
+      setImageError("");
       setFormData((prev) => ({ ...prev, [fieldName]: file }));
 
       // Create preview
@@ -310,7 +326,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
-  // Validate current step
+  // Update validateCurrentStep to include image validation
   const validateCurrentStep = () => {
     const newErrors: Record<string, string> = {};
 
@@ -332,12 +348,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         } else if (!isValidUrl(formData.generated_link)) {
           newErrors.generated_link = "Invalid URL format";
         }
-        if (
-          !formData.money_back_days ||
-          isNaN(Number(formData.money_back_days))
-        ) {
-          newErrors.money_back_days =
-            "Money back guarantee days must be a number";
+        if (!formData.money_back_days || isNaN(Number(formData.money_back_days))) {
+          newErrors.money_back_days = "Money back guarantee days must be a number";
+        }
+        // Add image validation
+        if (!productId && !formData.image && !imagePreview) {
+          newErrors.image = "Product image is required";
+          setImageError("Product image is required");
         }
         break;
 
@@ -683,16 +700,17 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
+                    required={!productId}
+                    className={imageError ? "border-red-500" : ""}
                   />
+                  {imageError && (
+                    <p className="text-sm text-red-500">{imageError}</p>
+                  )}
                   {imagePreview && (
                     <div className="mt-2">
                       <p className="text-sm text-gray-500 mb-1">Preview:</p>
                       <img
-                        src={
-                          imagePreview.startsWith("data:")
-                            ? imagePreview
-                            : `/${imagePreview}`
-                        }
+                        src={imagePreview.startsWith("data:") ? imagePreview : `/${imagePreview}`}
                         alt="Product preview"
                         className="max-w-xs max-h-40 object-contain border rounded-md"
                       />
@@ -983,14 +1001,24 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             <Button 
               type="button" 
               onClick={handleNextStep} 
-              disabled={isLoading || nameError !== "" || isCheckingName}
+              disabled={
+                isLoading || 
+                nameError !== "" || 
+                isCheckingName || 
+                (currentStep === "general" && !productId && !formData.image && !imagePreview)
+              }
             >
               Next
             </Button>
           ) : (
             <Button 
               type="submit" 
-              disabled={isLoading || nameError !== "" || isCheckingName}
+              disabled={
+                isLoading || 
+                nameError !== "" || 
+                isCheckingName || 
+                (!productId && !formData.image && !imagePreview)
+              }
             >
               {isLoading
                 ? "Saving..."
