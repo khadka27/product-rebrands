@@ -9,11 +9,33 @@ import { NextAuthProvider } from "@/components/providers/next-auth-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tribal Force X - New & Improved Formula",
+  title: "Verified Supplements Store - Premium Rebranded Supplements",
   description:
-    "Experience the power of Tribal Force X, the renamed and enhanced formula for male enhancement. Made with 100% natural ingredients.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  generator: "v0.dev",
+    "Discover our newly rebranded line of premium supplements, designed for optimal health and performance. Verified quality, exceptional results.",
+  keywords:
+    "supplements, health, fitness, vitamins, rebranded, premium, verified supplements",
+  openGraph: {
+    title: "Verified Supplements Store - Premium Rebranded Supplements",
+    description:
+      "Experience the next level of wellness with our rebranded supplements.",
+    type: "website",
+    url: "https://verifiedsupplements.store", // Replace with actual URL when live
+    images: [
+      {
+        url: "https://source.unsplash.com/1200x630/?health,supplements", // Replace with actual OG image URL
+        width: 1200,
+        height: 630,
+        alt: "Verified Supplements Store",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Verified Supplements Store - Premium Rebranded Supplements",
+    description:
+      "Our rebranded supplements are here to elevate your health journey.",
+    images: ["https://source.unsplash.com/1200x630/?wellness,fitness"], // Replace with actual Twitter image URL
+  },
 };
 
 export default function RootLayout({
