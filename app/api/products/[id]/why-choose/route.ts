@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { addWhyChoose, getWhyChooseByProductId, deleteWhyChooseByProductId } from "@/lib/models/why-choose"
+import { WhyChoose, getWhyChooseByProductId, deleteWhyChooseByProductId, createWhyChoose } from "@/lib/models/why-choose"
 import { validateWhyChoose } from "@/lib/utils"
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const whyChoosePoints = await getWhyChooseByProductId(Number.parseInt(params.id))
+    const whyChoosePoints = await getWhyChooseByProductId(params.id)
     return NextResponse.json(whyChoosePoints)
   } catch (error) {
     console.error("Error fetching why choose points:", error)
@@ -24,8 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     // Add the why choose point
-    const whyChoose = await addWhyChoose({
-      product_id: Number.parseInt(params.id),
+    const whyChoose = await createWhyChoose({
+      product_id: params.id,
       title: data.title,
       description: data.description,
       display_order: data.display_order || 0,
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const deleted = await deleteWhyChooseByProductId(Number.parseInt(params.id))
+    const deleted = await deleteWhyChooseByProductId(params.id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting why choose points:", error)
