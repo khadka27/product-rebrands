@@ -6,9 +6,14 @@ const pool = mysql.createPool({
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "product_management",
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ssl: process.env.DB_SSL === "true" ? {
+    rejectUnauthorized: true
+  } : undefined,
+  connectTimeout: 60000, // Increase connection timeout to 60 seconds
 });
 
 // Test the connection
