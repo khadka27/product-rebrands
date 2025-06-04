@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,  "scripts": {
     "dev": "next dev",
-    "build": "next build && node setup-admin.js",
+    "build": "next build && node setup-admin-standalone.js",
     "start": "next start",
     "lint": "next lint",
-    "setup-admin": "node setup-admin.js",
+    "setup-admin": "node setup-admin-standalone.js",
     "setup-admin-ts": "ts-node setup-admin.ts",
     "test-users": "ts-node test-users.ts",
-    "postinstall": "node setup-admin.js"
+    "postinstall": "node setup-admin-standalone.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

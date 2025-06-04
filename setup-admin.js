@@ -2,15 +2,57 @@
 
 // Require path module for resolving paths
 const path = require('path');
+const fs = require('fs');
 
-// Set NODE_PATH to include the current directory
-process.env.NODE_PATH = path.resolve(__dirname);
+// Helper to check if file exists
+const fileExists = (filePath) => {
+  try {
+    return fs.existsSync(filePath);
+  } catch (err) {
+    return false;
+  }
+};
 
-// Force Node.js to reload the module cache
-require('module').Module._initPaths();
+// Dynamically determine the location of the db.js file
+function resolveDbModule() {
+  const possiblePaths = [
+    // Try direct import first
+    './lib/db',
+    // Try CommonJS compiled version
+    './lib/db.js',
+    // Try from project root
+    path.join(__dirname, 'lib', 'db'),
+    path.join(__dirname, 'lib', 'db.js'),
+    // Try from dist directory
+    path.join(__dirname, 'dist', 'lib', 'db'),
+    path.join(__dirname, 'dist', 'lib', 'db.js')
+  ];
 
-// Now we can require our modules
-const { createAdminUser, initDatabase } = require('./lib/db');
+  for (const modulePath of possiblePaths) {
+    try {
+      // Try requiring the module
+      const dbModule = require(modulePath);
+      console.log(`Successfully loaded database module from: ${modulePath}`);
+      return dbModule;
+    } catch (error) {
+      // Continue to next path if this one fails
+      console.log(`Failed to load from ${modulePath}: ${error.code}`);
+    }
+  }
+
+  throw new Error('Could not find db module in any expected location');
+}
+
+// Try to load the database module
+let dbModule;
+try {
+  dbModule = resolveDbModule();
+} catch (error) {
+  console.error('Failed to load database module:', error.message);
+  process.exit(1);
+}
+
+const { createAdminUser, initDatabase } = dbModule;
 
 async function setupAdmin() {
   try {
