@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { NextAuthProvider } from "@/components/providers/next-auth-provider";
+import { SessionTimeout } from "@/components/session-timeout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,7 +48,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <NextAuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <SessionTimeout />
+          </ThemeProvider>
           <Toaster />
         </NextAuthProvider>
       </body>

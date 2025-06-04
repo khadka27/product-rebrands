@@ -1,4 +1,5 @@
 import mysql from "mysql2/promise";
+import bcrypt from "bcrypt";
 
 // Create a connection pool
 // const pool = mysql.createPool({
@@ -178,6 +179,17 @@ export async function initDatabase() {
     `);
     console.log("Visits table created/verified");
 
+    // Create users table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("Users table created/verified");
+
     // Verify tables exist
     const [tables] = await connection.query<any[]>("SHOW TABLES");
     console.log("Existing tables:", tables);
@@ -227,10 +239,52 @@ export async function addTestData() {
   }
 }
 
+// Initialize admin user from environment variables
+export async function initAdminUser() {
+  const connection = await pool.getConnection();
+  try {
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminUsername || !adminPassword) {
+      console.error("Admin credentials not found in environment variables");
+      return;
+    }
+
+    // Check if admin user exists
+    const [existingUsers] = await connection.query<mysql.RowDataPacket[]>(
+      "SELECT * FROM users WHERE username = ?",
+      [adminUsername]
+    );
+
+    if (existingUsers.length === 0) {
+      // Hash the admin password
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+      // Create admin user
+      await connection.query(
+        "INSERT INTO users (username, password) VALUES (?, ?)",
+        [adminUsername, hashedPassword]
+      );
+      console.log("Admin user created successfully");
+    } else {
+      console.log("Admin user already exists");
+    }
+  } catch (error) {
+    console.error("Error initializing admin user:", error);
+  } finally {
+    connection.release();
+  }
+}
+
 // Initialize database and add test data
 initDatabase()
   .then(() => {
     console.log("Database initialization completed");
+    return initAdminUser();
+  })
+  .then(() => {
+    console.log("Admin user initialization completed");
   })
   .catch((err) => {
     console.error("Error during database setup:", err);
