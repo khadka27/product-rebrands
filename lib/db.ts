@@ -1,4 +1,5 @@
 import mysql from "mysql2/promise";
+import crypto from 'crypto';
 
 // Create a connection pool
 const pool = mysql.createPool({
@@ -149,9 +150,7 @@ export async function initDatabase() {
         FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       )
     `);
-    console.log("Product Themes table created/verified");
-
-    // Create visits table
+    console.log("Product Themes table created/verified");    // Create visits table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS visits (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -164,6 +163,20 @@ export async function initDatabase() {
       )
     `);
     console.log("Visits table created/verified");
+    
+    // Create users table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        role ENUM('admin', 'user') DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("Users table created/verified");
 
     // Verify tables exist
     const [tables] = await connection.query<any[]>("SHOW TABLES");
@@ -222,6 +235,56 @@ initDatabase()
   .catch((err) => {
     console.error("Error during database setup:", err);
   });
+
+// Function to hash a password
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+
+// Function to verify a password against a hash
+export function verifyPassword(password: string, hashedPassword: string): boolean {
+  const [salt, storedHash] = hashedPassword.split(':');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return storedHash === hash;
+}
+
+// Function to create an admin user during build
+export async function createAdminUser(username = 'admin', password = 'admin123', email = 'admin@example.com') {
+  try {
+    const connection = await pool.getConnection();
+    
+    try {
+      // Check if the admin user already exists
+      const [existingUsers] = await connection.query<any[]>(
+        'SELECT * FROM users WHERE username = ?',
+        [username]
+      );
+      
+      if (existingUsers.length > 0) {
+        console.log(`Admin user '${username}' already exists`);
+        return;
+      }
+      
+      // Hash the password
+      const hashedPassword = hashPassword(password);
+      
+      // Create the admin user
+      await connection.query(
+        'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)',
+        [username, hashedPassword, email, 'admin']
+      );
+      
+      console.log(`Admin user '${username}' created successfully`);
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+    throw error;
+  }
+}
 
 // Drop all tables
 export async function dropTables() {

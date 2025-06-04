@@ -1,12 +1,15 @@
 {
   "name": "verifiedsupplements",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
+  "private": true,  "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node setup-admin.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup-admin": "node setup-admin.js",
+    "setup-admin-ts": "ts-node setup-admin.ts",
+    "test-users": "ts-node test-users.ts",
+    "postinstall": "node setup-admin.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
