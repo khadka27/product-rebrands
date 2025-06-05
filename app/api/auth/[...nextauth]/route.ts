@@ -20,19 +20,25 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
+          console.log("Missing credentials");
           return null;
         }
 
         try {
+          console.log("Attempting to authenticate user:", credentials.username);
+
           // Get user from database
           const [users] = await pool.query<User[]>(
             "SELECT * FROM users WHERE username = ?",
             [credentials.username]
           );
 
+          console.log("Query result:", users);
+
           const user = users[0];
 
           if (!user) {
+            console.log("User not found");
             return null;
           }
 
@@ -42,10 +48,14 @@ const handler = NextAuth({
             user.password
           );
 
+          console.log("Password verification result:", isValid);
+
           if (!isValid) {
+            console.log("Invalid password");
             return null;
           }
 
+          console.log("Authentication successful");
           return {
             id: user.id.toString(),
             name: user.username,
@@ -64,6 +74,7 @@ const handler = NextAuth({
     strategy: "jwt",
     maxAge: 30 * 60, // 30 minutes in seconds
   },
+  debug: true, // Enable debug mode
 });
 
 export { handler as GET, handler as POST };

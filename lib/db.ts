@@ -1,5 +1,7 @@
 import mysql from "mysql2/promise";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
 
 // Create a connection pool
 // const pool = mysql.createPool({
@@ -13,174 +15,88 @@ import bcrypt from "bcrypt";
 // });
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "product_management",
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3307,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl:
-    process.env.DB_SSL === "true"
-      ? {
-          rejectUnauthorized: true,
-        }
-      : undefined,
-  connectTimeout: 60000, // Increase connection timeout to 60 seconds
+  connectTimeout: 30000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+  multipleStatements: true,
+  dateStrings: true,
+  timezone: "Z",
 });
 
-// Test the connection
+// Test the connection with more detailed error handling
+console.log("Attempting database connection with config:", {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3307,
+});
+
 pool
   .getConnection()
-  .then((connection) => {
+  .then(async (connection) => {
     console.log("Database connection successful");
     connection.release();
+
+    // Initialize database and tables
+    await initializeDatabase();
   })
   .catch((err) => {
     console.error("Error connecting to the database:", err);
+    console.error("Connection details:", {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3307,
+    });
+
+    // Additional error information
+    if (err.code === "ENOTFOUND") {
+      console.error(
+        "DNS resolution failed. Please check if the hostname is correct and your DNS settings."
+      );
+    } else if (err.code === "ETIMEDOUT") {
+      console.error(
+        "Connection timed out. Please check if the database is accessible and the port is correct."
+      );
+      console.error("Trying to connect to:", {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 3307,
+        timeout: "30 seconds",
+      });
+      console.error("Possible solutions:");
+      console.error("1. Check if the database host is correct");
+      console.error("2. Try a different port (3306 or 3307)");
+      console.error("3. Check if your IP is whitelisted");
+      console.error("4. Check if the database service is running");
+    } else if (err.code === "ECONNREFUSED") {
+      console.error(
+        "Connection refused. Please check if the database is running and accessible."
+      );
+    }
   });
 
 // Initialize database tables if they don't exist
-export async function initDatabase() {
-  const connection = await pool.getConnection();
-
+async function initializeDatabase() {
   try {
-    console.log("Starting database initialization...");
+    console.log("Initializing database...");
 
     // Create database if it doesn't exist
-    await connection.query(`
-      CREATE DATABASE IF NOT EXISTS ${
-        process.env.DB_NAME || "product_management"
-      }
-    `);
-    console.log("Database created/verified");
+    await pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
+    console.log(`Database ${process.env.DB_NAME} created or already exists`);
 
     // Use the database
-    await connection.query(`
-      USE ${process.env.DB_NAME || "product_management"}
-    `);
-    console.log("Using database:", process.env.DB_NAME || "product_management");
-
-    // Create products table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS products (
-        product_id VARCHAR(255) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        slug VARCHAR(255) NOT NULL UNIQUE,
-        paragraph TEXT,
-        bullet_points JSON,
-        redirect_link VARCHAR(255) NOT NULL,
-        generated_link VARCHAR(255) NOT NULL UNIQUE,
-        money_back_days INT DEFAULT 0,
-        product_image VARCHAR(255),
-        product_badge VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("Products table created/verified");
-
-    // Create ingredients table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS ingredients (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        image VARCHAR(255),
-        display_order INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-      )
-    `);
-    console.log("Ingredients table created/verified");
-
-    // Create why_choose table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS why_choose (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        display_order INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-      )
-    `);
-    console.log("Why Choose table created/verified");
-
-    // Create product_themes table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS product_themes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) NOT NULL,
-        theme VARCHAR(50),
-        primary_bg_color VARCHAR(7) DEFAULT '#ffffff',
-        secondary_bg_color VARCHAR(7) DEFAULT '#f8fafc',
-        accent_bg_color VARCHAR(7) DEFAULT '#e2e8f0',
-        primary_text_color VARCHAR(7) DEFAULT '#1a202c',
-        secondary_text_color VARCHAR(7) DEFAULT '#4a5568',
-        accent_text_color VARCHAR(7) DEFAULT '#2d3748',
-        link_color VARCHAR(7) DEFAULT '#3182ce',
-        link_hover_color VARCHAR(7) DEFAULT '#2c5282',
-        primary_button_bg VARCHAR(7) DEFAULT '#3182ce',
-        primary_button_text VARCHAR(7) DEFAULT '#ffffff',
-        primary_button_hover_bg VARCHAR(7) DEFAULT '#2c5282',
-        secondary_button_bg VARCHAR(7) DEFAULT '#e2e8f0',
-        secondary_button_text VARCHAR(7) DEFAULT '#2d3748',
-        secondary_button_hover_bg VARCHAR(7) DEFAULT '#cbd5e0',
-        card_bg_color VARCHAR(7) DEFAULT '#ffffff',
-        card_border_color VARCHAR(7) DEFAULT '#e2e8f0',
-        card_shadow_color VARCHAR(7) DEFAULT '#000000',
-        header_bg_color VARCHAR(7) DEFAULT '#2d3748',
-        header_text_color VARCHAR(7) DEFAULT '#ffffff',
-        footer_bg_color VARCHAR(7) DEFAULT '#1a202c',
-        footer_text_color VARCHAR(7) DEFAULT '#e2e8f0',
-        font_family VARCHAR(100) DEFAULT 'Inter, sans-serif',
-        h1_font_size VARCHAR(10) DEFAULT '2.5rem',
-        h1_font_weight VARCHAR(10) DEFAULT '700',
-        h2_font_size VARCHAR(10) DEFAULT '2rem',
-        h2_font_weight VARCHAR(10) DEFAULT '600',
-        h3_font_size VARCHAR(10) DEFAULT '1.5rem',
-        h3_font_weight VARCHAR(10) DEFAULT '600',
-        body_font_size VARCHAR(10) DEFAULT '1rem',
-        body_line_height VARCHAR(10) DEFAULT '1.6',
-        section_padding VARCHAR(10) DEFAULT '3rem',
-        card_padding VARCHAR(10) DEFAULT '1.5rem',
-        button_padding VARCHAR(20) DEFAULT '0.75rem 1.5rem',
-        border_radius_sm VARCHAR(10) DEFAULT '0.375rem',
-        border_radius_md VARCHAR(10) DEFAULT '0.5rem',
-        border_radius_lg VARCHAR(10) DEFAULT '0.75rem',
-        border_radius_xl VARCHAR(10) DEFAULT '1rem',
-        max_width VARCHAR(10) DEFAULT '1200px',
-        container_padding VARCHAR(20) DEFAULT '1rem',
-        gradient_start VARCHAR(7) DEFAULT '#667eea',
-        gradient_end VARCHAR(7) DEFAULT '#764ba2',
-        shadow_color VARCHAR(7) DEFAULT '#000000',
-        custom_css TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-      )
-    `);
-    console.log("Product Themes table created/verified");
-
-    // Create visits table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS visits (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) NOT NULL,
-        ip_address VARCHAR(45) NOT NULL,
-        user_agent TEXT,
-        referrer TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-      )
-    `);
-    console.log("Visits table created/verified");
+    await pool.query(`USE ${process.env.DB_NAME}`);
+    console.log(`Using database ${process.env.DB_NAME}`);
 
     // Create users table
-    await connection.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
@@ -188,24 +104,33 @@ export async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log("Users table created/verified");
+    console.log("Users table created or already exists");
 
-    // Verify tables exist
-    const [tables] = await connection.query<any[]>("SHOW TABLES");
-    console.log("Existing tables:", tables);
-
-    // Check if we have any data
-    const [productCount] = await connection.query<any[]>(
-      "SELECT COUNT(*) as count FROM products"
+    // Check if admin user exists
+    const [users] = await pool.query<any[]>(
+      "SELECT * FROM users WHERE username = ?",
+      [process.env.ADMIN_USERNAME]
     );
-    console.log("Current product count:", productCount[0].count);
+
+    if (!users || users.length === 0) {
+      // Create admin user if it doesn't exist
+      const hashedPassword = await bcrypt.hash(
+        process.env.ADMIN_PASSWORD || "admin123",
+        10
+      );
+      await pool.query("INSERT INTO users (username, password) VALUES (?, ?)", [
+        process.env.ADMIN_USERNAME || "admin",
+        hashedPassword,
+      ]);
+      console.log("Admin user created successfully");
+    } else {
+      console.log("Admin user already exists");
+    }
 
     console.log("Database initialization completed successfully");
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;
-  } finally {
-    connection.release();
   }
 }
 
@@ -238,57 +163,6 @@ export async function addTestData() {
     connection.release();
   }
 }
-
-// Initialize admin user from environment variables
-export async function initAdminUser() {
-  const connection = await pool.getConnection();
-  try {
-    const adminUsername = process.env.ADMIN_USERNAME;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!adminUsername || !adminPassword) {
-      console.error("Admin credentials not found in environment variables");
-      return;
-    }
-
-    // Check if admin user exists
-    const [existingUsers] = await connection.query<mysql.RowDataPacket[]>(
-      "SELECT * FROM users WHERE username = ?",
-      [adminUsername]
-    );
-
-    if (existingUsers.length === 0) {
-      // Hash the admin password
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-      // Create admin user
-      await connection.query(
-        "INSERT INTO users (username, password) VALUES (?, ?)",
-        [adminUsername, hashedPassword]
-      );
-      console.log("Admin user created successfully");
-    } else {
-      console.log("Admin user already exists");
-    }
-  } catch (error) {
-    console.error("Error initializing admin user:", error);
-  } finally {
-    connection.release();
-  }
-}
-
-// Initialize database and add test data
-initDatabase()
-  .then(() => {
-    console.log("Database initialization completed");
-    return initAdminUser();
-  })
-  .then(() => {
-    console.log("Admin user initialization completed");
-  })
-  .catch((err) => {
-    console.error("Error during database setup:", err);
-  });
 
 // Drop all tables
 export async function dropTables() {
