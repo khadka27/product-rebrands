@@ -577,20 +577,24 @@ export async function recordVisit(
 export async function getProductStats(): Promise<any> {
   return withConnection(async (connection) => {
     try {
+      console.log("Getting total number of products...");
       // Get total number of products
       const [productCountResult] = await connection.query(
         "SELECT COUNT(*) as total FROM products"
       );
       const totalProducts = (productCountResult as any[])[0]?.total || 0;
+      console.log("Total products:", totalProducts);
 
-      // Get total visits (example - assuming a visits table exists)
-      // NOTE: Ensure your database has a 'visits' table with a 'created_at' column
+      console.log("Getting total visits...");
+      // Get total visits
       const [totalVisitsResult] = await connection.query(
         "SELECT COUNT(*) as total FROM visits"
       );
       const totalVisits = (totalVisitsResult as any[])[0]?.total || 0;
+      console.log("Total visits:", totalVisits);
 
-      // Get recent visits (example - assuming a visits table exists)
+      console.log("Getting recent visits...");
+      // Get recent visits
       const [recentVisitsResult] = await connection.query(`
         SELECT v.*, p.name as product_name, p.product_id
         FROM visits v
@@ -599,16 +603,39 @@ export async function getProductStats(): Promise<any> {
         LIMIT 10
       `);
       const recentVisits = recentVisitsResult as any[];
+      console.log("Recent visits count:", recentVisits.length);
 
-      // You can add more stats here if needed
+      // Get product visits
+      console.log("Getting product visits...");
+      const [productVisitsResult] = await connection.query(`
+        SELECT p.name, COUNT(v.id) as visit_count
+        FROM products p
+        LEFT JOIN visits v ON p.product_id = v.product_id
+        GROUP BY p.product_id, p.name
+        ORDER BY visit_count DESC
+        LIMIT 5
+      `);
+      const productVisits = productVisitsResult as any[];
+      console.log("Product visits:", productVisits);
 
-      return {
+      const stats = {
         totalProducts,
         totalVisits,
         recentVisits,
+        productVisits,
       };
+      console.log("Stats object created:", stats);
+
+      return stats;
     } catch (error) {
-      console.error("Error fetching product stats:", error);
+      console.error("Error in getProductStats:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        errno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+      });
       throw error; // Re-throw the error to be caught by the API route
     }
   });

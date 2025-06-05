@@ -35,23 +35,30 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Login: Starting login attempt");
 
     try {
+      console.log("Login: Attempting to sign in with credentials");
       const result = await signIn("credentials", {
         username: formData.username,
         password: formData.password,
         redirect: false,
       });
 
+      console.log("Login: Sign in result:", result);
+
       if (result?.error) {
+        console.error("Login: Authentication failed:", result.error);
         toast.error("Invalid username or password");
         return;
       }
 
+      console.log("Login: Authentication successful, redirecting...");
       const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
       router.push(callbackUrl);
       router.refresh();
     } catch (error) {
+      console.error("Login: Error during login:", error);
       toast.error("An error occurred during login");
     } finally {
       setIsLoading(false);

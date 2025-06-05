@@ -42,20 +42,36 @@ export async function GET(req: NextRequest) {
   let connection;
   try {
     // Ensure tables exist before any database operation
+    console.log("Starting GET /api/products - Ensuring tables exist...");
     await ensureTablesExist();
+    console.log("Tables check completed");
 
+    console.log("Attempting database connection...");
     connection = await db.getConnection();
-    console.log("Database connection established");
+    console.log("Database connection established successfully");
 
     const { searchParams } = new URL(req.url);
+    console.log(
+      "Request URL params:",
+      Object.fromEntries(searchParams.entries())
+    );
 
     // Handle stats query
     if (searchParams.get("stats") === "true") {
+      console.log("Fetching product stats...");
       try {
         const stats = await getProductStats();
+        console.log("Product stats fetched successfully:", stats);
         return NextResponse.json(stats);
       } catch (error: any) {
         console.error("Error fetching product stats:", error);
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          errno: error.errno,
+          sqlState: error.sqlState,
+          sqlMessage: error.sqlMessage,
+        });
         return NextResponse.json(
           { error: "Failed to fetch product stats", details: error.message },
           { status: 500 }
@@ -301,108 +317,129 @@ async function ensureTablesExist() {
   let connection;
   try {
     connection = await db.getConnection();
+    console.log("Checking/creating database tables...");
 
     // Create products table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS products (
-          product_id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          slug VARCHAR(255) NOT NULL UNIQUE,
-          paragraph TEXT,
-          bullet_points JSON,
-          redirect_link VARCHAR(255) NOT NULL,
-          generated_link VARCHAR(255) NOT NULL UNIQUE,
-          money_back_days INT DEFAULT 0,
-          product_image VARCHAR(255),
-          product_badge VARCHAR(255),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        product_id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        paragraph TEXT,
+        bullet_points JSON,
+        redirect_link VARCHAR(255),
+        generated_link VARCHAR(255),
+        product_image VARCHAR(255),
+        product_badge VARCHAR(255),
+        money_back_days INT DEFAULT 60,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create visits table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS visits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
+        ip_address VARCHAR(45),
+        user_agent VARCHAR(255),
+        referrer VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // Create product_themes table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS product_themes (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          product_id VARCHAR(255) UNIQUE REFERENCES products(product_id) ON DELETE CASCADE,
-          primary_bg_color VARCHAR(7),
-          secondary_bg_color VARCHAR(7),
-          accent_bg_color VARCHAR(7),
-          primary_text_color VARCHAR(7),
-          secondary_text_color VARCHAR(7),
-          accent_text_color VARCHAR(7),
-          link_color VARCHAR(7),
-          link_hover_color VARCHAR(7),
-          primary_button_bg VARCHAR(7),
-          primary_button_text VARCHAR(7),
-          primary_button_hover_bg VARCHAR(7),
-          secondary_button_bg VARCHAR(7),
-          secondary_button_text VARCHAR(7),
-          secondary_button_hover_bg VARCHAR(7),
-          card_bg_color VARCHAR(7),
-          card_border_color VARCHAR(7),
-          card_shadow_color VARCHAR(7),
-          header_bg_color VARCHAR(7),
-          header_text_color VARCHAR(7),
-          footer_bg_color VARCHAR(7),
-          footer_text_color VARCHAR(7),
-          font_family VARCHAR(255),
-          h1_font_size VARCHAR(20),
-          h1_font_weight VARCHAR(20),
-          h2_font_size VARCHAR(20),
-          h2_font_weight VARCHAR(20),
-          h3_font_size VARCHAR(20),
-          h3_font_weight VARCHAR(20),
-          body_font_size VARCHAR(20),
-          body_line_height VARCHAR(20),
-          section_padding VARCHAR(20),
-          card_padding VARCHAR(20),
-          button_padding VARCHAR(20),
-          border_radius_sm VARCHAR(20),
-          border_radius_md VARCHAR(20),
-          border_radius_lg VARCHAR(20),
-          border_radius_xl VARCHAR(20),
-          max_width VARCHAR(20),
-          container_padding VARCHAR(20),
-          gradient_start VARCHAR(7),
-          gradient_end VARCHAR(7),
-          shadow_color VARCHAR(7),
-          custom_css TEXT
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
+        primary_bg_color VARCHAR(7),
+        secondary_bg_color VARCHAR(7),
+        accent_bg_color VARCHAR(7),
+        primary_text_color VARCHAR(7),
+        secondary_text_color VARCHAR(7),
+        accent_text_color VARCHAR(7),
+        link_color VARCHAR(7),
+        link_hover_color VARCHAR(7),
+        primary_button_bg VARCHAR(7),
+        primary_button_text VARCHAR(7),
+        primary_button_hover_bg VARCHAR(7),
+        secondary_button_bg VARCHAR(7),
+        secondary_button_text VARCHAR(7),
+        secondary_button_hover_bg VARCHAR(7),
+        card_bg_color VARCHAR(7),
+        card_border_color VARCHAR(7),
+        card_shadow_color VARCHAR(7),
+        header_bg_color VARCHAR(7),
+        header_text_color VARCHAR(7),
+        footer_bg_color VARCHAR(7),
+        footer_text_color VARCHAR(7),
+        font_family VARCHAR(255),
+        h1_font_size VARCHAR(20),
+        h1_font_weight VARCHAR(20),
+        h2_font_size VARCHAR(20),
+        h2_font_weight VARCHAR(20),
+        h3_font_size VARCHAR(20),
+        h3_font_weight VARCHAR(20),
+        body_font_size VARCHAR(20),
+        body_line_height VARCHAR(20),
+        section_padding VARCHAR(20),
+        card_padding VARCHAR(20),
+        button_padding VARCHAR(20),
+        border_radius_sm VARCHAR(20),
+        border_radius_md VARCHAR(20),
+        border_radius_lg VARCHAR(20),
+        border_radius_xl VARCHAR(20),
+        max_width VARCHAR(20),
+        container_padding VARCHAR(20),
+        gradient_start VARCHAR(7),
+        gradient_end VARCHAR(7),
+        shadow_color VARCHAR(7),
+        custom_css TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
     // Create ingredients table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS ingredients (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
-          title VARCHAR(255) NOT NULL,
-          description TEXT NOT NULL,
-          image VARCHAR(255),
-          display_order INT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        image VARCHAR(255),
+        display_order INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
     // Create why_choose table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS why_choose (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
-          title VARCHAR(255) NOT NULL,
-          description TEXT NOT NULL,
-          display_order INT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        display_order INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
     console.log("Database tables checked/created successfully.");
   } catch (error) {
     console.error("Error ensuring tables exist:", error);
-    // Depending on severity, you might want to throw the error
-    // throw error;
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage,
+    });
+    throw error;
   } finally {
     if (connection) connection.release();
   }

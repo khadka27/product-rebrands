@@ -3,22 +3,13 @@ import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
 
-// Create a connection pool
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST || "localhost",
-//   user: process.env.DB_USER || "root",
-//   password: process.env.DB_PASSWORD || "",
-//   database: process.env.DB_NAME || "product_management",
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
-// });
-
+// Create a connection pool with more detailed configuration
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3307,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -31,21 +22,41 @@ const pool = mysql.createPool({
 });
 
 // Test the connection with more detailed error handling
-console.log("Attempting database connection with config:", {
+console.log("Database connection configuration:", {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3307,
+  hasPassword: !!process.env.DB_PASSWORD,
 });
 
+// Test the connection immediately
 pool
   .getConnection()
   .then(async (connection) => {
     console.log("Database connection successful");
-    connection.release();
+    try {
+      // Test the connection with a simple query
+      const [result] = await connection.query("SELECT 1 as test");
+      console.log("Test query result:", result);
 
-    // Initialize database and tables
-    await initializeDatabase();
+      // Check if we can access the database
+      if (process.env.DB_NAME) {
+        await connection.query(`USE ${process.env.DB_NAME}`);
+        console.log(
+          `Successfully connected to database: ${process.env.DB_NAME}`
+        );
+      }
+
+      connection.release();
+      console.log("Connection released successfully");
+
+      // Initialize database and tables
+      await initializeDatabase();
+    } catch (error) {
+      console.error("Error during connection test:", error);
+      throw error;
+    }
   })
   .catch((err) => {
     console.error("Error connecting to the database:", err);
@@ -79,6 +90,12 @@ pool
       console.error(
         "Connection refused. Please check if the database is running and accessible."
       );
+    } else if (err.code === "ER_ACCESS_DENIED_ERROR") {
+      console.error("Access denied. Please check your username and password.");
+    } else if (err.code === "ER_BAD_DB_ERROR") {
+      console.error(
+        `Database '${process.env.DB_NAME}' does not exist. Please create it first.`
+      );
     }
   });
 
@@ -88,12 +105,14 @@ async function initializeDatabase() {
     console.log("Initializing database...");
 
     // Create database if it doesn't exist
-    await pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
-    console.log(`Database ${process.env.DB_NAME} created or already exists`);
+    if (process.env.DB_NAME) {
+      await pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
+      console.log(`Database ${process.env.DB_NAME} created or already exists`);
 
-    // Use the database
-    await pool.query(`USE ${process.env.DB_NAME}`);
-    console.log(`Using database ${process.env.DB_NAME}`);
+      // Use the database
+      await pool.query(`USE ${process.env.DB_NAME}`);
+      console.log(`Using database ${process.env.DB_NAME}`);
+    }
 
     // Create users table
     await pool.query(`
