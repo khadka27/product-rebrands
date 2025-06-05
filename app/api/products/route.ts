@@ -430,15 +430,17 @@ async function ensureTablesExist() {
     `);
 
     console.log("Database tables checked/created successfully.");
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error ensuring tables exist:", error);
-    console.error("Error details:", {
-      message: error.message,
-      code: error.code,
-      errno: error.errno,
-      sqlState: error.sqlState,
-      sqlMessage: error.sqlMessage,
-    });
+    if (error && typeof error === 'object' && 'message' in error) {
+      console.error("Error details:", {
+        message: (error as { message: string }).message,
+        code: 'code' in error ? (error as { code: string }).code : undefined,
+        errno: 'errno' in error ? (error as { errno: number }).errno : undefined,
+        sqlState: 'sqlState' in error ? (error as { sqlState: string }).sqlState : undefined,
+        sqlMessage: 'sqlMessage' in error ? (error as { sqlMessage: string }).sqlMessage : undefined,
+      });
+    }
     throw error;
   } finally {
     if (connection) connection.release();

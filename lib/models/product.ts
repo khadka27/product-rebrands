@@ -629,13 +629,19 @@ export async function getProductStats(): Promise<any> {
       return stats;
     } catch (error) {
       console.error("Error in getProductStats:", error);
-      console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        errno: error.errno,
-        sqlState: error.sqlState,
-        sqlMessage: error.sqlMessage,
-      });
+      
+      // Type assertion with safety checks
+      if (error && typeof error === 'object') {
+        const err = error as any;
+        console.error("Error details:", {
+          message: err.message,
+          code: err.code,
+          errno: err.errno,
+          sqlState: err.sqlState,
+          sqlMessage: err.sqlMessage,
+        });
+      }
+      
       throw error; // Re-throw the error to be caught by the API route
     }
   });
