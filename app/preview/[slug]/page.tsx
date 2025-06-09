@@ -105,14 +105,14 @@ export default async function PreviewPage({
         <style dangerouslySetInnerHTML={{ __html: generateThemeCSS() }} />
       )}
 
-      <main className="min-h-screen bg-gradient-to-b from-[var(--bg-gradient-from)] via-[var(--bg-gradient-via)] to-[var(--bg-gradient-to)] text-[var(--text-primary)]">
+      <main className="min-h-screen bg-gradient-to-b from-[var(--bg-gradient-from)] via-[var(--bg-gradient-via)] to-[var(--bg-gradient-to)] text-[var(--text-primary)] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-white">
         <div className="relative">
           {/* Background elements */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/bg-pattern.png')] opacity-5"></div>
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-20 dark-theme:opacity-20 light-theme:opacity-10"></div>
-            <div className="absolute top-1/3 -left-40 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-20 dark-theme:opacity-20 light-theme:opacity-10"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-10 dark-theme:opacity-10 light-theme:opacity-5"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/bg-pattern.png')] opacity-5 dark:opacity-10"></div>
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-20 dark:opacity-30"></div>
+            <div className="absolute top-1/3 -left-40 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-20 dark:opacity-30"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600 rounded-full filter blur-[120px] opacity-10 dark:opacity-20"></div>
           </div>
 
           {/* Content */}
@@ -125,7 +125,7 @@ export default async function PreviewPage({
               <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 text-black dark:text-white text-center">
                 THIS PRODUCT HAS BEEN RENAMED TO
               </h1>
-              <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-red-600 text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-red-600 dark:text-red-500 text-center">
                 {product.name.toUpperCase()}
               </h2>
             </div>
@@ -151,7 +151,6 @@ export default async function PreviewPage({
                   productName={product.name}
                   whyChoose={product.why_choose.map(
                     (item: any, index: number) => ({
-                      // Use generateItemKey for robust key generation
                       key: generateItemKey(item, index),
                       id: item.id,
                       title: item.title,

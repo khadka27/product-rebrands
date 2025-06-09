@@ -18,9 +18,66 @@ interface Product {
   money_back_days: number;
   image?: string;
   badge_image?: string;
-  theme?: any;
-  ingredients?: any[];
-  why_choose?: any[];
+  theme?: {
+    theme_id: string;
+    product_id: string;
+    primary_bg_color: string;
+    secondary_bg_color: string;
+    accent_bg_color: string;
+    primary_text_color: string;
+    secondary_text_color: string;
+    accent_text_color: string;
+    link_color: string;
+    link_hover_color: string;
+    primary_button_bg: string;
+    primary_button_text: string;
+    primary_button_hover_bg: string;
+    secondary_button_bg: string;
+    secondary_button_text: string;
+    secondary_button_hover_bg: string;
+    card_bg_color: string;
+    card_border_color: string;
+    card_shadow_color: string;
+    header_bg_color: string;
+    header_text_color: string;
+    footer_bg_color: string;
+    footer_text_color: string;
+    font_family: string;
+    h1_font_size: string;
+    h1_font_weight: string;
+    h2_font_size: string;
+    h2_font_weight: string;
+    h3_font_size: string;
+    h3_font_weight: string;
+    body_font_size: string;
+    body_line_height: string;
+    section_padding: string;
+    card_padding: string;
+    button_padding: string;
+    border_radius_sm: string;
+    border_radius_md: string;
+    border_radius_lg: string;
+    border_radius_xl: string;
+    max_width: string;
+    container_padding: string;
+    gradient_start: string;
+    gradient_end: string;
+    shadow_color: string;
+    custom_css: string;
+  };
+  ingredients?: {
+    id: string;
+    title: string;
+    description: string;
+    image?: string;
+    display_order: number;
+  }[];
+  why_choose?: {
+    id: string;
+    title: string;
+    description: string;
+    display_order: number;
+  }[];
 }
 
 export default function EditProductPage({
@@ -36,12 +93,140 @@ export default function EditProductPage({
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        // First try to fetch from the store
+        const storeResponse = await fetch(`/api/store/products/${params.id}`);
+        if (storeResponse.ok) {
+          const storeData = await storeResponse.json();
+          if (storeData) {
+            // Format the store data to match our Product interface
+            const formattedData: Product = {
+              id: storeData.id,
+              name: storeData.name,
+              paragraph: storeData.paragraph || "",
+              bullet_points: storeData.bullet_points || [],
+              redirect_link: storeData.redirect_link || "",
+              generated_link: storeData.generated_link || "",
+              money_back_days: storeData.money_back_days || 0,
+              image: storeData.image,
+              badge_image: storeData.badge_image,
+              theme: storeData.theme || {
+                theme_id: "",
+                product_id: storeData.id,
+                primary_bg_color: "#ffffff",
+                secondary_bg_color: "#f44336",
+                accent_bg_color: "#ffc107",
+                primary_text_color: "#333333",
+                secondary_text_color: "#666666",
+                accent_text_color: "#ffc107",
+                link_color: "#3182ce",
+                link_hover_color: "#2c5282",
+                primary_button_bg: "#ff5722",
+                primary_button_text: "#ffffff",
+                primary_button_hover_bg: "#f44336",
+                secondary_button_bg: "#e0e0e0",
+                secondary_button_text: "#333333",
+                secondary_button_hover_bg: "#bdbdbd",
+                card_bg_color: "#ffffff",
+                card_border_color: "#e0e0e0",
+                card_shadow_color: "#0000001a",
+                header_bg_color: "#ffffff",
+                header_text_color: "#111111",
+                footer_bg_color: "#333333",
+                footer_text_color: "#ffffff",
+                font_family: "Inter, sans-serif",
+                h1_font_size: "2.5rem",
+                h1_font_weight: "700",
+                h2_font_size: "2rem",
+                h2_font_weight: "600",
+                h3_font_size: "1.5rem",
+                h3_font_weight: "500",
+                body_font_size: "1rem",
+                body_line_height: "1.5",
+                section_padding: "2rem",
+                card_padding: "1.5rem",
+                button_padding: "0.75rem 1.5rem",
+                border_radius_sm: "4px",
+                border_radius_md: "8px",
+                border_radius_lg: "12px",
+                border_radius_xl: "16px",
+                max_width: "1200px",
+                container_padding: "1rem",
+                gradient_start: "",
+                gradient_end: "",
+                shadow_color: "",
+                custom_css: "",
+              },
+              ingredients: storeData.ingredients || [],
+              why_choose: storeData.why_choose || [],
+            };
+            setProduct(formattedData);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // If store fetch fails, try the regular products API
         const response = await fetch(`/api/products/${params.id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch product");
         }
         const data = await response.json();
-        setProduct(data);
+
+        // Format the data
+        const formattedData: Product = {
+          ...data,
+          theme: data.theme || {
+            theme_id: "",
+            product_id: data.id,
+            primary_bg_color: "#ffffff",
+            secondary_bg_color: "#f44336",
+            accent_bg_color: "#ffc107",
+            primary_text_color: "#333333",
+            secondary_text_color: "#666666",
+            accent_text_color: "#ffc107",
+            link_color: "#3182ce",
+            link_hover_color: "#2c5282",
+            primary_button_bg: "#ff5722",
+            primary_button_text: "#ffffff",
+            primary_button_hover_bg: "#f44336",
+            secondary_button_bg: "#e0e0e0",
+            secondary_button_text: "#333333",
+            secondary_button_hover_bg: "#bdbdbd",
+            card_bg_color: "#ffffff",
+            card_border_color: "#e0e0e0",
+            card_shadow_color: "#0000001a",
+            header_bg_color: "#ffffff",
+            header_text_color: "#111111",
+            footer_bg_color: "#333333",
+            footer_text_color: "#ffffff",
+            font_family: "Inter, sans-serif",
+            h1_font_size: "2.5rem",
+            h1_font_weight: "700",
+            h2_font_size: "2rem",
+            h2_font_weight: "600",
+            h3_font_size: "1.5rem",
+            h3_font_weight: "500",
+            body_font_size: "1rem",
+            body_line_height: "1.5",
+            section_padding: "2rem",
+            card_padding: "1.5rem",
+            button_padding: "0.75rem 1.5rem",
+            border_radius_sm: "4px",
+            border_radius_md: "8px",
+            border_radius_lg: "12px",
+            border_radius_xl: "16px",
+            max_width: "1200px",
+            container_padding: "1rem",
+            gradient_start: "",
+            gradient_end: "",
+            shadow_color: "",
+            custom_css: "",
+          },
+          ingredients: data.ingredients || [],
+          why_choose: data.why_choose || [],
+        };
+
+        setProduct(formattedData);
       } catch (err) {
         console.error("Error fetching product:", err);
         setError("Failed to load product data");
@@ -199,8 +384,56 @@ export default function EditProductPage({
             {product.theme && (
               <div>
                 <h3 className="text-lg font-semibold">Theme Settings</h3>
-                <p>Primary BG: {product.theme.primary_bg_color}</p>
-                {/* Add other theme settings here as needed */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                  <div className="p-3 border rounded-md">
+                    <p className="font-medium">Colors</p>
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor: product.theme.primary_bg_color,
+                          }}
+                        />
+                        <span>Primary BG</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor: product.theme.secondary_bg_color,
+                          }}
+                        />
+                        <span>Secondary BG</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor: product.theme.accent_bg_color,
+                          }}
+                        />
+                        <span>Accent BG</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-md">
+                    <p className="font-medium">Typography</p>
+                    <div className="space-y-2 mt-2">
+                      <p>Font: {product.theme.font_family}</p>
+                      <p>H1: {product.theme.h1_font_size}</p>
+                      <p>Body: {product.theme.body_font_size}</p>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-md">
+                    <p className="font-medium">Layout</p>
+                    <div className="space-y-2 mt-2">
+                      <p>Max Width: {product.theme.max_width}</p>
+                      <p>Border Radius: {product.theme.border_radius_md}</p>
+                      <p>Padding: {product.theme.section_padding}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
