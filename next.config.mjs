@@ -19,12 +19,12 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "www.verifiedsupplements.store",
+        hostname: "verifiedsupplements.store",
         port: "",
         pathname: "/**",
       },
     ],
-    domains: ["source.unsplash.com", "images.unsplash.com", "www.verifiedsupplements.store"],
+    domains: ["source.unsplash.com", "images.unsplash.com", "verifiedsupplements.store"],
   },
 }
 
