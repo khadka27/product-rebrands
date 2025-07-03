@@ -124,8 +124,8 @@ export default function Dashboard() {
     }
   };
 
-  const copyToClipboard = async (productId: string) => {
-    const url = `${window.location.origin}/preview/${productId}`;
+  const copyToClipboard = async (productSlug: string, productId: string) => {
+    const url = `${window.location.origin}/preview/${productSlug}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedProductId(productId);
@@ -297,7 +297,7 @@ export default function Dashboard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => copyToClipboard(product.product_id)}
+                            onClick={() => copyToClipboard(product.slug, product.product_id)}
                           >
                             {copiedProductId === product.product_id ? (
                               <Check className="h-4 w-4" />

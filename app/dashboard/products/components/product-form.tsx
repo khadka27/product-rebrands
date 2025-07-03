@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeCustomizer } from "./theme-customizer";
 import type { ProductTheme } from "@/lib/models/product-theme";
-import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -101,6 +101,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [descriptionError, setDescriptionError] = useState("");
   const [paragraphError, setParagraphError] = useState("");
   const [bulletPointsError, setBulletPointsError] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Add name validation effect
   useEffect(() => {
@@ -138,6 +139,21 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   // Add image validation state
   const [imageError, setImageError] = useState("");
+
+  // Copy link functionality
+  const copyLinkToClipboard = async () => {
+    if (!formData.generated_link) return;
+    
+    try {
+      await navigator.clipboard.writeText(formData.generated_link);
+      setLinkCopied(true);
+      toast.success("Link copied to clipboard");
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error("Error copying to clipboard:", error);
+      toast.error("Failed to copy link");
+    }
+  };
 
   // Handle form input changes
   const handleChange = (
@@ -914,6 +930,18 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                     disabled={!formData.generated_link}
                   >
                     Preview
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={copyLinkToClipboard}
+                    disabled={!formData.generated_link}
+                  >
+                    {linkCopied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-500">
