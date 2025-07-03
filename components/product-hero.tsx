@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import CountdownTimer from "./countdown-timer";
 import type { Product } from "@/lib/models/product";
+import { getImagePath } from "@/lib/utils";
 
 interface ProductHeroProps {
   product?: Product;
@@ -89,7 +90,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                 <Image
-                  src={product?.product_image || "/images/product.png"}
+                  src={getImagePath(product?.product_image, "/images/product.png")}
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
@@ -98,10 +99,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={
-                    product?.product_badge ||
-                    "/images/New-and-Improved-Badge.png"
-                  }
+                  src={getImagePath(product?.product_badge, "/images/New-and-Improved-Badge.png")}
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"

@@ -101,3 +101,16 @@ function isValidUrl(string: string): boolean {
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Utility function to handle image paths consistently
+export function getImagePath(imagePath: string | null | undefined, fallback: string = "/images/placeholder.png"): string {
+  if (!imagePath) return fallback;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // If it's a relative path, ensure it starts with /
+  return `/${imagePath.replace(/^\//, '')}`;
+}

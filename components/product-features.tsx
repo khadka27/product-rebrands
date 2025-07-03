@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import type { Product } from "@/lib/models/product";
+import { getImagePath } from "@/lib/utils";
 
 interface ProductFeaturesProps {
   product: Product;
@@ -99,7 +100,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                 <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                   <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
                   <Image
-                    src={product?.product_image || "/placeholder.svg"}
+                    src={getImagePath(product?.product_image, "/placeholder.svg")}
                     alt="Product Image"
                     fill
                     className="object-contain z-10"

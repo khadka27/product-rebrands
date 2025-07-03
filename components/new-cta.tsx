@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import type { Product } from "@/lib/models/product";
+import { getImagePath } from "@/lib/utils";
 
 interface NewCtaProps {
   product: Product;
@@ -111,7 +112,7 @@ export default function NewCta({ product }: NewCtaProps) {
               <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src={product?.product_image || "/images/placeholder.png"}
+                  src={getImagePath(product?.product_image, "/images/placeholder.png")}
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
@@ -119,7 +120,7 @@ export default function NewCta({ product }: NewCtaProps) {
               </div>
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={product?.product_badge || "/images/new-badge.png"}
+                  src={getImagePath(product?.product_badge, "/images/new-badge.png")}
                   alt="New Product Badge"
                   fill
                   className="object-contain"
