@@ -24,7 +24,7 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
-    domains: ["source.unsplash.com", "images.unsplash.com", "verifiedsupplements.store"],
+    domains: ["source.unsplash.com", "images.unsplash.com", "verifiedsupplements.store", "www.verifiedsupplements.store"],
   },
 }
 
