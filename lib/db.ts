@@ -42,7 +42,7 @@ pool
 
       // Check if we can access the database
       if (process.env.DB_NAME) {
-        await connection.query(`USE ${process.env.DB_NAME}`);
+        await connection.query(`USE \`${process.env.DB_NAME}\``);
         console.log(
           `Successfully connected to database: ${process.env.DB_NAME}`
         );
@@ -106,11 +106,11 @@ async function initializeDatabase() {
 
     // Create database if it doesn't exist
     if (process.env.DB_NAME) {
-      await pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
+      await pool.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\``);
       console.log(`Database ${process.env.DB_NAME} created or already exists`);
 
       // Use the database
-      await pool.query(`USE ${process.env.DB_NAME}`);
+      await pool.query(`USE \`${process.env.DB_NAME}\``);
       console.log(`Using database ${process.env.DB_NAME}`);
     }
 
