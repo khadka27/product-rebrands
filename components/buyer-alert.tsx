@@ -33,7 +33,7 @@ export default function BuyerAlert({ product }: BuyerAlertProps) {
           transition={{ duration: 0.5 }}
           className="overflow-hidden"
         >
-          <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-2 md:p-6 rounded-lg md:rounded-xl shadow-lg w-[92%] mx-auto">
+          <div className="bg-red-600 dark:bg-red-700 text-white p-2 md:p-6 rounded-lg md:rounded-xl shadow-lg w-[92%] mx-auto">
             <div className="flex items-center justify-center mb-1 md:mb-3">
               <AlertTriangle className="w-4 h-4 md:w-7 md:h-7 mr-1 md:mr-2 text-yellow-300" />
               <span className="text-xs md:text-lg font-black uppercase tracking-wider text-yellow-300">

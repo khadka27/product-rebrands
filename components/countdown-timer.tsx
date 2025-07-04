@@ -41,7 +41,7 @@ export default function CountdownTimer() {
   return (
     <div className="relative overflow-hidden rounded-xl shadow-lg border border-indigo-500/30 dark:border-indigo-400/30">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 dark:from-red-700 dark:to-red-800"></div>
 
       {/* Animated pulse overlay */}
       <motion.div
@@ -66,7 +66,7 @@ export default function CountdownTimer() {
             </div>
             <div className="text-center md:text-left">
               <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">LIMITED TIME OFFER</h3>
-              <p className="text-white/80 text-sm md:text-base">Hurry, Stock Running Low!</p>
+              <p className="text-yellow-300/80 text-sm md:text-base">Hurry, Stock Running Low!</p>
             </div>
           </div>
 
@@ -81,12 +81,12 @@ export default function CountdownTimer() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 20, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="block text-2xl md:text-3xl font-bold text-indigo-700 dark:text-white"
+                  className="block text-2xl md:text-3xl font-bold text-red-600 dark:text-white"
                 >
                   {minutes}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-indigo-600 dark:text-indigo-300 font-medium">MINUTES</span>
+              <span className="text-xs text-red-600 dark:text-red-300 font-medium">MINUTES</span>
             </div>
 
             <span className="text-white text-2xl md:text-3xl font-bold">:</span>
@@ -100,12 +100,12 @@ export default function CountdownTimer() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 20, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="block text-2xl md:text-3xl font-bold text-indigo-700 dark:text-white"
+                  className="block text-2xl md:text-3xl font-bold text-red-600 dark:text-white"
                 >
                   {seconds}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-indigo-600 dark:text-indigo-300 font-medium">SECONDS</span>
+              <span className="text-xs text-red-600 dark:text-red-300 font-medium">SECONDS</span>
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function CountdownTimer() {
             initial={{ width: "100%" }}
             animate={{ width: `${progressPercentage}%` }}
             transition={{ duration: 0.5 }}
-            className="h-full bg-gradient-to-r from-green-400 to-green-500 dark:from-green-500 dark:to-green-400"
+            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-400"
           />
         </div>
 
