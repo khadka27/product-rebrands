@@ -14,10 +14,10 @@ interface ProductHeroProps {
 export default function ProductHero({ product }: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
-      <div className="relative backdrop-blur-sm bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)]">
+      <div className="relative backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)]">
         {/* Glow effects */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500 rounded-full filter blur-[80px] opacity-20 dark-theme:opacity-20 light-theme:opacity-10"></div>
-        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-indigo-700 rounded-full filter blur-[80px] opacity-20 dark-theme:opacity-20 light-theme:opacity-10"></div>
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-500 rounded-full filter blur-[80px] opacity-20"></div>
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-600 rounded-full filter blur-[80px] opacity-20"></div>
 
         <div className="grid md:grid-cols-2 gap-4 md:gap-12 items-center">
           <div className="order-2 md:order-1">
@@ -27,7 +27,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               transition={{ duration: 0.5 }}
               className="space-y-3 md:space-y-6"
             >
-              <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-xl text-white font-medium leading-relaxed">
                 {product?.paragraph || "Now rebranded as "}
 
                 {product?.paragraph
@@ -39,8 +39,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <ul className="space-y-2 md:space-y-3">
                   {product.bullet_points.map((point, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-yellow-500 mt-1">•</span>
-                      <span className="text-sm md:text-base text-[var(--text-primary)]">
+                      <span className="text-blue-400 mt-1">•</span>
+                      <span className="text-sm md:text-base text-white">
                         {point}
                       </span>
                     </li>
@@ -63,7 +63,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
                 <Button
                   variant="outline"
-                  className="w-full relative overflow-hidden group bg-[var(--button-secondary-bg)] border-2 border-yellow-400/30 hover:bg-yellow-50/10 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 text-[var(--button-secondary-text)]"
+                  className="w-full relative overflow-hidden group bg-transparent border-2 border-blue-400/50 hover:bg-blue-500/10 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 text-blue-400 hover:text-blue-300"
                   onClick={() => {
                     document
                       .getElementById("rename-info-modal")
@@ -73,7 +73,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl">
                     LEARN MORE
                   </span>
-                  <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine" />
+                  <span className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-blue-400 opacity-20 group-hover:animate-shine" />
                 </Button>
               </div>
             </motion.div>
@@ -88,9 +88,12 @@ export default function ProductHero({ product }: ProductHeroProps) {
             >
               {/* Responsive bottle size - smaller on mobile */}
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
-                <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70 dark-theme:opacity-70 light-theme:opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-600/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src={getImagePath(product?.product_image, "/images/product.png")}
+                  src={getImagePath(
+                    product?.product_image,
+                    "/images/product.png"
+                  )}
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
@@ -99,7 +102,10 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={getImagePath(product?.product_badge, "/images/New-and-Improved-Badge.png")}
+                  src={getImagePath(
+                    product?.product_badge,
+                    "/images/New-and-Improved-Badge.png"
+                  )}
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"

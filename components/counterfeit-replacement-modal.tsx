@@ -88,7 +88,7 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
       {/* Button to open the modal */}
       <Button
         onClick={openModal}
-        className="mt-2 md:mt-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1.5 md:py-2 px-2 md:px-4 rounded-lg shadow-md transition-all duration-300 text-[10px] xs:text-xs sm:text-sm md:text-base w-full sm:w-auto"
+        className="bg-[#FCD34D] hover:bg-[#F59E0B] text-black font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg shadow-lg transition-all duration-300 text-sm md:text-base w-full sm:w-auto border-2 border-[#F59E0B] hover:border-[#D97706]"
       >
         <span className="block sm:hidden">Got counterfeit? Get replacement!</span>
         <span className="hidden sm:block">Did you buy a counterfeit product? Let us replace it!</span>

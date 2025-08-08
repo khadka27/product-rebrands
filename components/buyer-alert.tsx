@@ -33,22 +33,22 @@ export default function BuyerAlert({ product }: BuyerAlertProps) {
           transition={{ duration: 0.5 }}
           className="overflow-hidden"
         >
-          <div className="bg-red-600 dark:bg-red-700 text-white p-2 md:p-6 rounded-lg md:rounded-xl shadow-lg w-[92%] mx-auto">
-            <div className="flex items-center justify-center mb-1 md:mb-3">
-              <AlertTriangle className="w-4 h-4 md:w-7 md:h-7 mr-1 md:mr-2 text-yellow-300" />
-              <span className="text-xs md:text-lg font-black uppercase tracking-wider text-yellow-300">
+          <div className="bg-[#DC2626] text-white p-4 md:p-6 rounded-lg md:rounded-xl shadow-lg w-[95%] mx-auto border-l-4 border-yellow-400">
+            <div className="flex items-center justify-center mb-2 md:mb-4">
+              <AlertTriangle className="w-5 h-5 md:w-8 md:h-8 mr-2 md:mr-3 text-yellow-300 flex-shrink-0" />
+              <span className="text-sm md:text-xl font-black uppercase tracking-wider text-yellow-300 text-center">
                 Buyer Alert: Beware of Counterfeits
               </span>
             </div>
-            <p className="text-[10px] md:text-base lg:text-lg">
+            <p className="text-sm md:text-base lg:text-lg text-center leading-relaxed mb-4 md:mb-6">
               Due to the popularity of our product, counterfeit versions are being sold under our old name. To protect
               our customers, we have officially renamed our authentic formula to{" "}
-              <span className="font-bold">{product?.name}</span>. Only purchase from authorized retailers to ensure you
+              <span className="font-bold text-yellow-100">{product?.name}</span>. Only purchase from authorized retailers to ensure you
               receive the genuine product.
             </p>
 
             {/* Counterfeit replacement button */}
-            <div className="mt-1 md:mt-4 flex justify-center px-2 md:px-0">
+            <div className="flex justify-center px-2 md:px-4">
               <CounterfeitReplacementModal product={product} />
             </div>
           </div>

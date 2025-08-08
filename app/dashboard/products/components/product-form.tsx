@@ -15,8 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeCustomizer } from "./theme-customizer";
-import type { ProductTheme } from "@/lib/models/product-theme";
 import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
@@ -38,6 +36,19 @@ interface WhyChoose {
   display_order: number;
 }
 
+interface Review {
+  id?: number;
+  product_id?: string;
+  name: string;
+  address: string;
+  rating: number;
+  review_text: string;
+  avatar?: string | File;
+  avatar_preview?: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 interface ProductFormProps {
   productId?: string;
   initialData?: {
@@ -49,9 +60,9 @@ interface ProductFormProps {
     money_back_days: number;
     image?: string;
     badge_image?: string;
-    theme?: ProductTheme;
     ingredients?: IngredientWithPreview[];
     why_choose?: WhyChoose[];
+    reviews?: Review[];
   };
 }
 
@@ -76,7 +87,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     money_back_days: initialData?.money_back_days || 60,
     image: null as File | null,
     badge_image: null as File | null,
-    theme: initialData?.theme || undefined,
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -93,6 +103,14 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [whyChoose, setWhyChoose] = useState<WhyChoose[]>(
     initialData?.why_choose || []
   );
+
+  const [reviews, setReviews] = useState<Review[]>(initialData?.reviews || []);
+
+  const [reviewErrors, setReviewErrors] = useState<
+    Record<string, Record<string, string>>
+  >({});
+
+  const [areReviewsValid, setAreReviewsValid] = useState(false);
 
   const [nameError, setNameError] = useState("");
   const [isCheckingName, setIsCheckingName] = useState(false);
@@ -137,13 +155,39 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     checkProductName();
   }, [debouncedName, productId]);
 
+  // Add useEffect to validate reviews when they change
+  useEffect(() => {
+    const validateCurrentReviews = () => {
+      // Check if at least one review exists
+      if (reviews.length === 0) {
+        setAreReviewsValid(false);
+        return;
+      }
+
+      // Check if all reviews are valid
+      const isValid = reviews.every((review) => {
+        return (
+          review.name.trim() !== "" &&
+          review.address.trim() !== "" &&
+          review.review_text.trim() !== "" &&
+          review.rating >= 1 &&
+          review.rating <= 5
+        );
+      });
+
+      setAreReviewsValid(isValid);
+    };
+
+    validateCurrentReviews();
+  }, [reviews]);
+
   // Add image validation state
   const [imageError, setImageError] = useState("");
 
   // Copy link functionality
   const copyLinkToClipboard = async () => {
     if (!formData.generated_link) return;
-    
+
     try {
       await navigator.clipboard.writeText(formData.generated_link);
       setLinkCopied(true);
@@ -209,11 +253,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  // Handle theme changes
-  const handleThemeChange = (theme: ProductTheme) => {
-    setFormData((prev) => ({ ...prev, theme }));
   };
 
   // Add a new ingredient
@@ -349,6 +388,125 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
+  // Add a new review
+  const addReview = () => {
+    setReviews((prev) => [
+      ...prev,
+      {
+        name: "",
+        address: "",
+        rating: 5,
+        review_text: "",
+        avatar: undefined,
+        avatar_preview: undefined,
+      },
+    ]);
+  };
+
+  // Remove a review
+  const removeReview = (index: number) => {
+    setReviews((prev) => prev.filter((_, i) => i !== index));
+
+    // Remove any errors for this review
+    setReviewErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[index.toString()];
+      return newErrors;
+    });
+  };
+
+  // Handle review input changes
+  const handleReviewChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
+    setReviews((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+
+    // Clear error for this field if it exists
+    if (reviewErrors[index]?.[field]) {
+      setReviewErrors((prev) => {
+        const newErrors = { ...prev };
+        if (newErrors[index]) {
+          delete newErrors[index][field];
+          if (Object.keys(newErrors[index]).length === 0) {
+            delete newErrors[index];
+          }
+        }
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle review avatar image changes
+  const handleReviewAvatarChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload an image file for the avatar");
+        return;
+      }
+
+      // Validate file size (max 2MB for avatars)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Avatar image size should be less than 2MB");
+        return;
+      }
+
+      setReviews((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], avatar: file };
+        return updated;
+      });
+
+      // Create preview for the avatar image
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setReviews((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            ...updated[index],
+            avatar_preview: event.target?.result as string,
+          };
+          return updated;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Render star rating
+  const renderStarRating = (index: number, currentRating: number) => {
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => handleReviewChange(index, "rating", star)}
+            className={`text-2xl ${
+              star <= currentRating ? "text-yellow-400" : "text-gray-300"
+            } hover:text-yellow-400 transition-colors`}
+          >
+            ★
+          </button>
+        ))}
+        <span className="ml-2 text-sm text-gray-600">
+          {currentRating} star{currentRating !== 1 ? "s" : ""}
+        </span>
+      </div>
+    );
+  };
+
   // Handle paragraph changes - New function
   const handleParagraphChange = (value: string) => {
     if (value.length <= 160) {
@@ -407,6 +565,48 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
     setBulletPointsError("");
     return true;
+  };
+
+  // Function to validate reviews and update errors
+  const validateReviews = () => {
+    const newReviewErrors: Record<string, Record<string, string>> = {};
+    let isValid = true;
+
+    // Check if at least one review exists
+    if (reviews.length === 0) {
+      return false;
+    }
+
+    reviews.forEach((review, index) => {
+      const errors: Record<string, string> = {};
+
+      if (!review.name.trim()) {
+        errors.name = "Customer name is required";
+        isValid = false;
+      }
+
+      if (!review.address.trim()) {
+        errors.address = "Customer address is required";
+        isValid = false;
+      }
+
+      if (!review.review_text.trim()) {
+        errors.review_text = "Review text is required";
+        isValid = false;
+      }
+
+      if (review.rating < 1 || review.rating > 5) {
+        errors.rating = "Rating must be between 1 and 5";
+        isValid = false;
+      }
+
+      if (Object.keys(errors).length > 0) {
+        newReviewErrors[index] = errors;
+      }
+    });
+
+    setReviewErrors(newReviewErrors);
+    return isValid;
   };
 
   // Update validateCurrentStep to check paragraph and bullet_points separately
@@ -492,6 +692,30 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           }
         });
         break;
+
+      case "reviews":
+        reviews.forEach((review, index) => {
+          if (!review.name.trim()) {
+            newErrors[`review_${index}_name`] = "Customer name is required";
+            isValid = false;
+          }
+          if (!review.address.trim()) {
+            newErrors[`review_${index}_address`] =
+              "Customer address is required";
+            isValid = false;
+          }
+          if (!review.review_text.trim()) {
+            newErrors[`review_${index}_review_text`] =
+              "Review text is required";
+            isValid = false;
+          }
+          if (review.rating < 1 || review.rating > 5) {
+            newErrors[`review_${index}_rating`] =
+              "Rating must be between 1 and 5";
+            isValid = false;
+          }
+        });
+        break;
     }
 
     setErrors(newErrors);
@@ -501,7 +725,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Handle step navigation
   const handleNextStep = () => {
     if (validateCurrentStep()) {
-      const steps = ["general", "ingredients", "why-choose", "appearance"];
+      const steps = ["general", "ingredients", "why-choose", "reviews"];
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex < steps.length - 1) {
         setCurrentStep(steps[currentIndex + 1]);
@@ -510,7 +734,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   };
 
   const handlePreviousStep = () => {
-    const steps = ["general", "ingredients", "why-choose", "appearance"];
+    const steps = ["general", "ingredients", "why-choose", "reviews"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1]);
@@ -527,56 +751,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
-  // Add this function at the top-level inside ProductForm
-  function mapThemeToBackend(theme: any) {
-    if (!theme) return undefined;
-    return {
-      primary_bg_color: theme.primary_bg_color,
-      secondary_bg_color: theme.secondary_bg_color,
-      accent_bg_color: theme.accent_bg_color,
-      primary_text_color: theme.primary_text_color,
-      secondary_text_color: theme.secondary_text_color,
-      accent_text_color: theme.accent_text_color,
-      link_color: theme.link_color,
-      link_hover_color: theme.link_hover_color,
-      primary_button_bg: theme.primary_button_bg,
-      primary_button_text: theme.primary_button_text,
-      primary_button_hover_bg: theme.primary_button_hover_bg,
-      secondary_button_bg: theme.secondary_button_bg,
-      secondary_button_text: theme.secondary_button_text,
-      secondary_button_hover_bg: theme.secondary_button_hover_bg,
-      card_bg_color: theme.card_bg_color,
-      card_border_color: theme.card_border_color,
-      card_shadow_color: theme.card_shadow_color,
-      header_bg_color: theme.header_bg_color,
-      header_text_color: theme.header_text_color,
-      footer_bg_color: theme.footer_bg_color,
-      footer_text_color: theme.footer_text_color,
-      font_family: theme.font_family,
-      h1_font_size: theme.h1_font_size,
-      h1_font_weight: theme.h1_font_weight,
-      h2_font_size: theme.h2_font_size,
-      h2_font_weight: theme.h2_font_weight,
-      h3_font_size: theme.h3_font_size,
-      h3_font_weight: theme.h3_font_weight,
-      body_font_size: theme.body_font_size,
-      body_line_height: theme.body_line_height,
-      section_padding: theme.section_padding,
-      card_padding: theme.card_padding,
-      button_padding: theme.button_padding,
-      border_radius_sm: theme.border_radius_sm,
-      border_radius_md: theme.border_radius_md,
-      border_radius_lg: theme.border_radius_lg,
-      border_radius_xl: theme.border_radius_xl,
-      max_width: theme.max_width,
-      container_padding: theme.container_padding,
-      gradient_start: theme.gradient_start,
-      gradient_end: theme.gradient_end,
-      shadow_color: theme.shadow_color,
-      custom_css: theme.custom_css,
-    };
-  }
-
   // Handle form submission - Update to send paragraph and bullet_points separately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -588,15 +762,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
     if (!validateCurrentStep()) {
       // Scroll to the first tab with an error if necessary
-      const steps = ["general", "ingredients", "why-choose", "appearance"];
+      const steps = ["general", "ingredients", "why-choose", "reviews"];
       for (const step of steps) {
         const stepErrors = Object.keys(errors).filter((key) =>
           step === "general"
-            ? !key.startsWith("ingredient_") && !key.startsWith("why_choose_")
+            ? !key.startsWith("ingredient_") &&
+              !key.startsWith("why_choose_") &&
+              !key.startsWith("review_")
             : step === "ingredients"
             ? key.startsWith("ingredient_")
             : step === "why-choose"
             ? key.startsWith("why_choose_")
+            : step === "reviews"
+            ? key.startsWith("review_")
             : false
         );
         if (
@@ -635,11 +813,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
       if (formData.badge_image) {
         submitData.append("badge_image", formData.badge_image);
-      }
-
-      if (formData.theme) {
-        const backendTheme = mapThemeToBackend(formData.theme);
-        submitData.append("theme", JSON.stringify(backendTheme));
       }
 
       // Add ingredients data
@@ -682,6 +855,31 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         )
       );
 
+      // Add reviews data
+      submitData.append(
+        "reviews",
+        JSON.stringify(
+          reviews.map((review) => ({
+            id: review.id, // Include ID for existing reviews
+            name: review.name,
+            address: review.address,
+            rating: review.rating,
+            review_text: review.review_text,
+            // We'll handle the avatar files separately
+          }))
+        )
+      );
+
+      // Add review avatar images
+      reviews.forEach((review, index) => {
+        if (review.avatar instanceof File) {
+          submitData.append(`review_avatar_${index}`, review.avatar);
+        } else if (typeof review.avatar === "string") {
+          // If it's an existing avatar path, send it back
+          submitData.append(`review_avatar_${index}_existing`, review.avatar);
+        }
+      });
+
       const url = productId ? `/api/products/${productId}` : "/api/products";
       const method = productId ? "PUT" : "POST";
 
@@ -701,20 +899,23 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           if (data.errors.bullet_points)
             setBulletPointsError(data.errors.bullet_points);
           // Scroll to the first tab with an error if necessary
-          const steps = ["general", "ingredients", "why-choose", "appearance"];
+          const steps = ["general", "ingredients", "why-choose", "reviews"];
           for (const step of steps) {
             const stepErrors = Object.keys(data.errors).filter(
               (key) =>
                 step === "general"
                   ? !key.startsWith("ingredient_") &&
                     !key.startsWith("why_choose_") &&
+                    !key.startsWith("review_") &&
                     key !== "paragraph" &&
                     key !== "bullet_points" // General errors excluding paragraph/bullet_points
                   : step === "ingredients"
                   ? key.startsWith("ingredient_") // Ingredient errors
                   : step === "why-choose"
                   ? key.startsWith("why_choose_")
-                  : false // Why Choose errors
+                  : step === "reviews"
+                  ? key.startsWith("review_")
+                  : false // Review errors
             );
             // Check if the current step has errors or if it's the general step with paragraph/bullet point errors
             if (
@@ -753,7 +954,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
           <TabsTrigger value="why-choose">Why Choose</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="reviews">Customer Reviews</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -1250,11 +1451,193 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="appearance">
-          <ThemeCustomizer
-            initialTheme={formData.theme}
-            onChange={handleThemeChange}
-          />
+        <TabsContent value="reviews">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Reviews</CardTitle>
+              <CardDescription>
+                Add customer reviews to build trust and showcase product
+                effectiveness
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {reviews.map((review, index) => (
+                <div
+                  key={index}
+                  className="p-4 border border-gray-200 rounded-lg space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-lg font-semibold">
+                      Review #{index + 1}
+                    </h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeReview(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`review-name-${index}`}>
+                        Customer Name
+                      </Label>
+                      <Input
+                        id={`review-name-${index}`}
+                        value={review.name}
+                        onChange={(e) =>
+                          handleReviewChange(index, "name", e.target.value)
+                        }
+                        placeholder="John D."
+                        className={`${
+                          reviewErrors[index]?.name ? "border-red-500" : ""
+                        }`}
+                      />
+                      {reviewErrors[index]?.name && (
+                        <p className="text-sm text-red-600">
+                          {reviewErrors[index].name}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`review-address-${index}`}>
+                        Location
+                      </Label>
+                      <Input
+                        id={`review-address-${index}`}
+                        value={review.address}
+                        onChange={(e) =>
+                          handleReviewChange(index, "address", e.target.value)
+                        }
+                        placeholder="42, New York, NY"
+                        className={`${
+                          reviewErrors[index]?.address ? "border-red-500" : ""
+                        }`}
+                      />
+                      {reviewErrors[index]?.address && (
+                        <p className="text-sm text-red-600">
+                          {reviewErrors[index].address}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Avatar Upload Section */}
+                  <div className="space-y-2">
+                    <Label htmlFor={`review-avatar-${index}`}>
+                      Customer Avatar
+                    </Label>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <Input
+                          id={`review-avatar-${index}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleReviewAvatarChange(index, e)}
+                          className="w-full"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Upload customer photo (max 2MB, optional)
+                        </p>
+                      </div>
+                      {(review.avatar_preview ||
+                        (typeof review.avatar === "string" &&
+                          review.avatar)) && (
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                            <img
+                              src={
+                                review.avatar_preview
+                                  ? review.avatar_preview
+                                  : typeof review.avatar === "string"
+                                  ? `/images/avatars/${review.avatar}`
+                                  : ""
+                              }
+                              alt={`${review.name || "Customer"} Avatar`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <p className="text-xs text-center text-gray-500 mt-1">
+                            Preview
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Rating</Label>
+                    {renderStarRating(index, review.rating)}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`review-text-${index}`}>Review Text</Label>
+                    <Textarea
+                      id={`review-text-${index}`}
+                      value={review.review_text}
+                      onChange={(e) =>
+                        handleReviewChange(index, "review_text", e.target.value)
+                      }
+                      placeholder="I've been using this product for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed..."
+                      rows={4}
+                      className={`${
+                        reviewErrors[index]?.review_text ? "border-red-500" : ""
+                      }`}
+                    />
+                    {reviewErrors[index]?.review_text && (
+                      <p className="text-sm text-red-600">
+                        {reviewErrors[index].review_text}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addReview}
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Review
+              </Button>
+
+              {/* Review Validation Status */}
+              <div className="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                <div className="flex items-center gap-2">
+                  {reviews.length === 0 ? (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-amber-500" />
+                      <p className="text-sm text-amber-700 font-medium">
+                        Add at least one customer review to enable submission
+                      </p>
+                    </>
+                  ) : areReviewsValid ? (
+                    <>
+                      <Check className="w-5 h-5 text-green-500" />
+                      <p className="text-sm text-green-700 font-medium">
+                        All customer reviews are complete! Ready to submit.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <p className="text-sm text-red-700 font-medium">
+                        Please complete all required fields in the customer
+                        reviews
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -1280,7 +1663,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             </Button>
           )}
 
-          {currentStep !== "appearance" ? (
+          {currentStep !== "reviews" ? (
             <Button
               type="button"
               onClick={handleNextStep}
@@ -1309,7 +1692,9 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                 paragraphError !== "" || // Disable if paragraph has errors
                 bulletPointsError !== "" || // Disable if bullet points have errors
                 // Check for image only on create
-                (!productId && !formData.image && !imagePreview)
+                (!productId && !formData.image && !imagePreview) ||
+                // Disable if reviews are not valid when on reviews tab
+                !areReviewsValid
               }
             >
               {isLoading

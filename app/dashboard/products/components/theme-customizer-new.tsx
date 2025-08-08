@@ -66,137 +66,69 @@ const defaultTheme: ProductTheme = {
 
 const presetThemes = [
   {
-    name: "Modern Minimal",
-    theme: {
-      ...defaultTheme,
-      primary_bg_color: "#fafafa",
-      secondary_bg_color: "#f4f4f5",
-      accent_bg_color: "#e4e4e7",
-      primary_text_color: "#18181b",
-      secondary_text_color: "#71717a",
-      accent_text_color: "#3b82f6",
-      link_color: "#3b82f6",
-      link_hover_color: "#2563eb",
-      primary_button_bg: "#3b82f6",
-      primary_button_text: "#ffffff",
-      primary_button_hover_bg: "#2563eb",
-      secondary_button_bg: "#f4f4f5",
-      secondary_button_text: "#18181b",
-      secondary_button_hover_bg: "#e4e4e7",
-      card_bg_color: "#ffffff",
-      card_border_color: "#e4e4e7",
-      header_bg_color: "#ffffff",
-      header_text_color: "#18181b",
-      footer_bg_color: "#18181b",
-      footer_text_color: "#fafafa",
-    },
+    name: "Default",
+    theme: defaultTheme,
   },
   {
-    name: "Cyber Dark",
+    name: "Dark",
     theme: {
       ...defaultTheme,
-      primary_bg_color: "#0f0f23",
-      secondary_bg_color: "#1a1a2e",
-      accent_bg_color: "#16213e",
-      primary_text_color: "#edf2f7",
-      secondary_text_color: "#a0aec0",
-      accent_text_color: "#00ff88",
-      link_color: "#00ff88",
-      link_hover_color: "#00e676",
-      primary_button_bg: "#00ff88",
-      primary_button_text: "#0f0f23",
-      primary_button_hover_bg: "#00e676",
-      secondary_button_bg: "#16213e",
-      secondary_button_text: "#edf2f7",
-      secondary_button_hover_bg: "#1a1a2e",
-      card_bg_color: "#1a1a2e",
-      card_border_color: "#16213e",
-      header_bg_color: "#0f0f23",
-      header_text_color: "#edf2f7",
-      footer_bg_color: "#000000",
-      footer_text_color: "#a0aec0",
-    },
-  },
-  {
-    name: "Ocean Gradient",
-    theme: {
-      ...defaultTheme,
-      primary_bg_color: "#0891b2",
-      secondary_bg_color: "#0e7490",
-      accent_bg_color: "#0284c7",
-      primary_text_color: "#f0f9ff",
-      secondary_text_color: "#e0f2fe",
-      accent_text_color: "#fbbf24",
-      link_color: "#fbbf24",
-      link_hover_color: "#f59e0b",
-      primary_button_bg: "#f59e0b",
-      primary_button_text: "#ffffff",
-      primary_button_hover_bg: "#d97706",
-      secondary_button_bg: "#0369a1",
-      secondary_button_text: "#f0f9ff",
-      secondary_button_hover_bg: "#075985",
-      card_bg_color: "#f0f9ff",
-      card_border_color: "#0284c7",
-      header_bg_color: "#0e7490",
-      header_text_color: "#f0f9ff",
-      footer_bg_color: "#164e63",
-      footer_text_color: "#e0f2fe",
-    },
-  },
-  {
-    name: "Emerald Forest",
-    theme: {
-      ...defaultTheme,
-      primary_bg_color: "#065f46",
-      secondary_bg_color: "#047857",
-      accent_bg_color: "#059669",
-      primary_text_color: "#ecfdf5",
-      secondary_text_color: "#d1fae5",
-      accent_text_color: "#fbbf24",
-      link_color: "#10b981",
-      link_hover_color: "#059669",
-      primary_button_bg: "#dc2626",
-      primary_button_text: "#ffffff",
-      primary_button_hover_bg: "#b91c1c",
-      secondary_button_bg: "#10b981",
-      secondary_button_text: "#ffffff",
-      secondary_button_hover_bg: "#059669",
-      card_bg_color: "#ecfdf5",
-      card_border_color: "#a7f3d0",
-      header_bg_color: "#047857",
-      header_text_color: "#ecfdf5",
-      footer_bg_color: "#022c22",
-      footer_text_color: "#d1fae5",
-    },
-  },
-  {
-    name: "Sunset Vibes",
-    theme: {
-      ...defaultTheme,
-      primary_bg_color: "#fb7185",
-      secondary_bg_color: "#f43f5e",
-      accent_bg_color: "#ec4899",
-      primary_text_color: "#ffffff",
-      secondary_text_color: "#fce7f3",
-      accent_text_color: "#fbbf24",
-      link_color: "#fbbf24",
-      link_hover_color: "#f59e0b",
-      primary_button_bg: "#f59e0b",
-      primary_button_text: "#ffffff",
-      primary_button_hover_bg: "#d97706",
-      secondary_button_bg: "#be185d",
-      secondary_button_text: "#ffffff",
-      secondary_button_hover_bg: "#9d174d",
-      card_bg_color: "#fdf2f8",
-      card_border_color: "#f9a8d4",
-      header_bg_color: "#f43f5e",
+      primary_bg_color: "#121212",
+      secondary_bg_color: "#1e1e1e",
+      primary_text_color: "#e0e0e0",
+      secondary_text_color: "#bdbdbd",
+      card_bg_color: "#1e1e1e",
+      card_border_color: "#333333",
+      header_bg_color: "#1e1e1e",
       header_text_color: "#ffffff",
-      footer_bg_color: "#881337",
-      footer_text_color: "#fce7f3",
+      footer_bg_color: "#000000",
+      footer_text_color: "#e0e0e0",
     },
   },
   {
-    name: "Royal Luxury",
+    name: "Ocean Blue",
+    theme: {
+      ...defaultTheme,
+      primary_bg_color: "#0ea5e9",
+      secondary_bg_color: "#0284c7",
+      accent_bg_color: "#38bdf8",
+      primary_text_color: "#ffffff",
+      secondary_text_color: "#e0f2fe",
+      primary_button_bg: "#f59e0b",
+      header_bg_color: "#0284c7",
+      footer_bg_color: "#075985",
+    },
+  },
+  {
+    name: "Forest Green",
+    theme: {
+      ...defaultTheme,
+      primary_bg_color: "#059669",
+      secondary_bg_color: "#047857",
+      accent_bg_color: "#10b981",
+      primary_text_color: "#ffffff",
+      secondary_text_color: "#d1fae5",
+      primary_button_bg: "#dc2626",
+      header_bg_color: "#047857",
+      footer_bg_color: "#064e3b",
+    },
+  },
+  {
+    name: "Sunset Orange",
+    theme: {
+      ...defaultTheme,
+      primary_bg_color: "#ea580c",
+      secondary_bg_color: "#dc2626",
+      accent_bg_color: "#f97316",
+      primary_text_color: "#ffffff",
+      secondary_text_color: "#fed7aa",
+      primary_button_bg: "#1d4ed8",
+      header_bg_color: "#dc2626",
+      footer_bg_color: "#991b1b",
+    },
+  },
+  {
+    name: "Royal Purple",
     theme: {
       ...defaultTheme,
       primary_bg_color: "#7c3aed",
@@ -204,61 +136,39 @@ const presetThemes = [
       accent_bg_color: "#8b5cf6",
       primary_text_color: "#ffffff",
       secondary_text_color: "#e9d5ff",
-      accent_text_color: "#fbbf24",
-      link_color: "#a78bfa",
-      link_hover_color: "#8b5cf6",
-      primary_button_bg: "#fbbf24",
-      primary_button_text: "#1f2937",
-      primary_button_hover_bg: "#f59e0b",
-      secondary_button_bg: "#5b21b6",
-      secondary_button_text: "#ffffff",
-      secondary_button_hover_bg: "#4c1d95",
-      card_bg_color: "#faf5ff",
-      card_border_color: "#c4b5fd",
+      primary_button_bg: "#f59e0b",
       header_bg_color: "#6d28d9",
-      header_text_color: "#ffffff",
-      footer_bg_color: "#3730a3",
-      footer_text_color: "#e9d5ff",
+      footer_bg_color: "#581c87",
     },
   },
 ];
 
 interface ThemeCustomizerProps {
   initialTheme?: ProductTheme;
-  onChange: (theme: ProductTheme | null) => void;
+  onChange: (theme: ProductTheme) => void;
 }
 
 export function ThemeCustomizer({
-  initialTheme,
+  initialTheme = defaultTheme,
   onChange,
 }: ThemeCustomizerProps) {
-  const [theme, setTheme] = useState<ProductTheme | null>(initialTheme || null);
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
-  const [hasUserSelectedTheme, setHasUserSelectedTheme] = useState<boolean>(
-    !!initialTheme
+  const [theme, setTheme] = useState<ProductTheme>(
+    initialTheme || defaultTheme
   );
+  const [selectedPreset, setSelectedPreset] = useState<string>("Default");
 
   const handleChange = (key: keyof ProductTheme, value: string) => {
-    const currentTheme = theme || defaultTheme;
-    const updatedTheme = { ...currentTheme, [key]: value };
+    const updatedTheme = { ...theme, [key]: value };
     setTheme(updatedTheme);
-    setHasUserSelectedTheme(true);
     onChange(updatedTheme);
     setSelectedPreset(""); // Clear preset selection when manually changing colors
   };
 
   const applyPreset = (presetTheme: ProductTheme, presetName: string) => {
-    console.log(`🎨 Applying preset theme: ${presetName}`, presetTheme);
-    const mergedTheme = { ...defaultTheme, ...presetTheme };
+    const mergedTheme = { ...theme, ...presetTheme };
     setTheme(mergedTheme);
-    setHasUserSelectedTheme(true);
     onChange(mergedTheme);
     setSelectedPreset(presetName);
-
-    // Show user feedback
-    console.log(
-      `✅ Theme "${presetName}" applied successfully! Colors will be saved when product is saved.`
-    );
   };
 
   return (
@@ -278,40 +188,13 @@ export function ThemeCustomizer({
             <TabsTrigger value="typography">✍️ Typography</TabsTrigger>
             <TabsTrigger value="preview">👀 Preview</TabsTrigger>
           </TabsList>
+
           <TabsContent value="presets">
             <div className="space-y-4">
               <div className="text-sm text-gray-600 mb-4">
                 Choose from our professionally designed color themes or
                 customize your own colors in the Custom Colors tab.
               </div>
-
-              {!hasUserSelectedTheme && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-center gap-2 text-blue-800">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="font-medium">No theme selected yet</span>
-                  </div>
-                  <p className="text-sm text-blue-600 mt-1">
-                    Select a preset theme below to apply colors to your product
-                    page.
-                  </p>
-                </div>
-              )}
-
-              {selectedPreset && hasUserSelectedTheme && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="font-medium">
-                      "{selectedPreset}" theme selected
-                    </span>
-                  </div>
-                  <p className="text-sm text-green-600 mt-1">
-                    Colors will be saved to database when you save the product.
-                  </p>
-                </div>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {presetThemes.map((preset) => (
                   <ThemePresetCard
@@ -324,24 +207,10 @@ export function ThemeCustomizer({
                 ))}
               </div>
             </div>
-          </TabsContent>{" "}
+          </TabsContent>
+
           <TabsContent value="colors">
             <div className="space-y-6">
-              {!hasUserSelectedTheme && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-center gap-2 text-yellow-800">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="font-medium">
-                      Select a preset theme first
-                    </span>
-                  </div>
-                  <p className="text-sm text-yellow-600 mt-1">
-                    Choose a preset theme from the "🌟 Preset Themes" tab, then
-                    come back here to customize individual colors.
-                  </p>
-                </div>
-              )}
-
               <div className="text-sm text-gray-600 mb-4">
                 Customize individual colors for your product page. Changes here
                 will override preset selections.
@@ -355,27 +224,24 @@ export function ThemeCustomizer({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorPicker
                       label="Primary Background"
-                      value={(theme || defaultTheme).primary_bg_color}
+                      value={theme.primary_bg_color}
                       onChange={(color) =>
                         handleChange("primary_bg_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Secondary Background"
-                      value={(theme || defaultTheme).secondary_bg_color}
+                      value={theme.secondary_bg_color}
                       onChange={(color) =>
                         handleChange("secondary_bg_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Accent Background"
-                      value={(theme || defaultTheme).accent_bg_color}
+                      value={theme.accent_bg_color}
                       onChange={(color) =>
                         handleChange("accent_bg_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                   </div>
                 </div>
@@ -387,27 +253,24 @@ export function ThemeCustomizer({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorPicker
                       label="Primary Text"
-                      value={(theme || defaultTheme).primary_text_color}
+                      value={theme.primary_text_color}
                       onChange={(color) =>
                         handleChange("primary_text_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Secondary Text"
-                      value={(theme || defaultTheme).secondary_text_color}
+                      value={theme.secondary_text_color}
                       onChange={(color) =>
                         handleChange("secondary_text_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Accent Text"
-                      value={(theme || defaultTheme).accent_text_color}
+                      value={theme.accent_text_color}
                       onChange={(color) =>
                         handleChange("accent_text_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                   </div>
                 </div>
@@ -419,35 +282,31 @@ export function ThemeCustomizer({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorPicker
                       label="Primary Button Background"
-                      value={(theme || defaultTheme).primary_button_bg}
+                      value={theme.primary_button_bg}
                       onChange={(color) =>
                         handleChange("primary_button_bg", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Primary Button Text"
-                      value={(theme || defaultTheme).primary_button_text}
+                      value={theme.primary_button_text}
                       onChange={(color) =>
                         handleChange("primary_button_text", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Secondary Button Background"
-                      value={(theme || defaultTheme).secondary_button_bg}
+                      value={theme.secondary_button_bg}
                       onChange={(color) =>
                         handleChange("secondary_button_bg", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Secondary Button Text"
-                      value={(theme || defaultTheme).secondary_button_text}
+                      value={theme.secondary_button_text}
                       onChange={(color) =>
                         handleChange("secondary_button_text", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                   </div>
                 </div>
@@ -459,65 +318,59 @@ export function ThemeCustomizer({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorPicker
                       label="Card Background"
-                      value={(theme || defaultTheme).card_bg_color}
+                      value={theme.card_bg_color}
                       onChange={(color) => handleChange("card_bg_color", color)}
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Card Border"
-                      value={(theme || defaultTheme).card_border_color}
+                      value={theme.card_border_color}
                       onChange={(color) =>
                         handleChange("card_border_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Header Background"
-                      value={(theme || defaultTheme).header_bg_color}
+                      value={theme.header_bg_color}
                       onChange={(color) =>
                         handleChange("header_bg_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Header Text"
-                      value={(theme || defaultTheme).header_text_color}
+                      value={theme.header_text_color}
                       onChange={(color) =>
                         handleChange("header_text_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Footer Background"
-                      value={(theme || defaultTheme).footer_bg_color}
+                      value={theme.footer_bg_color}
                       onChange={(color) =>
                         handleChange("footer_bg_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                     <ColorPicker
                       label="Footer Text"
-                      value={(theme || defaultTheme).footer_text_color}
+                      value={theme.footer_text_color}
                       onChange={(color) =>
                         handleChange("footer_text_color", color)
                       }
-                      disabled={!hasUserSelectedTheme}
                     />
                   </div>
                 </div>
               </div>
             </div>
           </TabsContent>
+
           <TabsContent value="typography">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="font_family">Font Family</Label>
                 <select
                   id="font_family"
-                  value={(theme || defaultTheme).font_family}
+                  value={theme.font_family}
                   onChange={(e) => handleChange("font_family", e.target.value)}
                   className="w-full p-2 border rounded-md"
-                  disabled={!hasUserSelectedTheme}
                 >
                   <option value="Inter, sans-serif">Inter</option>
                   <option value="Arial, sans-serif">Arial</option>
@@ -537,12 +390,11 @@ export function ThemeCustomizer({
                   <Input
                     id="h1_font_size"
                     type="text"
-                    value={(theme || defaultTheme).h1_font_size}
+                    value={theme.h1_font_size}
                     onChange={(e) =>
                       handleChange("h1_font_size", e.target.value)
                     }
                     placeholder="2.5rem"
-                    disabled={!hasUserSelectedTheme}
                   />
                 </div>
 
@@ -550,12 +402,11 @@ export function ThemeCustomizer({
                   <Label htmlFor="h1_font_weight">H1 Font Weight</Label>
                   <select
                     id="h1_font_weight"
-                    value={(theme || defaultTheme).h1_font_weight}
+                    value={theme.h1_font_weight}
                     onChange={(e) =>
                       handleChange("h1_font_weight", e.target.value)
                     }
                     className="w-full p-2 border rounded-md"
-                    disabled={!hasUserSelectedTheme}
                   >
                     <option value="400">Normal</option>
                     <option value="500">Medium</option>
@@ -567,75 +418,65 @@ export function ThemeCustomizer({
               </div>
             </div>
           </TabsContent>
+
           <TabsContent value="preview">
             <div className="space-y-4">
               <h3 className="text-lg font-medium mb-4">Live Preview</h3>
-              {!hasUserSelectedTheme ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                  <div className="text-gray-500 mb-2">No theme selected</div>
-                  <p className="text-sm text-gray-400">
-                    Select a preset theme to see the live preview
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className="p-6 rounded-lg border-2"
+              <div
+                className="p-6 rounded-lg border-2"
+                style={{
+                  backgroundColor: theme.primary_bg_color,
+                  color: theme.primary_text_color,
+                  fontFamily: theme.font_family,
+                  borderColor: theme.card_border_color,
+                }}
+              >
+                <h1
                   style={{
-                    backgroundColor: (theme || defaultTheme).primary_bg_color,
-                    color: (theme || defaultTheme).primary_text_color,
-                    fontFamily: (theme || defaultTheme).font_family,
-                    borderColor: (theme || defaultTheme).card_border_color,
+                    fontSize: theme.h1_font_size,
+                    fontWeight: theme.h1_font_weight,
+                    color: theme.header_text_color,
+                    marginBottom: "1rem",
                   }}
                 >
-                  <h1
+                  Your Product Title
+                </h1>
+                <p
+                  style={{
+                    color: theme.secondary_text_color,
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  This is how your product description will look with the
+                  current theme settings.
+                </p>
+                <div className="flex gap-3">
+                  <button
                     style={{
-                      fontSize: (theme || defaultTheme).h1_font_size,
-                      fontWeight: (theme || defaultTheme).h1_font_weight,
-                      color: (theme || defaultTheme).header_text_color,
-                      marginBottom: "1rem",
+                      backgroundColor: theme.primary_button_bg,
+                      color: theme.primary_button_text,
+                      padding: theme.button_padding,
+                      borderRadius: theme.border_radius_sm,
+                      border: "none",
+                      cursor: "pointer",
                     }}
                   >
-                    Your Product Title
-                  </h1>
-                  <p
+                    Primary Button
+                  </button>
+                  <button
                     style={{
-                      color: (theme || defaultTheme).secondary_text_color,
-                      marginBottom: "1.5rem",
+                      backgroundColor: theme.secondary_button_bg,
+                      color: theme.secondary_button_text,
+                      padding: theme.button_padding,
+                      borderRadius: theme.border_radius_sm,
+                      border: "none",
+                      cursor: "pointer",
                     }}
                   >
-                    This is how your product description will look with the
-                    current theme settings.
-                  </p>
-                  <div className="flex gap-3">
-                    <button
-                      style={{
-                        backgroundColor: (theme || defaultTheme)
-                          .primary_button_bg,
-                        color: (theme || defaultTheme).primary_button_text,
-                        padding: (theme || defaultTheme).button_padding,
-                        borderRadius: (theme || defaultTheme).border_radius_sm,
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Primary Button
-                    </button>
-                    <button
-                      style={{
-                        backgroundColor: (theme || defaultTheme)
-                          .secondary_button_bg,
-                        color: (theme || defaultTheme).secondary_button_text,
-                        padding: (theme || defaultTheme).button_padding,
-                        borderRadius: (theme || defaultTheme).border_radius_sm,
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Secondary Button
-                    </button>
-                  </div>
+                    Secondary Button
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

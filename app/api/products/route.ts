@@ -432,13 +432,20 @@ async function ensureTablesExist() {
     console.log("Database tables checked/created successfully.");
   } catch (error: unknown) {
     console.error("Error ensuring tables exist:", error);
-    if (error && typeof error === 'object' && 'message' in error) {
+    if (error && typeof error === "object" && "message" in error) {
       console.error("Error details:", {
         message: (error as { message: string }).message,
-        code: 'code' in error ? (error as { code: string }).code : undefined,
-        errno: 'errno' in error ? (error as { errno: number }).errno : undefined,
-        sqlState: 'sqlState' in error ? (error as { sqlState: string }).sqlState : undefined,
-        sqlMessage: 'sqlMessage' in error ? (error as { sqlMessage: string }).sqlMessage : undefined,
+        code: "code" in error ? (error as { code: string }).code : undefined,
+        errno:
+          "errno" in error ? (error as { errno: number }).errno : undefined,
+        sqlState:
+          "sqlState" in error
+            ? (error as { sqlState: string }).sqlState
+            : undefined,
+        sqlMessage:
+          "sqlMessage" in error
+            ? (error as { sqlMessage: string }).sqlMessage
+            : undefined,
       });
     }
     throw error;
@@ -486,6 +493,7 @@ export async function POST(req: NextRequest) {
     const themeData = formData.get("theme") as string;
     const ingredientsData = formData.get("ingredients") as string;
     const whyChooseData = formData.get("why_choose") as string;
+    const reviewsData = formData.get("reviews") as string;
 
     // Generate slug and check for duplicates
     const slug = generateSlug(name);
@@ -530,6 +538,9 @@ export async function POST(req: NextRequest) {
     const why_choose: WhyChoose[] = whyChooseData
       ? (JSON.parse(whyChooseData) as WhyChoose[])
       : [];
+    const reviews: any[] = reviewsData
+      ? (JSON.parse(reviewsData) as any[])
+      : [];
     const theme: ProductTheme | undefined = themeData
       ? (JSON.parse(themeData) as ProductTheme)
       : undefined;
@@ -564,6 +575,37 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Process review avatar images and add to reviews array
+    for (let i = 0; i < reviews.length; i++) {
+      const reviewAvatarFile = formData.get(`review_avatar_${i}`) as File;
+      // Also check for existing avatar path if editing
+      const existingAvatarPath = formData.get(
+        `review_avatar_${i}_existing`
+      ) as string;
+
+      if (reviewAvatarFile) {
+        const buffer = Buffer.from(await reviewAvatarFile.arrayBuffer());
+        const file = {
+          buffer,
+          originalname: reviewAvatarFile.name,
+          mimetype: reviewAvatarFile.type,
+        } as Express.Multer.File;
+
+        const avatarPath = await processImage(
+          file,
+          "public/images/avatars",
+          `avatar_${slug}_${i}`
+        );
+        reviews[i].avatar = avatarPath;
+      } else if (existingAvatarPath) {
+        // If no new file, but an existing path is sent, keep the existing path
+        reviews[i].avatar = existingAvatarPath;
+      } else {
+        // If no new file and no existing path, set avatar to null or undefined
+        reviews[i].avatar = null;
+      }
+    }
+
     // Construct the product object for createProduct
     const productData = {
       name,
@@ -579,6 +621,7 @@ export async function POST(req: NextRequest) {
       money_back_days,
       ingredients,
       why_choose,
+      reviews,
       theme,
     };
 
@@ -665,6 +708,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const theme = formData.get("theme") as string;
     const ingredients = formData.get("ingredients") as string;
     const why_choose = formData.get("why_choose") as string;
+    const reviews = formData.get("reviews") as string;
 
     // Update product
     await connection.query(`
@@ -775,6 +819,32 @@ export async function PUT(request: Request, { params }: RouteParams) {
             ${item.display_order}
           )
         `);
+      }
+    }
+
+    // Update reviews
+    if (reviews) {
+      const reviewsData = JSON.parse(reviews);
+      // First delete existing reviews
+      await connection.query(`DELETE FROM reviews WHERE product_id = ?`, [
+        params.id,
+      ]);
+
+      // Then insert new reviews
+      for (const review of reviewsData) {
+        await connection.query(
+          `
+          INSERT INTO reviews (
+            product_id, name, address, rating, review_text
+          ) VALUES (?, ?, ?, ?, ?)`,
+          [
+            params.id,
+            review.name,
+            review.address,
+            review.rating,
+            review.review_text,
+          ]
+        );
       }
     }
 

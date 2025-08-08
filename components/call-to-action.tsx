@@ -22,10 +22,10 @@ export default function CallToAction({ product }: CallToActionProps) {
         className="relative overflow-hidden"
       >
         {/* Different background colors for light and dark modes */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-indigo-600 dark:from-indigo-800 dark:to-indigo-700 rounded-xl md:rounded-3xl"></div>
-        <div className="absolute inset-0 bg-[url('/images/pattern-bg.png')] opacity-10 dark:opacity-[var(--cta-pattern-opacity)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-3xl"></div>
+        <div className="absolute inset-0 bg-[url('/images/pattern-bg.png')] opacity-10"></div>
 
-        <div className="relative backdrop-blur-sm rounded-xl md:rounded-3xl p-4 md:p-12 lg:p-16 border border-indigo-500/30 dark:border-indigo-400/40 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
+        <div className="relative backdrop-blur-sm rounded-xl md:rounded-3xl p-4 md:p-12 lg:p-16 border border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.3)]">
           <div className="grid md:grid-cols-2 gap-4 md:gap-8 items-center">
             <div className="max-w-xl">
               <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-6 text-white drop-shadow-md">
@@ -85,7 +85,10 @@ export default function CallToAction({ product }: CallToActionProps) {
               <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src={getImagePath(product?.product_image, "/images/placeholder.png")}
+                  src={getImagePath(
+                    product?.product_image,
+                    "/images/placeholder.png"
+                  )}
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"

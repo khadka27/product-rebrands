@@ -78,6 +78,14 @@ interface Product {
     description: string;
     display_order: number;
   }[];
+  reviews?: {
+    id: number;
+    name: string;
+    address: string;
+    rating: number;
+    review_text: string;
+    avatar?: string;
+  }[];
 }
 
 export default function EditProductPage({
@@ -158,6 +166,7 @@ export default function EditProductPage({
               },
               ingredients: storeData.ingredients || [],
               why_choose: storeData.why_choose || [],
+              reviews: storeData.reviews || [],
             };
             setProduct(formattedData);
             setLoading(false);
@@ -224,6 +233,7 @@ export default function EditProductPage({
           },
           ingredients: data.ingredients || [],
           why_choose: data.why_choose || [],
+          reviews: data.reviews || [],
         };
 
         setProduct(formattedData);
@@ -377,6 +387,53 @@ export default function EditProductPage({
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Customer Reviews Section */}
+            {product.reviews && product.reviews.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold">Customer Reviews</h3>
+                <div className="grid gap-4 mt-2">
+                  {product.reviews.map((review) => (
+                    <div key={review.id} className="p-3 border rounded-md">
+                      <div className="flex items-start gap-3">
+                        {review.avatar && (
+                          <img
+                            src={`/images/avatars/${review.avatar}`}
+                            alt={`${review.name}'s avatar`}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium">{review.name}</span>
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={
+                                    i < review.rating
+                                      ? "text-yellow-400"
+                                      : "text-gray-300"
+                                  }
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-gray-600 text-sm mb-2">
+                            {review.review_text}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {review.address}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

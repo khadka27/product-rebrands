@@ -3,8 +3,10 @@ import { generateSlug } from "../utils";
 import { generateProductId } from "../server-utils";
 import type { Ingredient } from "./ingredient";
 import type { WhyChoose } from "./why-choose";
+import type { Review } from "./review";
 import { createIngredient, deleteIngredientByProductId } from "./ingredient";
 import { createWhyChoose, deleteWhyChooseByProductId } from "./why-choose";
+import { getReviewsByProductId, deleteReviewsByProductId } from "./review";
 import {
   createOrUpdateProductTheme,
   deleteProductThemeByProductId,
@@ -26,6 +28,7 @@ export interface Product {
   updated_at?: Date;
   ingredients?: Ingredient[];
   why_choose?: WhyChoose[];
+  reviews?: Review[];
   theme?: ProductTheme;
 }
 
@@ -100,6 +103,21 @@ export async function createProduct(
           // Pass the connection to createWhyChoose
           await createWhyChoose(
             { ...whyChooseItem, product_id: productId },
+            connection
+          );
+        }
+      }
+
+      // Insert Reviews
+      if (product.reviews && product.reviews.length > 0) {
+        for (const review of product.reviews) {
+          // Import and use createReview with the existing connection
+          const { createReview } = await import("./review");
+          await createReview(
+            {
+              ...review,
+              product_id: productId,
+            },
             connection
           );
         }
@@ -308,6 +326,25 @@ export async function updateProduct(
         }
       }
 
+      // Update Reviews (Delete existing and insert new)
+      if (product.reviews !== undefined) {
+        const { deleteReviewsByProductId, createReview } = await import(
+          "./review"
+        );
+        await deleteReviewsByProductId(productId, connection);
+        if (product.reviews && product.reviews.length > 0) {
+          for (const review of product.reviews) {
+            await createReview(
+              {
+                ...review,
+                product_id: productId,
+              },
+              connection
+            );
+          }
+        }
+      }
+
       // Update Theme (Create or Update)
       if (product.theme !== undefined) {
         await createOrUpdateProductTheme(
@@ -448,6 +485,9 @@ export async function getProductWithDetails(
         [product.product_id]
       );
 
+      // Fetch reviews for the product
+      const reviewRows = await getReviewsByProductId(product.product_id);
+
       const hasThemeData =
         product.primary_bg_color !== null &&
         product.primary_bg_color !== undefined;
@@ -552,6 +592,7 @@ export async function getProductWithDetails(
         theme,
         ingredients: ingredientRows || [],
         why_choose: whyChooseRows || [],
+        reviews: reviewRows || [],
       };
     } catch (error) {
       console.error("Error fetching product with details:", error);
@@ -647,73 +688,4 @@ export async function getProductStats(): Promise<any> {
   });
 }
 
-export interface ProductTheme {
-  theme_id: string;
-  product_id: string;
-  primary_bg_color: string;
-  secondary_bg_color: string;
-  accent_bg_color: string;
-  primary_text_color: string;
-  secondary_text_color: string;
-  accent_text_color: string;
-  link_color: string;
-  link_hover_color: string;
-  primary_button_bg: string;
-  primary_button_text: string;
-  primary_button_hover_bg: string;
-  secondary_button_bg: string;
-  secondary_button_text: string;
-  secondary_button_hover_bg: string;
-  card_bg_color: string;
-  card_border_color: string;
-  card_shadow_color: string;
-  header_bg_color: string;
-  header_text_color: string;
-  footer_bg_color: string;
-  footer_text_color: string;
-  font_family: string;
-  h1_font_size: string;
-  h1_font_weight: string;
-  h2_font_size: string;
-  h2_font_weight: string;
-  h3_font_size: string;
-  h3_font_weight: string;
-  body_font_size: string;
-  body_line_height: string;
-  section_padding: string;
-  card_padding: string;
-  button_padding: string;
-  border_radius_sm: string;
-  border_radius_md: string;
-  border_radius_lg: string;
-  border_radius_xl: string;
-  max_width: string;
-  container_padding: string;
-  gradient_start: string;
-  gradient_end: string;
-  shadow_color: string;
-  custom_css: string;
-  // Dark mode colors
-  dark_primary_bg_color?: string;
-  dark_secondary_bg_color?: string;
-  dark_accent_bg_color?: string;
-  dark_primary_text_color?: string;
-  dark_secondary_text_color?: string;
-  dark_accent_text_color?: string;
-  dark_link_color?: string;
-  dark_link_hover_color?: string;
-  dark_primary_button_bg?: string;
-  dark_primary_button_text?: string;
-  dark_primary_button_hover_bg?: string;
-  dark_secondary_button_bg?: string;
-  dark_secondary_button_text?: string;
-  dark_secondary_button_hover_bg?: string;
-  dark_card_bg_color?: string;
-  dark_card_border_color?: string;
-  dark_card_shadow_color?: string;
-  dark_header_bg_color?: string;
-  dark_header_text_color?: string;
-  dark_footer_bg_color?: string;
-  dark_footer_text_color?: string;
-  dark_shadow_color?: string;
-}
+// Removed duplicate interface definition as it's already imported from "./product-theme"
