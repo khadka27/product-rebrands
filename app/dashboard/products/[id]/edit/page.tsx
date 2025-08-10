@@ -117,7 +117,13 @@ export default function EditProductPage({
       try {
         console.log("Fetching product with ID:", resolvedParams.id);
 
-        const response = await fetch(`/api/products/${resolvedParams.id}`);
+        // Test database connection first
+        const testResponse = await fetch("/api/test-db");
+        console.log("Database test response:", testResponse.ok);
+
+        const response = await fetch(
+          `/api/products-simple/${resolvedParams.id}`
+        );
         if (!response.ok) {
           throw new Error(
             `Failed to fetch product: ${response.status} ${response.statusText}`
@@ -127,23 +133,26 @@ export default function EditProductPage({
 
         console.log("Fetched product data:", data);
 
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch product");
+        }
+
+        const productData = data.product;
+
         // Format the data
         const formattedData: Product = {
-          id: data.product_id || data.id,
-          name: data.name || "",
-          paragraph: data.paragraph || "",
-          bullet_points:
-            typeof data.bullet_points === "string"
-              ? JSON.parse(data.bullet_points || "[]")
-              : data.bullet_points || [],
-          redirect_link: data.redirect_link || "",
-          generated_link: data.generated_link || "",
-          money_back_days: data.money_back_days || 60,
-          image: data.product_image || data.image,
-          badge_image: data.product_badge || data.badge_image,
-          theme: data.theme || {
+          id: productData.product_id || productData.id,
+          name: productData.name || "",
+          paragraph: productData.paragraph || "",
+          bullet_points: productData.bullet_points || [],
+          redirect_link: productData.redirect_link || "",
+          generated_link: productData.generated_link || "",
+          money_back_days: productData.money_back_days || 60,
+          image: productData.image,
+          badge_image: productData.badge_image,
+          theme: {
             theme_id: "",
-            product_id: data.product_id || data.id,
+            product_id: productData.product_id || productData.id,
             primary_bg_color: "#ffffff",
             secondary_bg_color: "#f44336",
             accent_bg_color: "#ffc107",
@@ -188,17 +197,9 @@ export default function EditProductPage({
             shadow_color: "",
             custom_css: "",
           },
-          ingredients: (data.ingredients || []).map((ingredient: any) => ({
-            ...ingredient,
-            image_preview: ingredient.image || undefined,
-          })),
-          why_choose: data.why_choose || [],
-          reviews: (data.reviews || []).map((review: any) => ({
-            ...review,
-            avatar_preview: review.avatar
-              ? `/images/avatars/${review.avatar}`
-              : undefined,
-          })),
+          ingredients: [],
+          why_choose: [],
+          reviews: [],
         };
 
         console.log("Formatted data:", formattedData);
