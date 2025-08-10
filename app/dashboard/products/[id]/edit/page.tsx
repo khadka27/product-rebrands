@@ -118,19 +118,33 @@ export default function EditProductPage({
         console.log("Fetching product with ID:", resolvedParams.id);
 
         // Test database connection first
+        console.log("Testing database connection...");
         const testResponse = await fetch("/api/test-db");
         console.log("Database test response:", testResponse.ok);
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log("Database test result:", testData);
+        }
 
-        const response = await fetch(
-          `/api/products-simple/${resolvedParams.id}`
+        const apiUrl = `/api/products-simple/${resolvedParams.id}`;
+        console.log("Fetching from URL:", apiUrl);
+
+        const response = await fetch(apiUrl);
+        console.log(
+          "API response status:",
+          response.status,
+          response.statusText
         );
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.log("API error response:", errorText);
           throw new Error(
             `Failed to fetch product: ${response.status} ${response.statusText}`
           );
         }
-        const data = await response.json();
 
+        const data = await response.json();
         console.log("Fetched product data:", data);
 
         if (!data.success) {

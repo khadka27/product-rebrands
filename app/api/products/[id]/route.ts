@@ -454,35 +454,59 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  let connection;
   try {
     const productId = params.id;
+    console.log("Deleting product:", productId);
+
+    connection = await db.getConnection();
 
     // Start a transaction
-    await db.query("BEGIN");
+    await connection.beginTransaction();
 
     try {
       // Delete related records first
-      await db.query(`DELETE FROM product_themes WHERE product_id = $1`, [
-        productId,
-      ]);
-      await db.query(`DELETE FROM product_ingredients WHERE product_id = $1`, [
-        productId,
-      ]);
-      await db.query(`DELETE FROM product_why_choose WHERE product_id = $1`, [
-        productId,
-      ]);
+      await connection.query(
+        `DELETE FROM product_themes WHERE product_id = ?`,
+        [productId]
+      );
+      await connection.query(
+        `DELETE FROM product_ingredients WHERE product_id = ?`,
+        [productId]
+      );
+      await connection.query(
+        `DELETE FROM product_why_choose WHERE product_id = ?`,
+        [productId]
+      );
+      await connection.query(
+        `DELETE FROM customer_reviews WHERE product_id = ?`,
+        [productId]
+      );
 
       // Delete the product
-      await db.query(`DELETE FROM products WHERE product_id = $1`, [productId]);
+      const [result] = (await connection.query(
+        `DELETE FROM products WHERE product_id = ?`,
+        [productId]
+      )) as any;
+
+      if (result.affectedRows === 0) {
+        await connection.rollback();
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
 
       // Commit the transaction
-      await db.query("COMMIT");
+      await connection.commit();
 
-      return NextResponse.json({ success: true });
-    } catch (error) {
-      // Rollback the transaction on error
-      await db.query("ROLLBACK");
-      throw error;
+      return NextResponse.json({
+        success: true,
+        message: "Product deleted successfully",
+      });
+    } catch (transactionError) {
+      await connection.rollback();
+      throw transactionError;
     }
   } catch (error) {
     console.error("Error deleting product:", error);
@@ -490,5 +514,9 @@ export async function DELETE(
       { error: "Failed to delete product" },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
