@@ -16,44 +16,55 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  let connection;
   try {
     const productId = params.id;
 
-    // Fetch product
-    const productResult = await db.query(
-      `SELECT * FROM products WHERE product_id = $1`,
-      [productId]
-    );
+    // Get a single connection for all queries
+    connection = await db.getConnection();
 
-    if (productResult.rows.length === 0) {
+    // Fetch product
+    const [productResult] = (await connection.query(
+      `SELECT * FROM products WHERE product_id = ?`,
+      [productId]
+    )) as any;
+
+    if (productResult.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const product = productResult.rows[0];
+    const product = productResult[0];
 
     // Fetch theme
-    const themeResult = await db.query(
-      `SELECT * FROM product_themes WHERE product_id = $1`,
+    const [themeResult] = (await connection.query(
+      `SELECT * FROM product_themes WHERE product_id = ?`,
       [productId]
-    );
+    )) as any;
 
     // Fetch ingredients
-    const ingredientsResult = await db.query(
-      `SELECT * FROM product_ingredients WHERE product_id = $1 ORDER BY display_order`,
+    const [ingredientsResult] = (await connection.query(
+      `SELECT * FROM product_ingredients WHERE product_id = ? ORDER BY display_order`,
       [productId]
-    );
+    )) as any;
 
     // Fetch why choose items
-    const whyChooseResult = await db.query(
-      `SELECT * FROM product_why_choose WHERE product_id = $1 ORDER BY display_order`,
+    const [whyChooseResult] = (await connection.query(
+      `SELECT * FROM product_why_choose WHERE product_id = ? ORDER BY display_order`,
       [productId]
-    );
+    )) as any;
+
+    // Fetch reviews
+    const [reviewsResult] = (await connection.query(
+      `SELECT * FROM customer_reviews WHERE product_id = ? ORDER BY id`,
+      [productId]
+    )) as any;
 
     return NextResponse.json({
       ...product,
-      theme: themeResult.rows[0] || null,
-      ingredients: ingredientsResult.rows,
-      why_choose: whyChooseResult.rows,
+      theme: themeResult[0] || null,
+      ingredients: ingredientsResult,
+      why_choose: whyChooseResult,
+      reviews: reviewsResult,
     });
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -61,6 +72,10 @@ export async function GET(
       { error: "Failed to fetch product" },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
