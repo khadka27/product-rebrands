@@ -20,40 +20,39 @@ export async function GET(
     const productId = params.id;
 
     // Fetch product
-    const productResult = await db.query(
-      `SELECT * FROM products WHERE product_id = $1`,
+
+    const [rows]: any = await db.query(
+      `SELECT * FROM products WHERE product_id = ?`,
       [productId]
     );
-
-    if (productResult.rows.length === 0) {
+    if (rows.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
-
-    const product = productResult.rows[0];
+    const product = rows[0];
 
     // Fetch theme
-    const themeResult = await db.query(
-      `SELECT * FROM product_themes WHERE product_id = $1`,
+    const [themeRows]: any = await db.query(
+      `SELECT * FROM product_themes WHERE product_id = ?`,
       [productId]
     );
 
     // Fetch ingredients
-    const ingredientsResult = await db.query(
-      `SELECT * FROM product_ingredients WHERE product_id = $1 ORDER BY display_order`,
+    const [ingredientsRows]: any = await db.query(
+      `SELECT * FROM product_ingredients WHERE product_id = ? ORDER BY display_order`,
       [productId]
     );
 
     // Fetch why choose items
-    const whyChooseResult = await db.query(
-      `SELECT * FROM product_why_choose WHERE product_id = $1 ORDER BY display_order`,
+    const [whyChooseRows]: any = await db.query(
+      `SELECT * FROM product_why_choose WHERE product_id = ? ORDER BY display_order`,
       [productId]
     );
 
     return NextResponse.json({
       ...product,
-      theme: themeResult.rows[0] || null,
-      ingredients: ingredientsResult.rows,
-      why_choose: whyChooseResult.rows,
+      theme: themeRows[0] || null,
+      ingredients: ingredientsRows,
+      why_choose: whyChooseRows,
     });
   } catch (error) {
     console.error("Error fetching product:", error);
