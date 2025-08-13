@@ -6,6 +6,7 @@ CREATE TABLE reviews (
   address VARCHAR2(500) NOT NULL,
   rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
   review_text CLOB NOT NULL,
+  avatar VARCHAR2(500),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
