@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { product_id, name, address, rating, review_text } = body;
+    const { product_id, name, address, rating, review_text, avatar } = body;
 
     if (!product_id || !name || !address || !rating || !review_text) {
       return NextResponse.json(
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       address,
       rating,
       review_text,
+      avatar: avatar || null,
     });
 
     return NextResponse.json(review, { status: 201 });

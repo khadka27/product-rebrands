@@ -22,7 +22,13 @@ export default function TestimonialsSection({
           name: review.name,
           location: review.address,
           rating: review.rating,
-          image: `/placeholder-user.jpg`, // Use placeholder image for all reviews
+          image:
+            review.avatar && review.avatar.trim() !== ""
+              ? review.avatar.startsWith("/images/") ||
+                review.avatar.startsWith("/")
+                ? review.avatar
+                : `/images/${review.avatar}`
+              : "/placeholder-user.jpg",
         }))
       : [
           // Fallback testimonials if no reviews in database
