@@ -16,55 +16,44 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  let connection;
   try {
     const productId = params.id;
 
-    // Get a single connection for all queries
-    connection = await db.getConnection();
-
     // Fetch product
-    const [productResult] = (await connection.query(
-      `SELECT * FROM products WHERE product_id = ?`,
+    const productResult = await db.query(
+      `SELECT * FROM products WHERE product_id = $1`,
       [productId]
-    )) as any;
+    );
 
-    if (productResult.length === 0) {
+    if (productResult.rows.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const product = productResult[0];
+    const product = productResult.rows[0];
 
     // Fetch theme
-    const [themeResult] = (await connection.query(
-      `SELECT * FROM product_themes WHERE product_id = ?`,
+    const themeResult = await db.query(
+      `SELECT * FROM product_themes WHERE product_id = $1`,
       [productId]
-    )) as any;
+    );
 
     // Fetch ingredients
-    const [ingredientsResult] = (await connection.query(
-      `SELECT * FROM product_ingredients WHERE product_id = ? ORDER BY display_order`,
+    const ingredientsResult = await db.query(
+      `SELECT * FROM product_ingredients WHERE product_id = $1 ORDER BY display_order`,
       [productId]
-    )) as any;
+    );
 
     // Fetch why choose items
-    const [whyChooseResult] = (await connection.query(
-      `SELECT * FROM product_why_choose WHERE product_id = ? ORDER BY display_order`,
+    const whyChooseResult = await db.query(
+      `SELECT * FROM product_why_choose WHERE product_id = $1 ORDER BY display_order`,
       [productId]
-    )) as any;
-
-    // Fetch reviews
-    const [reviewsResult] = (await connection.query(
-      `SELECT * FROM customer_reviews WHERE product_id = ? ORDER BY id`,
-      [productId]
-    )) as any;
+    );
 
     return NextResponse.json({
       ...product,
-      theme: themeResult[0] || null,
-      ingredients: ingredientsResult,
-      why_choose: whyChooseResult,
-      reviews: reviewsResult,
+      theme: themeResult.rows[0] || null,
+      ingredients: ingredientsResult.rows,
+      why_choose: whyChooseResult.rows,
     });
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -72,10 +61,6 @@ export async function GET(
       { error: "Failed to fetch product" },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }
 
@@ -454,59 +439,35 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  let connection;
   try {
     const productId = params.id;
-    console.log("Deleting product:", productId);
-
-    connection = await db.getConnection();
 
     // Start a transaction
-    await connection.beginTransaction();
+    await db.query("BEGIN");
 
     try {
       // Delete related records first
-      await connection.query(
-        `DELETE FROM product_themes WHERE product_id = ?`,
-        [productId]
-      );
-      await connection.query(
-        `DELETE FROM product_ingredients WHERE product_id = ?`,
-        [productId]
-      );
-      await connection.query(
-        `DELETE FROM product_why_choose WHERE product_id = ?`,
-        [productId]
-      );
-      await connection.query(
-        `DELETE FROM customer_reviews WHERE product_id = ?`,
-        [productId]
-      );
+      await db.query(`DELETE FROM product_themes WHERE product_id = $1`, [
+        productId,
+      ]);
+      await db.query(`DELETE FROM product_ingredients WHERE product_id = $1`, [
+        productId,
+      ]);
+      await db.query(`DELETE FROM product_why_choose WHERE product_id = $1`, [
+        productId,
+      ]);
 
       // Delete the product
-      const [result] = (await connection.query(
-        `DELETE FROM products WHERE product_id = ?`,
-        [productId]
-      )) as any;
-
-      if (result.affectedRows === 0) {
-        await connection.rollback();
-        return NextResponse.json(
-          { error: "Product not found" },
-          { status: 404 }
-        );
-      }
+      await db.query(`DELETE FROM products WHERE product_id = $1`, [productId]);
 
       // Commit the transaction
-      await connection.commit();
+      await db.query("COMMIT");
 
-      return NextResponse.json({
-        success: true,
-        message: "Product deleted successfully",
-      });
-    } catch (transactionError) {
-      await connection.rollback();
-      throw transactionError;
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      // Rollback the transaction on error
+      await db.query("ROLLBACK");
+      throw error;
     }
   } catch (error) {
     console.error("Error deleting product:", error);
@@ -514,9 +475,5 @@ export async function DELETE(
       { error: "Failed to delete product" },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }

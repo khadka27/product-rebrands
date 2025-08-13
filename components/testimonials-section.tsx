@@ -17,32 +17,13 @@ export default function TestimonialsSection({
 
   const testimonials =
     reviews.length > 0
-      ? reviews.map((review, index) => {
-          // Derive image path from stored avatar
-          let imagePath = "/placeholder-user.jpg";
-          if (review.avatar) {
-            if (review.avatar.startsWith("http")) {
-              imagePath = review.avatar; // absolute URL
-            } else if (review.avatar.startsWith("/")) {
-              imagePath = review.avatar; // already rooted
-            } else if (
-              review.avatar.includes("/images") ||
-              review.avatar.includes("/avatars")
-            ) {
-              imagePath = review.avatar; // stored relative with folder info
-            } else {
-              // Assume filename only saved; prepend common folder
-              imagePath = `/images/avatars/${review.avatar}`;
-            }
-          }
-          return {
-            text: review.review_text,
-            name: review.name,
-            location: review.address,
-            rating: review.rating,
-            image: imagePath,
-          };
-        })
+      ? reviews.map((review, index) => ({
+          text: review.review_text,
+          name: review.name,
+          location: review.address,
+          rating: review.rating,
+          image: `/placeholder-user.jpg`, // Use placeholder image for all reviews
+        }))
       : [
           // Fallback testimonials if no reviews in database
           {
@@ -90,58 +71,55 @@ export default function TestimonialsSection({
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {testimonials.map((testimonial, index) => {
-              const stableKey = `${testimonial.name}-${index}`;
-              return (
-                <motion.div
-                  key={stableKey}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 relative"
-                >
-                  <Quote className="absolute top-3 right-3 w-4 h-4 md:w-8 md:h-8 text-blue-400" />
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                viewport={{ once: true, amount: 0.1 }}
+                className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 relative"
+              >
+                <Quote className="absolute top-3 right-3 w-4 h-4 md:w-8 md:h-8 text-blue-400" />
 
-                  <div className="flex items-center mb-3 md:mb-4">
-                    <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-blue-500/30 mr-2 md:mr-4">
-                      <Image
-                        src={testimonial.image || "/placeholder.svg"}
-                        alt={`${testimonial.name} photo`}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-bold text-white text-xs md:text-base">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-[0.65rem] md:text-sm text-gray-300">
-                        {testimonial.location}
-                      </p>
-                    </div>
+                <div className="flex items-center mb-3 md:mb-4">
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-blue-500/30 mr-2 md:mr-4">
+                    <Image
+                      src={testimonial.image || "/placeholder.svg"}
+                      alt={`${testimonial.name} photo`}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-
-                  <div className="flex mb-2 md:mb-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3 h-3 md:w-5 md:h-5 ${
-                          i < testimonial.rating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-500"
-                        }`}
-                      />
-                    ))}
+                  <div>
+                    <p className="font-bold text-white text-xs md:text-base">
+                      {testimonial.name}
+                    </p>
+                    <p className="text-[0.65rem] md:text-sm text-gray-300">
+                      {testimonial.location}
+                    </p>
                   </div>
+                </div>
 
-                  <p className="text-xs md:text-base text-gray-300 italic mb-3 md:mb-4 group-hover:text-white transition-colors duration-300 line-clamp-4 md:line-clamp-none">
-                    "{testimonial.text}"
-                  </p>
-                </motion.div>
-              );
-            })}
+                <div className="flex mb-2 md:mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-3 h-3 md:w-5 md:h-5 ${
+                        i < testimonial.rating
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-500"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <p className="text-xs md:text-base text-gray-300 italic mb-3 md:mb-4 group-hover:text-white transition-colors duration-300 line-clamp-4 md:line-clamp-none">
+                  "{testimonial.text}"
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </motion.div>

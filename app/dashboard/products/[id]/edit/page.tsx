@@ -91,82 +91,102 @@ interface Product {
 export default function EditProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
-    null
-  );
-
-  // Resolve params on mount
-  useEffect(() => {
-    const resolveParams = async () => {
-      const resolved = await params;
-      setResolvedParams(resolved);
-    };
-    resolveParams();
-  }, [params]);
 
   useEffect(() => {
-    if (!resolvedParams) return;
-
     const fetchProduct = async () => {
       try {
-        console.log("Fetching product with ID:", resolvedParams.id);
-
-        // Test database connection first
-        console.log("Testing database connection...");
-        const testResponse = await fetch("/api/test-db");
-        console.log("Database test response:", testResponse.ok);
-        if (testResponse.ok) {
-          const testData = await testResponse.json();
-          console.log("Database test result:", testData);
+        // First try to fetch from the store
+        const storeResponse = await fetch(`/api/store/products/${params.id}`);
+        if (storeResponse.ok) {
+          const storeData = await storeResponse.json();
+          if (storeData) {
+            // Format the store data to match our Product interface
+            const formattedData: Product = {
+              id: storeData.id,
+              name: storeData.name,
+              paragraph: storeData.paragraph || "",
+              bullet_points: storeData.bullet_points || [],
+              redirect_link: storeData.redirect_link || "",
+              generated_link: storeData.generated_link || "",
+              money_back_days: storeData.money_back_days || 0,
+              image: storeData.image,
+              badge_image: storeData.badge_image,
+              theme: storeData.theme || {
+                theme_id: "",
+                product_id: storeData.id,
+                primary_bg_color: "#ffffff",
+                secondary_bg_color: "#f44336",
+                accent_bg_color: "#ffc107",
+                primary_text_color: "#333333",
+                secondary_text_color: "#666666",
+                accent_text_color: "#ffc107",
+                link_color: "#3182ce",
+                link_hover_color: "#2c5282",
+                primary_button_bg: "#ff5722",
+                primary_button_text: "#ffffff",
+                primary_button_hover_bg: "#f44336",
+                secondary_button_bg: "#e0e0e0",
+                secondary_button_text: "#333333",
+                secondary_button_hover_bg: "#bdbdbd",
+                card_bg_color: "#ffffff",
+                card_border_color: "#e0e0e0",
+                card_shadow_color: "#0000001a",
+                header_bg_color: "#ffffff",
+                header_text_color: "#111111",
+                footer_bg_color: "#333333",
+                footer_text_color: "#ffffff",
+                font_family: "Inter, sans-serif",
+                h1_font_size: "2.5rem",
+                h1_font_weight: "700",
+                h2_font_size: "2rem",
+                h2_font_weight: "600",
+                h3_font_size: "1.5rem",
+                h3_font_weight: "500",
+                body_font_size: "1rem",
+                body_line_height: "1.5",
+                section_padding: "2rem",
+                card_padding: "1.5rem",
+                button_padding: "0.75rem 1.5rem",
+                border_radius_sm: "4px",
+                border_radius_md: "8px",
+                border_radius_lg: "12px",
+                border_radius_xl: "16px",
+                max_width: "1200px",
+                container_padding: "1rem",
+                gradient_start: "",
+                gradient_end: "",
+                shadow_color: "",
+                custom_css: "",
+              },
+              ingredients: storeData.ingredients || [],
+              why_choose: storeData.why_choose || [],
+              reviews: storeData.reviews || [],
+            };
+            setProduct(formattedData);
+            setLoading(false);
+            return;
+          }
         }
 
-        const apiUrl = `/api/products-simple/${resolvedParams.id}`;
-        console.log("Fetching from URL:", apiUrl);
-
-        const response = await fetch(apiUrl);
-        console.log(
-          "API response status:",
-          response.status,
-          response.statusText
-        );
-
+        // If store fetch fails, try the regular products API
+        const response = await fetch(`/api/products/${params.id}`);
         if (!response.ok) {
-          const errorText = await response.text();
-          console.log("API error response:", errorText);
-          throw new Error(
-            `Failed to fetch product: ${response.status} ${response.statusText}`
-          );
+          throw new Error("Failed to fetch product");
         }
-
         const data = await response.json();
-        console.log("Fetched product data:", data);
-
-        if (!data.success) {
-          throw new Error(data.error || "Failed to fetch product");
-        }
-
-        const productData = data.product;
 
         // Format the data
         const formattedData: Product = {
-          id: productData.product_id || productData.id,
-          name: productData.name || "",
-          paragraph: productData.paragraph || "",
-          bullet_points: productData.bullet_points || [],
-          redirect_link: productData.redirect_link || "",
-          generated_link: productData.generated_link || "",
-          money_back_days: productData.money_back_days || 60,
-          image: productData.image,
-          badge_image: productData.badge_image,
-          theme: {
+          ...data,
+          theme: data.theme || {
             theme_id: "",
-            product_id: productData.product_id || productData.id,
+            product_id: data.id,
             primary_bg_color: "#ffffff",
             secondary_bg_color: "#f44336",
             accent_bg_color: "#ffc107",
@@ -211,12 +231,11 @@ export default function EditProductPage({
             shadow_color: "",
             custom_css: "",
           },
-          ingredients: [],
-          why_choose: [],
-          reviews: [],
+          ingredients: data.ingredients || [],
+          why_choose: data.why_choose || [],
+          reviews: data.reviews || [],
         };
 
-        console.log("Formatted data:", formattedData);
         setProduct(formattedData);
       } catch (err) {
         console.error("Error fetching product:", err);
@@ -228,7 +247,7 @@ export default function EditProductPage({
     };
 
     fetchProduct();
-  }, [resolvedParams?.id]);
+  }, [params.id]);
 
   if (loading) {
     return (

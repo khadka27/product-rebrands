@@ -136,18 +136,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             productId ? `&excludeId=${productId}` : ""
           }`
         );
-
-        if (!response.ok) {
-          console.error(
-            "Name check API error:",
-            response.status,
-            response.statusText
-          );
-          // Don't show error to user for name validation failures
-          setNameError("");
-          return;
-        }
-
         const data = await response.json();
 
         if (data.exists) {
@@ -158,8 +146,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         }
       } catch (error) {
         console.error("Error checking product name:", error);
-        // Don't show error toast for name validation - just log it
-        setNameError("");
+        toast.error("Failed to check product name");
       } finally {
         setIsCheckingName(false);
       }
@@ -895,8 +882,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
       const url = productId ? `/api/products/${productId}` : "/api/products";
       const method = productId ? "PUT" : "POST";
-
-      console.log("Submitting to URL:", url, "with method:", method);
 
       const response = await fetch(url, {
         method,

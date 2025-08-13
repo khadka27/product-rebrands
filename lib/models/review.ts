@@ -23,28 +23,11 @@ async function withConnection<T>(
   }
 }
 
-async function ensureAvatarColumn(connection: any) {
-  try {
-    const [cols] = await connection.query(
-      "SHOW COLUMNS FROM reviews LIKE 'avatar'"
-    );
-    if ((cols as any[]).length === 0) {
-      console.log("Adding missing avatar column to reviews table");
-      await connection.query(
-        "ALTER TABLE reviews ADD COLUMN avatar VARCHAR(500) NULL AFTER review_text"
-      );
-    }
-  } catch (e) {
-    console.error("Failed ensuring avatar column:", e);
-  }
-}
-
 export async function createReview(
   review: Omit<Review, "id" | "created_at" | "updated_at">,
   existingConnection?: any
 ): Promise<Review> {
   if (existingConnection) {
-    await ensureAvatarColumn(existingConnection);
     // Use existing connection (for transactions)
     const query = `
       INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
@@ -76,7 +59,6 @@ export async function createReview(
   } else {
     // Use new connection (for standalone operations)
     return withConnection(async (connection) => {
-      await ensureAvatarColumn(connection);
       const query = `
         INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
@@ -103,7 +85,6 @@ export async function createReview(
 
 export async function getReviewById(id: number): Promise<Review | null> {
   return withConnection(async (connection) => {
-    await ensureAvatarColumn(connection);
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
@@ -125,7 +106,6 @@ export async function getReviewsByProductId(
   productId: string
 ): Promise<Review[]> {
   return withConnection(async (connection) => {
-    await ensureAvatarColumn(connection);
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
@@ -143,7 +123,6 @@ export async function updateReview(
   review: Partial<Omit<Review, "id" | "created_at" | "updated_at">>
 ): Promise<Review | null> {
   return withConnection(async (connection) => {
-    await ensureAvatarColumn(connection);
     const fields = [];
     const values = [];
 
