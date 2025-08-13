@@ -632,11 +632,11 @@ export async function POST(req: NextRequest) {
     const newProduct = await createProduct(productData);
 
     return NextResponse.json(newProduct, { status: 201 }); // Created
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error creating product:", error);
     // Handle specific errors if needed, e.g., database errors
     return NextResponse.json(
-      { error: "Failed to create product" },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   } finally {
