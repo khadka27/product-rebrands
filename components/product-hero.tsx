@@ -27,7 +27,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               transition={{ duration: 0.5 }}
               className="space-y-3 md:space-y-6"
             >
-              <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-xl text-white font-medium leading-relaxed">
                 {product?.paragraph || "Now rebranded as "}
 
                 {product?.paragraph
@@ -39,8 +39,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <ul className="space-y-2 md:space-y-3">
                   {product.bullet_points.map((point, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-[var(--benefit-icon)] mt-1">•</span>
-                      <span className="text-sm md:text-base text-[var(--text-primary)]">
+                      <span className="text-blue-400 mt-1">•</span>
+                      <span className="text-sm md:text-base text-white">
                         {point}
                       </span>
                     </li>

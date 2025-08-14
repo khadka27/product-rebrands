@@ -82,7 +82,7 @@ export default function IngredientsSection({
         <div className="relative">
           <div className="flex items-center justify-center mb-6 md:mb-10">
             <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-[var(--text-primary)] mx-0 md:mx-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white mx-0 md:mx-6">
               Key Ingredients
             </h2>
             <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
@@ -115,10 +115,10 @@ export default function IngredientsSection({
                     </div>
                   </div>
                   <div className="text-center sm:text-left">
-                    <h3 className="text-base md:text-xl font-bold text-[var(--ingredient-title)] group-hover:text-[var(--benefit-title)] transition-colors duration-300 mb-1 md:mb-2">
+                    <h3 className="text-base md:text-xl font-bold text-blue-400 group-hover:text-blue-300 transition-colors duration-300 mb-1 md:mb-2">
                       {getIngredientTitle(ingredient)}
                     </h3>
-                    <p className="text-xs md:text-base text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors duration-300">
+                    <p className="text-xs md:text-base text-gray-300 group-hover:text-white transition-colors duration-300">
                       {getIngredientDescription(ingredient)}
                     </p>
                   </div>

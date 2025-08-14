@@ -27,7 +27,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
           <div className="flex items-center justify-center mb-6 md:mb-10">
             <div className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent w-full max-w-xs hidden md:block"></div>
             {/* Enhanced responsive text size for better mobile readability */}
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center text-[var(--text-primary)] mx-0 md:mx-6 whitespace-normal md:whitespace-nowrap">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center text-white mx-0 md:mx-6 whitespace-normal md:whitespace-nowrap">
               The {product?.name} Difference
             </h2>
             <div className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent w-full max-w-xs hidden md:block"></div>
@@ -56,7 +56,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
+                    <span className="text-gray-300 text-sm md:text-lg">
                       FDA Registered Facility
                     </span>
                   </li>
@@ -64,7 +64,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
+                    <span className="text-gray-300 text-sm md:text-lg">
                       GMP Certified Manufacturing
                     </span>
                   </li>
@@ -72,7 +72,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
+                    <span className="text-gray-300 text-sm md:text-lg">
                       Third-Party Tested for Purity
                     </span>
                   </li>
@@ -80,7 +80,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
+                    <span className="text-gray-300 text-sm md:text-lg">
                       Made in the USA
                     </span>
                   </li>

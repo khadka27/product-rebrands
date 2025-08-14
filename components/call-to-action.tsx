@@ -38,21 +38,21 @@ export default function CallToAction({ product }: CallToActionProps) {
               </p>
 
               <ul className="mb-3 md:mb-8 space-y-1 md:space-y-3">
-                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 flex items-center justify-center mr-2 md:mr-3">
+                <li className="flex items-center text-white text-sm md:text-lg">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
                   <span>Free Shipping on All Orders</span>
                 </li>
-                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 flex items-center justify-center mr-2 md:mr-3">
+                <li className="flex items-center text-white text-sm md:text-lg">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
                   <span>
                     {product?.money_back_days}-Day Money Back Guarantee
                   </span>
                 </li>
-                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
+                <li className="flex items-center text-white text-sm md:text-lg">
                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
