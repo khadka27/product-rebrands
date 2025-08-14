@@ -27,7 +27,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               transition={{ duration: 0.5 }}
               className="space-y-3 md:space-y-6"
             >
-              <p className="text-xs sm:text-sm md:text-xl text-white font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-xl text-[var(--text-primary)] font-medium leading-relaxed">
                 {product?.paragraph || "Now rebranded as "}
 
                 {product?.paragraph
@@ -39,8 +39,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <ul className="space-y-2 md:space-y-3">
                   {product.bullet_points.map((point, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span className="text-sm md:text-base text-white">
+                      <span className="text-[var(--benefit-icon)] mt-1">•</span>
+                      <span className="text-sm md:text-base text-[var(--text-primary)]">
                         {point}
                       </span>
                     </li>
@@ -86,8 +86,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
               transition={{ duration: 0.5 }}
               className="relative"
             >
-              {/* Responsive bottle size - smaller on mobile */}
-              <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
+              {/* Responsive bottle size - enhanced for mobile */}
+              <div className="relative w-48 h-60 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-600/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
                   src={getImagePath(

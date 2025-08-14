@@ -38,21 +38,21 @@ export default function CallToAction({ product }: CallToActionProps) {
               </p>
 
               <ul className="mb-3 md:mb-8 space-y-1 md:space-y-3">
-                <li className="flex items-center text-white text-xs md:text-base">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
+                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
                   <span>Free Shipping on All Orders</span>
                 </li>
-                <li className="flex items-center text-white text-xs md:text-base">
-                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
+                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
+                  <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
                   <span>
                     {product?.money_back_days}-Day Money Back Guarantee
                   </span>
                 </li>
-                <li className="flex items-center text-white text-xs md:text-base">
+                <li className="flex items-center text-[var(--cta-text)] text-sm md:text-lg">
                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-green-500 dark:bg-green-500 flex items-center justify-center mr-2 md:mr-3">
                     <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                   </div>
@@ -79,8 +79,8 @@ export default function CallToAction({ product }: CallToActionProps) {
             </div>
 
             <div className="flex justify-center mt-4 md:mt-0">
-              {/* Responsive bottle size */}
-              <div className="relative w-32 h-40 sm:w-44 sm:h-56 md:w-72 md:h-96">
+              {/* Responsive bottle size - enhanced for mobile */}
+              <div className="relative w-48 h-60 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
                   src={getImagePath(

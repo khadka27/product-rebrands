@@ -24,10 +24,10 @@ export default function ThemeNavigation() {
   };
 
   return (
-    <div className="fixed top-3 right-3 z-50 flex bg-white dark:bg-gray-800 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-full p-0.5">
+    <div className="fixed top-3 right-3 z-50 flex bg-[var(--sticky-button-bg)] backdrop-blur-md border border-[var(--sticky-button-border)] rounded-full p-0.5">
       <button
         onClick={toggleTheme}
-        className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 hover:bg-[var(--toggle-hover)] text-[var(--sticky-button-text)]"
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {isDark ? (

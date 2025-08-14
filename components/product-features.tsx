@@ -26,8 +26,8 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
         <div className="relative">
           <div className="flex items-center justify-center mb-6 md:mb-10">
             <div className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent w-full max-w-xs hidden md:block"></div>
-            {/* Responsive text size */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center text-white mx-0 md:mx-6 whitespace-normal md:whitespace-nowrap">
+            {/* Enhanced responsive text size for better mobile readability */}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center text-[var(--text-primary)] mx-0 md:mx-6 whitespace-normal md:whitespace-nowrap">
               The {product?.name} Difference
             </h2>
             <div className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent w-full max-w-xs hidden md:block"></div>
@@ -56,7 +56,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-gray-300 text-xs md:text-base">
+                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
                       FDA Registered Facility
                     </span>
                   </li>
@@ -64,7 +64,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-gray-300 text-xs md:text-base">
+                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
                       GMP Certified Manufacturing
                     </span>
                   </li>
@@ -72,7 +72,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-gray-300 text-xs md:text-base">
+                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
                       Third-Party Tested for Purity
                     </span>
                   </li>
@@ -80,7 +80,7 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-2">
                       <Check className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-gray-300 text-xs md:text-base">
+                    <span className="text-[var(--text-secondary)] text-sm md:text-lg">
                       Made in the USA
                     </span>
                   </li>
@@ -96,8 +96,8 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                 viewport={{ once: true, amount: 0.1 }}
                 className="relative"
               >
-                {/* Responsive bottle size */}
-                <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
+                {/* Responsive bottle size - enhanced for mobile */}
+                <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
                   <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                   <Image
                     src={getImagePath(

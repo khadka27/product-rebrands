@@ -19,7 +19,7 @@ export default function NewCta({ product }: NewCtaProps) {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
-        className="backdrop-blur-sm bg-gradient-to-r from-indigo-700 to-indigo-600 dark:from-indigo-800 dark:to-indigo-700 border border-indigo-500/50 dark:border-indigo-400/50 rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)] relative"
+        className="backdrop-blur-sm bg-[var(--cta-gradient)] border border-[var(--card-border)] rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden shadow-lg relative"
       >
         {/* Glow effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500 rounded-full filter blur-[100px] opacity-20 dark:opacity-30"></div>
@@ -38,8 +38,8 @@ export default function NewCta({ product }: NewCtaProps) {
                 <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 text-xs md:text-base">
-                  <span className="font-bold text-white">
+                <p className="text-[var(--cta-text-secondary)] text-sm md:text-lg">
+                  <span className="font-bold text-[var(--cta-text)]">
                     Premium Quality Formula
                   </span>{" "}
                   - Made in FDA registered facility with 100% natural
@@ -48,21 +48,21 @@ export default function NewCta({ product }: NewCtaProps) {
               </div>
 
               <div className="flex items-start">
-                <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
+                <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 text-xs md:text-base">
-                  <span className="font-bold text-white">Proven Results</span> -
+                <p className="text-[var(--cta-text-secondary)] text-sm md:text-lg">
+                  <span className="font-bold text-[var(--cta-text)]">Proven Results</span> -
                   Thousands of satisfied customers report significant
                   improvements
                 </p>
               </div>
 
               <div className="flex items-start">
-                <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
+                <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 text-xs md:text-base">
+                <p className="text-[var(--cta-text-secondary)] text-sm md:text-lg">
                   <span className="font-bold text-white">
                     Risk-Free Guarantee
                   </span>{" "}
@@ -108,8 +108,8 @@ export default function NewCta({ product }: NewCtaProps) {
 
           <div className="flex justify-center mt-6 md:mt-0">
             <div className="relative">
-              {/* Responsive bottle size */}
-              <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
+              {/* Responsive bottle size - enhanced for mobile */}
+              <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
                   src={getImagePath(

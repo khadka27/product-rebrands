@@ -99,10 +99,10 @@ export default function TestimonialsSection({
                     />
                   </div>
                   <div>
-                    <p className="font-bold text-white text-xs md:text-base">
+                    <p className="font-bold text-[var(--text-primary)] text-sm md:text-lg">
                       {testimonial.name}
                     </p>
-                    <p className="text-[0.65rem] md:text-sm text-gray-300">
+                    <p className="text-xs md:text-base text-[var(--text-secondary)]">
                       {testimonial.location}
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export default function TestimonialsSection({
                   ))}
                 </div>
 
-                <p className="text-xs md:text-base text-gray-300 italic mb-3 md:mb-4 group-hover:text-white transition-colors duration-300 line-clamp-4 md:line-clamp-none">
+                <p className="text-sm md:text-lg text-[var(--text-secondary)] italic mb-3 md:mb-4 group-hover:text-[var(--text-primary)] transition-colors duration-300 line-clamp-4 md:line-clamp-none">
                   "{testimonial.text}"
                 </p>
               </motion.div>
