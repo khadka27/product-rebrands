@@ -74,7 +74,7 @@ export default function IngredientsSection({
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         viewport={{ once: true, amount: 0.1 }}
-        className="backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] relative"
+        className="backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden relative"
       >
         {/* Glow effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500 rounded-full filter blur-[100px] opacity-10"></div>
@@ -96,11 +96,11 @@ export default function IngredientsSection({
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
                 viewport={{ once: true, amount: 0.1 }}
-                className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300"
               >
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 md:gap-6">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-blue-500/30 shadow-lg shadow-blue-900/20">
+                    <div className="w-12 h-12 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-blue-500/30">
                       <Image
                         src={
                           typeof ingredient.image === "string"

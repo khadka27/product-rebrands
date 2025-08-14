@@ -1,45 +1,45 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Clock, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, AlertCircle } from "lucide-react";
 
 export default function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState(240) // 4 minutes in seconds
-  const [isActive, setIsActive] = useState(true)
+  const [timeLeft, setTimeLeft] = useState(240); // 4 minutes in seconds
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
-    if (!isActive) return
+    if (!isActive) return;
 
     const timer = setInterval(() => {
       if (timeLeft > 0) {
-        setTimeLeft(timeLeft - 1)
+        setTimeLeft(timeLeft - 1);
       } else {
-        setIsActive(false)
-        clearInterval(timer)
+        setIsActive(false);
+        clearInterval(timer);
       }
-    }, 1000)
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [timeLeft, isActive])
+    return () => clearInterval(timer);
+  }, [timeLeft, isActive]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
     return {
       minutes: minutes.toString().padStart(2, "0"),
       seconds: remainingSeconds.toString().padStart(2, "0"),
-    }
-  }
+    };
+  };
 
-  const { minutes, seconds } = formatTime(timeLeft)
+  const { minutes, seconds } = formatTime(timeLeft);
 
   // Calculate percentage for progress bar
-  const progressPercentage = (timeLeft / 240) * 100
+  const progressPercentage = (timeLeft / 240) * 100;
 
   return (
-    <div className="relative overflow-hidden rounded-xl shadow-lg border border-indigo-500/30 dark:border-indigo-400/30">
+    <div className="relative overflow-hidden rounded-xl border border-indigo-500/30 dark:border-indigo-400/30">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 dark:from-red-700 dark:to-red-800"></div>
 
@@ -65,15 +65,19 @@ export default function CountdownTimer() {
               <Clock className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
             <div className="text-center md:text-left">
-              <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">LIMITED TIME OFFER</h3>
-              <p className="text-yellow-300/80 text-sm md:text-base">Hurry, Stock Running Low!</p>
+              <h3 className="text-white font-bold text-lg md:text-xl uppercase tracking-wider">
+                LIMITED TIME OFFER
+              </h3>
+              <p className="text-yellow-300/80 text-sm md:text-base">
+                Hurry, Stock Running Low!
+              </p>
             </div>
           </div>
 
           {/* Timer display */}
           <div className="flex items-center space-x-2">
             {/* Minutes */}
-            <div className="bg-white dark:bg-indigo-900/80 backdrop-blur-sm rounded-lg p-2 md:p-3 w-16 md:w-20 text-center shadow-lg border border-white/20 dark:border-indigo-400/30">
+            <div className="bg-white dark:bg-indigo-900/80 backdrop-blur-sm rounded-lg p-2 md:p-3 w-16 md:w-20 text-center border border-white/20 dark:border-indigo-400/30">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={minutes}
@@ -86,13 +90,15 @@ export default function CountdownTimer() {
                   {minutes}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-red-600 dark:text-red-300 font-medium">MINUTES</span>
+              <span className="text-xs text-red-600 dark:text-red-300 font-medium">
+                MINUTES
+              </span>
             </div>
 
             <span className="text-white text-2xl md:text-3xl font-bold">:</span>
 
             {/* Seconds */}
-            <div className="bg-white dark:bg-indigo-900/80 backdrop-blur-sm rounded-lg p-2 md:p-3 w-16 md:w-20 text-center shadow-lg border border-white/20 dark:border-indigo-400/30">
+            <div className="bg-white dark:bg-indigo-900/80 backdrop-blur-sm rounded-lg p-2 md:p-3 w-16 md:w-20 text-center border border-white/20 dark:border-indigo-400/30">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={seconds}
@@ -105,7 +111,9 @@ export default function CountdownTimer() {
                   {seconds}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-red-600 dark:text-red-300 font-medium">SECONDS</span>
+              <span className="text-xs text-red-600 dark:text-red-300 font-medium">
+                SECONDS
+              </span>
             </div>
           </div>
         </div>
@@ -129,10 +137,12 @@ export default function CountdownTimer() {
             className="mt-2 flex items-center justify-center"
           >
             <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-300 mr-1.5" />
-            <p className="text-yellow-300 text-xs md:text-sm font-medium">Almost gone! Complete your order now.</p>
+            <p className="text-yellow-300 text-xs md:text-sm font-medium">
+              Almost gone! Complete your order now.
+            </p>
           </motion.div>
         )}
       </div>
     </div>
-  )
+  );
 }

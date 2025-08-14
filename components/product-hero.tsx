@@ -14,7 +14,7 @@ interface ProductHeroProps {
 export default function ProductHero({ product }: ProductHeroProps) {
   return (
     <section className="mb-8 md:mb-20">
-      <div className="relative backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)]">
+      <div className="relative backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden">
         {/* Glow effects */}
         <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-500 rounded-full filter blur-[80px] opacity-20"></div>
         <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-600 rounded-full filter blur-[80px] opacity-20"></div>
@@ -52,7 +52,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
               <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
                 <Button
-                  className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
+                  className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 border border-yellow-400/20"
                   onClick={() => window.open(product?.redirect_link)}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl text-black">

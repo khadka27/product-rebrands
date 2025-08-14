@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { X, Upload, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { X, Upload, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import type { Product } from "@/lib/models/product";
 
@@ -12,8 +12,10 @@ interface CounterfeitReplacementModalProps {
   product: Product;
 }
 
-export default function CounterfeitReplacementModal({ product }: CounterfeitReplacementModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function CounterfeitReplacementModal({
+  product,
+}: CounterfeitReplacementModalProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,52 +24,54 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
     purchaseLocation: "",
     purchaseDate: "",
     additionalInfo: "",
-  })
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const openModal = () => {
-    setIsOpen(true)
-    document.body.style.overflow = "hidden" // Prevent scrolling when modal is open
-  }
+    setIsOpen(true);
+    document.body.style.overflow = "hidden"; // Prevent scrolling when modal is open
+  };
 
   const closeModal = () => {
-    setIsOpen(false)
-    document.body.style.overflow = "auto" // Re-enable scrolling
-  }
+    setIsOpen(false);
+    document.body.style.overflow = "auto"; // Re-enable scrolling
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setPhotoFile(e.target.files[0])
+      setPhotoFile(e.target.files[0]);
     }
-  }
+  };
 
   const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setReceiptFile(e.target.files[0])
+      setReceiptFile(e.target.files[0]);
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     // Simulate form submission
     setTimeout(() => {
-      setIsSubmitting(false)
-      setIsSubmitted(true)
+      setIsSubmitting(false);
+      setIsSubmitted(true);
 
       // Reset form after 3 seconds
       setTimeout(() => {
-        setIsOpen(false)
-        setIsSubmitted(false)
+        setIsOpen(false);
+        setIsSubmitted(false);
         setFormData({
           name: "",
           email: "",
@@ -76,33 +80,42 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
           purchaseLocation: "",
           purchaseDate: "",
           additionalInfo: "",
-        })
-        setPhotoFile(null)
-        setReceiptFile(null)
-      }, 3000)
-    }, 1500)
-  }
+        });
+        setPhotoFile(null);
+        setReceiptFile(null);
+      }, 3000);
+    }, 1500);
+  };
 
   return (
     <>
       {/* Button to open the modal */}
       <Button
         onClick={openModal}
-        className="bg-[#FCD34D] hover:bg-[#F59E0B] text-black font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg shadow-lg transition-all duration-300 text-sm md:text-base w-full sm:w-auto border-2 border-[#F59E0B] hover:border-[#D97706]"
+        className="bg-[#FCD34D] hover:bg-[#F59E0B] text-black font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg transition-all duration-300 text-sm md:text-base w-full sm:w-auto border-2 border-[#F59E0B] hover:border-[#D97706]"
       >
-        <span className="block sm:hidden">Got counterfeit? Get replacement!</span>
-        <span className="hidden sm:block">Did you buy a counterfeit product? Let us replace it!</span>
+        <span className="block sm:hidden">
+          Got counterfeit? Get replacement!
+        </span>
+        <span className="hidden sm:block">
+          Did you buy a counterfeit product? Let us replace it!
+        </span>
       </Button>
 
       {/* Modal Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           {/* Modal Content */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="bg-indigo-600 text-white p-4 rounded-t-xl flex justify-between items-center">
-              <h2 className="text-xl font-bold">Counterfeit Replacement Program</h2>
-              <button onClick={closeModal} className="text-white hover:text-gray-200 transition-colors">
+              <h2 className="text-xl font-bold">
+                Counterfeit Replacement Program
+              </h2>
+              <button
+                onClick={closeModal}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -112,8 +125,9 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
               {!isSubmitted ? (
                 <>
                   <p className="mb-4 text-gray-700 dark:text-gray-300">
-                    We're sorry you may have purchased a counterfeit product. To help us verify and replace it with an
-                    authentic {product?.name}, please provide the following information:
+                    We're sorry you may have purchased a counterfeit product. To
+                    help us verify and replace it with an authentic{" "}
+                    {product?.name}, please provide the following information:
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -247,7 +261,9 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
                           >
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
                             <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {photoFile ? photoFile.name : "Click to upload product photo"}
+                              {photoFile
+                                ? photoFile.name
+                                : "Click to upload product photo"}
                             </span>
                           </label>
                         </div>
@@ -272,7 +288,9 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
                           >
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
                             <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {receiptFile ? receiptFile.name : "Click to upload receipt"}
+                              {receiptFile
+                                ? receiptFile.name
+                                : "Click to upload receipt"}
                             </span>
                           </label>
                         </div>
@@ -301,8 +319,9 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
                       <div className="flex">
                         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 flex-shrink-0" />
                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                          Our team will review your submission and contact you within 2-3 business days. If approved,
-                          we'll send you an authentic {product?.name} at no cost.
+                          Our team will review your submission and contact you
+                          within 2-3 business days. If approved, we'll send you
+                          an authentic {product?.name} at no cost.
                         </p>
                       </div>
                     </div>
@@ -335,17 +354,25 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
                       viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     Request Submitted Successfully!
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Thank you for your submission. Our team will review your request and contact you within 2-3 business
-                    days.
+                    Thank you for your submission. Our team will review your
+                    request and contact you within 2-3 business days.
                   </p>
-                  <Button onClick={closeModal} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <Button
+                    onClick={closeModal}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
                     Close
                   </Button>
                 </div>
@@ -355,5 +382,5 @@ export default function CounterfeitReplacementModal({ product }: CounterfeitRepl
         </div>
       )}
     </>
-  )
+  );
 }

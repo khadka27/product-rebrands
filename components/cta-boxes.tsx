@@ -62,7 +62,7 @@ export default function CtaBoxes({
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
             viewport={{ once: true }}
-            className={`bg-indigo-600 dark:bg-indigo-700 rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg border border-indigo-500/20 dark:border-indigo-400/30 relative overflow-hidden`}
+            className={`bg-green-700 dark:bg-green-800 rounded-xl md:rounded-2xl p-3 md:p-6 border border-indigo-500/20 dark:border-indigo-400/30 relative overflow-hidden`}
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
@@ -86,10 +86,7 @@ export default function CtaBoxes({
                   <Button
                     className="relative overflow-hidden group bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1 md:py-2 px-2 md:px-4 rounded-lg transition-all duration-300 text-xs md:text-base"
                     onClick={() =>
-                      window.open(
-                        product?.redirect_link || "#",
-                        "_blank",
-                      )
+                      window.open(product?.redirect_link || "#", "_blank")
                     }
                   >
                     <span className="relative z-10">{box.buttonText}</span>

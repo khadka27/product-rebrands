@@ -101,85 +101,22 @@ export default function EditProductPage({
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        // First try to fetch from the store
-        const storeResponse = await fetch(`/api/store/products/${params.id}`);
-        if (storeResponse.ok) {
-          const storeData = await storeResponse.json();
-          if (storeData) {
-            // Format the store data to match our Product interface
-            const formattedData: Product = {
-              id: storeData.id,
-              name: storeData.name,
-              paragraph: storeData.paragraph || "",
-              bullet_points: storeData.bullet_points || [],
-              redirect_link: storeData.redirect_link || "",
-              generated_link: storeData.generated_link || "",
-              money_back_days: storeData.money_back_days || 0,
-              image: storeData.image,
-              badge_image: storeData.badge_image,
-              theme: storeData.theme || {
-                theme_id: "",
-                product_id: storeData.id,
-                primary_bg_color: "#ffffff",
-                secondary_bg_color: "#f44336",
-                accent_bg_color: "#ffc107",
-                primary_text_color: "#333333",
-                secondary_text_color: "#666666",
-                accent_text_color: "#ffc107",
-                link_color: "#3182ce",
-                link_hover_color: "#2c5282",
-                primary_button_bg: "#ff5722",
-                primary_button_text: "#ffffff",
-                primary_button_hover_bg: "#f44336",
-                secondary_button_bg: "#e0e0e0",
-                secondary_button_text: "#333333",
-                secondary_button_hover_bg: "#bdbdbd",
-                card_bg_color: "#ffffff",
-                card_border_color: "#e0e0e0",
-                card_shadow_color: "#0000001a",
-                header_bg_color: "#ffffff",
-                header_text_color: "#111111",
-                footer_bg_color: "#333333",
-                footer_text_color: "#ffffff",
-                font_family: "Inter, sans-serif",
-                h1_font_size: "2.5rem",
-                h1_font_weight: "700",
-                h2_font_size: "2rem",
-                h2_font_weight: "600",
-                h3_font_size: "1.5rem",
-                h3_font_weight: "500",
-                body_font_size: "1rem",
-                body_line_height: "1.5",
-                section_padding: "2rem",
-                card_padding: "1.5rem",
-                button_padding: "0.75rem 1.5rem",
-                border_radius_sm: "4px",
-                border_radius_md: "8px",
-                border_radius_lg: "12px",
-                border_radius_xl: "16px",
-                max_width: "1200px",
-                container_padding: "1rem",
-                gradient_start: "",
-                gradient_end: "",
-                shadow_color: "",
-                custom_css: "",
-              },
-              ingredients: storeData.ingredients || [],
-              why_choose: storeData.why_choose || [],
-              reviews: storeData.reviews || [],
-            };
-            setProduct(formattedData);
-            setLoading(false);
-            return;
-          }
+        console.log("Fetching product with ID:", params.id);
+
+        // Fetch from the regular products API
+        const response = await fetch(`/api/products/${params.id}`);
+        console.log("API response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API error:", errorText);
+          throw new Error(
+            `Failed to fetch product: ${response.status} ${errorText}`
+          );
         }
 
-        // If store fetch fails, try the regular products API
-        const response = await fetch(`/api/products/${params.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch product");
-        }
         const data = await response.json();
+        console.log("Fetched product data:", data);
 
         // Format the data
         const formattedData: Product = {
@@ -253,7 +190,7 @@ export default function EditProductPage({
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-400"></div>
         </div>
       </div>
     );
@@ -270,7 +207,7 @@ export default function EditProductPage({
             <p>{error}</p>
             <button
               onClick={() => router.push("/dashboard")}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="mt-4 px-4 py-2 bg-deep-purple-400 text-white rounded hover:bg-purple-500"
             >
               Return to Dashboard
             </button>
@@ -291,7 +228,7 @@ export default function EditProductPage({
             <p>The requested product could not be found.</p>
             <button
               onClick={() => router.push("/dashboard")}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="mt-4 px-4 py-2 bg-purple-400 text-white rounded hover:bg-purple-500"
             >
               Return to Dashboard
             </button>

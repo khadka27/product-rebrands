@@ -53,7 +53,7 @@ export default function RenameInfoModal({ product }: ProductLearnMoreProps) {
     >
       <div
         id="modal-content"
-        className="bg-gradient-to-br from-[var(--modal-bg-from)] to-[var(--modal-bg-to)] rounded-2xl p-5 md:p-8 max-w-2xl w-full mx-auto border border-[var(--card-border)] shadow-2xl relative max-h-[90vh] overflow-y-auto"
+        className="bg-gradient-to-br from-[var(--modal-bg-from)] to-[var(--modal-bg-to)] rounded-2xl p-5 md:p-8 max-w-2xl w-full mx-auto border border-[var(--card-border)] relative max-h-[90vh] overflow-y-auto"
       >
         <button
           onClick={closeModal}

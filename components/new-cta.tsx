@@ -26,7 +26,7 @@ export default function NewCta({ product }: NewCtaProps) {
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6 drop-shadow-md">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">
               Experience{" "}
               <span className="text-yellow-300 font-extrabold">
                 {product?.name.toUpperCase()}
@@ -38,7 +38,7 @@ export default function NewCta({ product }: NewCtaProps) {
                 <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
+                <p className="text-white/95 text-xs md:text-base">
                   <span className="font-bold text-white">
                     Premium Quality Formula
                   </span>{" "}
@@ -51,7 +51,7 @@ export default function NewCta({ product }: NewCtaProps) {
                 <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
+                <p className="text-white/95 text-xs md:text-base">
                   <span className="font-bold text-white">Proven Results</span> -
                   Thousands of satisfied customers report significant
                   improvements
@@ -62,7 +62,7 @@ export default function NewCta({ product }: NewCtaProps) {
                 <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 bg-green-500 dark:bg-green-500 rounded-full flex items-center justify-center mt-0.5 mr-2 md:mr-3">
                   <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                 </div>
-                <p className="text-white/95 drop-shadow-sm text-xs md:text-base">
+                <p className="text-white/95 text-xs md:text-base">
                   <span className="font-bold text-white">
                     Risk-Free Guarantee
                   </span>{" "}
@@ -72,17 +72,17 @@ export default function NewCta({ product }: NewCtaProps) {
               </div>
             </div>
 
-            <div className="bg-indigo-600 dark:bg-indigo-700 p-3 md:p-4 rounded-lg md:rounded-xl mb-4 md:mb-6">
+            <div className="bg-green-600 dark:bg-green-700 p-3 md:p-4 rounded-lg md:rounded-xl mb-4 md:mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-300 font-bold drop-shadow-sm text-sm md:text-base">
+                  <p className="text-yellow-300 font-bold text-sm md:text-base">
                     LIMITED TIME OFFER
                   </p>
-                  <p className="text-white text-xs md:text-sm drop-shadow-sm">
+                  <p className="text-white text-xs md:text-sm">
                     Order now and save up to $600
                   </p>
                 </div>
-                <div className="bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg px-2 py-1 md:px-3 md:py-1 font-bold text-xs md:text-base">
+                <div className="bg-red-600 dark:bg-red-700 text-white rounded-lg px-2 py-1 md:px-3 md:py-1 font-bold text-xs md:text-base">
                   30% OFF
                 </div>
               </div>
@@ -94,7 +94,7 @@ export default function NewCta({ product }: NewCtaProps) {
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <Button
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-4 md:py-6 rounded-xl transition-all duration-300 shadow-lg shadow-yellow-900/30 border border-yellow-400/20"
+                className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-4 md:py-6 rounded-xl transition-all duration-300 border border-yellow-400/20"
                 onClick={() => window.open(product?.redirect_link)}
               >
                 <span className="relative z-10 font-bold tracking-wider text-black flex items-center text-base md:text-lg">
@@ -112,7 +112,10 @@ export default function NewCta({ product }: NewCtaProps) {
               <div className="relative w-44 h-56 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <Image
-                  src={getImagePath(product?.product_image, "/images/placeholder.png")}
+                  src={getImagePath(
+                    product?.product_image,
+                    "/images/placeholder.png"
+                  )}
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
@@ -120,7 +123,10 @@ export default function NewCta({ product }: NewCtaProps) {
               </div>
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <Image
-                  src={getImagePath(product?.product_badge, "/images/new-badge.png")}
+                  src={getImagePath(
+                    product?.product_badge,
+                    "/images/new-badge.png"
+                  )}
                   alt="New Product Badge"
                   fill
                   className="object-contain"

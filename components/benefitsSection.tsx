@@ -44,18 +44,18 @@ export default function BenefitsSection({
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         viewport={{ once: true, amount: 0.1 }}
-        className="backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] relative"
+        className="backdrop-blur-sm bg-[#2a3441] border border-green-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden relative"
       >
         {/* Glow effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500 rounded-full filter blur-[100px] opacity-10"></div>
 
         <div className="relative">
           <div className="flex items-center justify-center mb-4 md:mb-10">
-            <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
+            <div className="h-0.5 bg-gradient-to-r from-transparent via-green-500 to-transparent w-full max-w-xs hidden md:block"></div>
             <h2 className="text-lg sm:text-xl md:text-3xl font-bold text-center text-white mx-0 md:mx-6">
               Why Choose {productName.toUpperCase()}
             </h2>
-            <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
+            <div className="h-0.5 bg-gradient-to-r from-transparent via-green-500 to-transparent w-full max-w-xs hidden md:block"></div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-2 md:gap-6">
@@ -68,11 +68,11 @@ export default function BenefitsSection({
                 viewport={{ once: true, amount: 0.1 }}
                 className="flex items-start bg-[#1e2633] p-2 md:p-5 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300"
               >
-                <div className="flex-shrink-0 w-4 h-4 md:w-5 md:h-5 bg-blue-500 rounded-full flex items-center justify-center mr-2 md:mr-4 mt-0.5 md:mt-1">
+                <div className="flex-shrink-0 w-4 h-4 md:w-5 md:h-5 bg-green-500 rounded-full flex items-center justify-center mr-2 md:mr-4 mt-0.5 md:mt-1">
                   <Check className="w-2 h-2 md:w-3 md:h-3 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xs md:text-lg font-bold text-blue-400 mb-0.5 md:mb-1">
+                  <h3 className="text-xs md:text-lg font-bold text-green-400 mb-0.5 md:mb-1">
                     {item.title}
                   </h3>
                   <p className="text-[10px] md:text-base text-gray-300 group-hover:text-white transition-colors duration-300">

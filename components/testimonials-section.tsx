@@ -62,18 +62,18 @@ export default function TestimonialsSection({
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         viewport={{ once: true, amount: 0.1 }}
-        className="backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] relative"
+        className="backdrop-blur-sm bg-[#2a3441] border border-purple-400/30 rounded-xl md:rounded-3xl p-6 md:p-12 overflow-hidden relative"
       >
         {/* Glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500 rounded-full filter blur-[100px] opacity-10"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500 rounded-full filter blur-[100px] opacity-10"></div>
 
         <div className="relative">
           <div className="flex items-center justify-center mb-6 md:mb-10">
-            <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
+            <div className="h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent w-full max-w-xs hidden md:block"></div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white mx-0 md:mx-6">
               Customer Reviews
             </h2>
-            <div className="h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent w-full max-w-xs hidden md:block"></div>
+            <div className="h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent w-full max-w-xs hidden md:block"></div>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
@@ -84,12 +84,12 @@ export default function TestimonialsSection({
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2, delay: index * 0.05 }}
                 viewport={{ once: true, amount: 0.1 }}
-                className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-blue-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 relative"
+                className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-purple-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 relative"
               >
-                <Quote className="absolute top-3 right-3 w-4 h-4 md:w-8 md:h-8 text-blue-400" />
+                <Quote className="absolute top-3 right-3 w-4 h-4 md:w-8 md:h-8 text-purple-400" />
 
                 <div className="flex items-center mb-3 md:mb-4">
-                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-blue-500/30 mr-2 md:mr-4">
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-purple-500/30 mr-2 md:mr-4">
                     <Image
                       src={testimonial.image || "/placeholder.svg"}
                       alt={`${testimonial.name} photo`}

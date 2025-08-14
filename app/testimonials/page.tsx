@@ -91,7 +91,7 @@ export default function TestimonialsPage() {
             {testimonials.map((testimonial, index) => (
               <Card
                 key={index}
-                className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col"
+                className="transition-shadow duration-300 flex flex-col"
               >
                 <CardContent className="pt-6 flex flex-col flex-grow">
                   <div className="flex items-start mb-4">

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Clock, Package } from "lucide-react";
 
-
 interface PricingSectionProps {
   productName: string;
   moneyBackDays: number;
@@ -110,7 +109,7 @@ export default function PricingSection({
               </div>
 
               <div className="flex justify-center mb-4 relative">
-                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12 shadow-lg">
+                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12">
                   <div className="text-center">
                     <p className="text-xs font-bold">SAVE</p>
                     <p className="text-sm font-bold">$80</p>
@@ -131,7 +130,7 @@ export default function PricingSection({
               </div>
 
               <Button
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-indigo-500 to-indigo-400 hover:from-indigo-600 hover:to-indigo-500 dark:from-indigo-400 dark:to-indigo-500 dark:hover:from-indigo-500 dark:hover:to-indigo-600 text-base py-4 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-900/30 border border-indigo-400/20"
+                className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-base py-4 rounded-xl transition-all duration-300 border border-yellow-400/20"
                 onClick={() =>
                   window.open(
                     "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
@@ -151,7 +150,7 @@ export default function PricingSection({
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
               viewport={{ once: true }}
-              className="border-2 border-indigo-500 dark:border-indigo-400 rounded-xl p-4 md:p-6 bg-yellow-50/90 dark:bg-indigo-900/50 backdrop-blur-sm relative overflow-hidden transform scale-105 shadow-xl"
+              className="border-2 border-indigo-500 dark:border-indigo-400 rounded-xl p-4 md:p-6 bg-yellow-50/90 dark:bg-indigo-900/50 backdrop-blur-sm relative overflow-hidden transform scale-105"
             >
               <div className="absolute -top-1 -right-1 w-24 h-24">
                 <div className="absolute transform rotate-45 bg-indigo-500 dark:bg-indigo-400 text-white text-xs font-bold py-1 right-[-35px] top-[32px] w-[170px] text-center">
@@ -167,7 +166,7 @@ export default function PricingSection({
               </div>
 
               <div className="flex justify-center mb-4 relative">
-                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12 shadow-lg">
+                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12">
                   <div className="text-center">
                     <p className="text-xs font-bold">SAVE</p>
                     <p className="text-sm font-bold">$600</p>
@@ -188,7 +187,7 @@ export default function PricingSection({
               </div>
 
               <Button
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 dark:from-indigo-400 dark:to-indigo-500 dark:hover:from-indigo-500 dark:hover:to-indigo-600 text-base py-4 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-900/30 border border-indigo-400/20"
+                className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-base py-4 rounded-xl transition-all duration-300 border border-yellow-400/20"
                 onClick={() =>
                   window.open(
                     "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"
@@ -236,7 +235,7 @@ export default function PricingSection({
               </div>
 
               <div className="flex justify-center mb-4 relative">
-                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12 shadow-lg">
+                <div className="absolute top-0 right-0 bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center transform rotate-12">
                   <div className="text-center">
                     <p className="text-xs font-bold">SAVE</p>
                     <p className="text-sm font-bold">$270</p>
@@ -257,7 +256,7 @@ export default function PricingSection({
               </div>
 
               <Button
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-indigo-500 to-indigo-400 hover:from-indigo-600 hover:to-indigo-500 dark:from-indigo-400 dark:to-indigo-500 dark:hover:from-indigo-500 dark:hover:to-indigo-600 text-base py-4 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-900/30 border border-indigo-400/20"
+                className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-600 hover:to-yellow-500 text-base py-4 rounded-xl transition-all duration-300 border border-yellow-400/20"
                 onClick={() =>
                   window.open(
                     "https://thetribalforcex.com/start/index.php?aff_id=12683&subid=renamelander"

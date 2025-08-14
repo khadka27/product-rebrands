@@ -36,7 +36,7 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
   };
 
   return (
-    <section className="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-8 rounded-2xl mb-8 shadow-xl">
+    <section className="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-8 rounded-2xl mb-8">
       <div className="grid md:grid-cols-2 gap-8 items-center">
         <div className="order-2 md:order-1">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">

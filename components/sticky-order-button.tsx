@@ -6,14 +6,11 @@ import { ArrowUp } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Product } from "@/lib/models/product";
 
-
 interface StickyOrderButtonProps {
   product: Product;
 }
 
-export default function StickyOrderButton({
-  product,
-}: StickyOrderButtonProps) {
+export default function StickyOrderButton({ product }: StickyOrderButtonProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -53,12 +50,8 @@ export default function StickyOrderButton({
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
         <Button
-          className="relative overflow-hidden group bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 py-1.5 md:py-3 px-2 md:px-6 rounded-full transition-all duration-300 shadow-lg shadow-black/30 border border-indigo-400/20 text-[10px] md:text-base"
-          onClick={() =>
-            window.open(
-              product?.redirect_link
-            )
-          }
+          className="relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 py-1.5 md:py-3 px-2 md:px-6 rounded-full transition-all duration-300 text-[10px] md:text-base"
+          onClick={() => window.open(product?.redirect_link)}
         >
           <span className="relative z-10 font-bold tracking-wider text-white">
             ORDER NOW

@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ShieldCheck, Menu, X } from "lucide-react"
-import { useState } from "react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ShieldCheck, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export const navLinks = [
   { href: "/features", label: "Features" },
   { href: "/rebrand", label: "Our Rebrand" },
   { href: "/testimonials", label: "Testimonials" },
   { href: "/shop", label: "Shop Now" },
-]
+];
 
 export function SiteHeader() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2 group">
@@ -37,8 +37,16 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
               <span className="sr-only">Toggle menu</span>
             </Button>
           </div>
@@ -46,7 +54,7 @@ export function SiteHeader() {
       </div>
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 right-0 bg-background shadow-lg p-4 animate-in slide-in-from-top-4 fade-in-20 duration-300">
+        <div className="md:hidden absolute top-16 left-0 right-0 bg-background p-4 animate-in slide-in-from-top-4 fade-in-20 duration-300">
           <nav className="flex flex-col space-y-3">
             {navLinks.map((link) => (
               <Link
@@ -62,5 +70,5 @@ export function SiteHeader() {
         </div>
       )}
     </header>
-  )
+  );
 }

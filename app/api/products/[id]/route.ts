@@ -48,11 +48,18 @@ export async function GET(
       [productId]
     );
 
+    // Fetch reviews
+    const [reviewsRows]: any = await db.query(
+      `SELECT * FROM product_reviews WHERE product_id = ? ORDER BY id`,
+      [productId]
+    );
+
     return NextResponse.json({
       ...product,
       theme: themeRows[0] || null,
       ingredients: ingredientsRows,
       why_choose: whyChooseRows,
+      reviews: reviewsRows,
     });
   } catch (error) {
     console.error("Error fetching product:", error);
