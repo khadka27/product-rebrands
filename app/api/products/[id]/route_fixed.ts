@@ -124,31 +124,11 @@ export async function PUT(
     const badgeImageFile = formData.get("badge_image") as File;
 
     if (imageFile && imageFile.size > 0) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const file = {
-        buffer,
-        originalname: imageFile.name,
-        mimetype: imageFile.type,
-      } as Express.Multer.File;
-      productImagePath = await processImage(
-        file,
-        "public/images/products",
-        `product_${productId}`
-      );
+      productImagePath = await processImage(imageFile, "products", {});
     }
 
     if (badgeImageFile && badgeImageFile.size > 0) {
-      const buffer = Buffer.from(await badgeImageFile.arrayBuffer());
-      const file = {
-        buffer,
-        originalname: badgeImageFile.name,
-        mimetype: badgeImageFile.type,
-      } as Express.Multer.File;
-      badgeImagePath = await processImage(
-        file,
-        "public/images/badges",
-        `badge_${productId}`
-      );
+      badgeImagePath = await processImage(badgeImageFile, "badges", {});
     }
 
     const connection = await db.getConnection();
@@ -214,26 +194,18 @@ export async function PUT(
           );
 
           // Insert new ingredients
-          for (const [index, ingredient] of ingredients.entries()) {
+          for (const ingredient of ingredients) {
             let ingredientImagePath = null;
 
             // Check if there's a file for this ingredient
             const ingredientImageFile = formData.get(
-              `ingredient_image_${index}`
+              `ingredient_image_${ingredient.tempId || ingredient.id}`
             ) as File;
             if (ingredientImageFile && ingredientImageFile.size > 0) {
-              const buffer = Buffer.from(
-                await ingredientImageFile.arrayBuffer()
-              );
-              const file = {
-                buffer,
-                originalname: ingredientImageFile.name,
-                mimetype: ingredientImageFile.type,
-              } as Express.Multer.File;
               ingredientImagePath = await processImage(
-                file,
-                "public/images/ingredients",
-                `ingredient_${productId}_${index}`
+                ingredientImageFile as any,
+                "ingredients",
+                {}
               );
             } else if (
               ingredient.image_preview &&
@@ -306,23 +278,15 @@ export async function PUT(
           ]);
 
           // Insert new reviews
-          for (const [index, review] of reviews.entries()) {
+          for (const review of reviews) {
             let avatarPath = null;
 
             // Check if there's a file for this review
-            const avatarFile = formData.get(`review_avatar_${index}`) as File;
+            const avatarFile = formData.get(
+              `review_avatar_${review.tempId || review.id}`
+            ) as File;
             if (avatarFile && avatarFile.size > 0) {
-              const buffer = Buffer.from(await avatarFile.arrayBuffer());
-              const file = {
-                buffer,
-                originalname: avatarFile.name,
-                mimetype: avatarFile.type,
-              } as Express.Multer.File;
-              avatarPath = await processImage(
-                file,
-                "public/images/avatars",
-                `avatar_${productId}_${index}`
-              );
+              avatarPath = await processImage(avatarFile, "avatars", {});
             } else if (
               review.avatar_preview &&
               !review.avatar_preview.startsWith("blob:")

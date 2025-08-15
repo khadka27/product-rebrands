@@ -15,21 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Plus,
-  Trash2,
-  AlertCircle,
-  Copy,
-  Check,
-  ExternalLink,
-} from "lucide-react";
+import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -134,8 +120,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [paragraphError, setParagraphError] = useState("");
   const [bulletPointsError, setBulletPointsError] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdProductLink, setCreatedProductLink] = useState("");
 
   // Add name validation effect
   useEffect(() => {
@@ -209,19 +193,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       setLinkCopied(true);
       toast.success("Link copied to clipboard");
       setTimeout(() => setLinkCopied(false), 2000);
-    } catch (error) {
-      console.error("Error copying to clipboard:", error);
-      toast.error("Failed to copy link");
-    }
-  };
-
-  // Copy product link functionality for success modal
-  const copyProductLinkToClipboard = async () => {
-    if (!createdProductLink) return;
-
-    try {
-      await navigator.clipboard.writeText(createdProductLink);
-      toast.success("Product link copied to clipboard");
     } catch (error) {
       console.error("Error copying to clipboard:", error);
       toast.error("Failed to copy link");
@@ -963,17 +934,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         return;
       }
 
-      // Handle success
-      if (productId) {
-        toast.success("Product updated!");
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        // For new product creation, show success modal
-        toast.success("Product created!");
-        setCreatedProductLink(formData.generated_link);
-        setShowSuccessModal(true);
-      }
+      toast.success(productId ? "Product updated!" : "Product created!");
+      // Redirect to product page or dashboard
+      router.push("/dashboard");
+      router.refresh();
     } catch (error) {
       console.error("Error submitting form:", error);
       setErrors({ general: "Failed to submit form" });
@@ -1742,71 +1706,6 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           )}
         </div>
       </div>
-
-      {/* Success Modal */}
-      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-green-500" />
-              Product Created Successfully!
-            </DialogTitle>
-            <DialogDescription>
-              Your product has been created and is now live. Here's your product
-              link:
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Generated Link Display */}
-            <div className="p-3 bg-gray-50 rounded-lg border">
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Product Link:
-              </p>
-              <p className="text-sm text-gray-600 break-all">
-                {createdProductLink}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => {
-                  if (createdProductLink) {
-                    window.open(createdProductLink, "_blank");
-                  }
-                }}
-                className="flex items-center gap-2 flex-1"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Visit Product Page
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={copyProductLinkToClipboard}
-                className="flex items-center gap-2 flex-1"
-              >
-                <Copy className="h-4 w-4" />
-                Copy Link
-              </Button>
-            </div>
-
-            {/* Close and Redirect Button */}
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowSuccessModal(false);
-                router.push("/dashboard");
-                router.refresh();
-              }}
-              className="w-full mt-4"
-            >
-              Go to Dashboard
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </form>
   );
 }
