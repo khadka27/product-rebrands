@@ -1,6 +1,13 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { generateSlug } from "@/lib/utils";
 import { processImage } from "@/lib/server-utils";
+
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
 
 export async function GET(
   request: Request,
@@ -8,6 +15,7 @@ export async function GET(
 ) {
   try {
     const productId = params.id;
+
     const connection = await db.getConnection();
 
     try {
@@ -37,22 +45,25 @@ export async function GET(
         }
       }
 
-      // Fetch related data
+      // Fetch theme
       const [themeRows]: any = await connection.query(
         "SELECT * FROM product_themes WHERE product_id = ?",
         [productId]
       );
 
+      // Fetch ingredients
       const [ingredientsRows]: any = await connection.query(
         "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
         [productId]
       );
 
+      // Fetch why choose items
       const [whyChooseRows]: any = await connection.query(
         "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
         [productId]
       );
 
+      // Fetch reviews
       const [reviewsRows]: any = await connection.query(
         "SELECT * FROM reviews WHERE product_id = ? ORDER BY id",
         [productId]
