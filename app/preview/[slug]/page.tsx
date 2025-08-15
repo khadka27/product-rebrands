@@ -61,10 +61,10 @@ export default async function PreviewPage({
             <div className="text-center mb-6 md:mb-12 pt-4 md:pt-8">
               <BuyerAlert product={product} />
 
-              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-4 text-center text-[#E53E3E]">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-5xl font-extrabold mb-2 md:mb-4 text-center text-[#E53E3E]">
                 THIS PRODUCT HAS BEEN RENAMED TO
               </h1>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black text-center text-[#E53E3E]">
+              <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-center text-[#E53E3E]">
                 {product.name.toUpperCase()}
               </h2>
             </div>
