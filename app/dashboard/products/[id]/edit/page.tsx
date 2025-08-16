@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { getImagePath } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -300,7 +301,10 @@ export default function EditProductPage({
                       <p>Description: {ingredient.description}</p>
                       {ingredient.image && (
                         <img
-                          src={ingredient.image}
+                          src={getImagePath(
+                            ingredient.image,
+                            "/placeholder.svg"
+                          )}
                           alt={ingredient.title}
                           className="w-16 h-16 object-cover rounded-md mt-2"
                         />

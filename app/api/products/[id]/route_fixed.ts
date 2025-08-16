@@ -124,11 +124,23 @@ export async function PUT(
     const badgeImageFile = formData.get("badge_image") as File;
 
     if (imageFile && imageFile.size > 0) {
-      productImagePath = await processImage(imageFile, "products", {});
+      const fileBuffer = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(fileBuffer);
+      productImagePath = await processImage(
+        { buffer, originalname: imageFile.name } as Express.Multer.File,
+        "products",
+        `product_${productId}`
+      );
     }
 
     if (badgeImageFile && badgeImageFile.size > 0) {
-      badgeImagePath = await processImage(badgeImageFile, "badges", {});
+      const fileBuffer = await badgeImageFile.arrayBuffer();
+      const buffer = Buffer.from(fileBuffer);
+      badgeImagePath = await processImage(
+        { buffer, originalname: badgeImageFile.name } as Express.Multer.File,
+        "badges",
+        `badge_${productId}`
+      );
     }
 
     const connection = await db.getConnection();
@@ -201,12 +213,15 @@ export async function PUT(
             const ingredientImageFile = formData.get(
               `ingredient_image_${ingredient.tempId || ingredient.id}`
             ) as File;
+            
             if (ingredientImageFile && ingredientImageFile.size > 0) {
-              ingredientImagePath = await processImage(
-                ingredientImageFile as any,
-                "ingredients",
-                {}
-              );
+            const fileBuffer = await ingredientImageFile.arrayBuffer();
+            const buffer = Buffer.from(fileBuffer);
+            ingredientImagePath = await processImage(
+              { buffer, originalname: ingredientImageFile.name } as Express.Multer.File,
+              "ingredients",
+              `ingredient_${productId}_${ingredient.tempId || ingredient.id}`
+            );
             } else if (
               ingredient.image_preview &&
               !ingredient.image_preview.startsWith("blob:")
@@ -271,8 +286,7 @@ export async function PUT(
       if (reviewsJson) {
         try {
           const reviews = JSON.parse(reviewsJson as string);
-
-          // Delete existing reviews
+          
           await connection.query("DELETE FROM reviews WHERE product_id = ?", [
             productId,
           ]);
@@ -285,14 +299,15 @@ export async function PUT(
             const avatarFile = formData.get(
               `review_avatar_${review.tempId || review.id}`
             ) as File;
+            
             if (avatarFile && avatarFile.size > 0) {
-              avatarPath = await processImage(avatarFile, "avatars", {});
-            } else if (
-              review.avatar_preview &&
-              !review.avatar_preview.startsWith("blob:")
-            ) {
-              // Keep existing avatar
-              avatarPath = review.avatar_preview;
+              const fileBuffer = await avatarFile.arrayBuffer();
+              const buffer = Buffer.from(fileBuffer);
+              avatarPath = await processImage(
+                { buffer, originalname: avatarFile.name } as Express.Multer.File,
+                "avatars",
+                `avatar_${productId}_${review.tempId || review.id}`
+              );
             }
 
             await connection.query(

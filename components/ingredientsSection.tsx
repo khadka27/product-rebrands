@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { getImagePath } from "@/lib/utils";
 
 import { type Ingredient as DBIngredient } from "@/lib/models/ingredient";
 
@@ -104,8 +105,8 @@ export default function IngredientsSection({
                       <Image
                         src={
                           typeof ingredient.image === "string"
-                            ? ingredient.image
-                            : productImage || "/placeholder.svg"
+                            ? getImagePath(ingredient.image, "/placeholder.svg")
+                            : getImagePath(productImage, "/placeholder.svg")
                         }
                         alt={getIngredientTitle(ingredient)}
                         width={96}

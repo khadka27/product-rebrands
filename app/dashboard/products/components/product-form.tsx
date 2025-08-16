@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
+import { getImagePath } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProductSuccessModal } from "./product-success-modal";
 
@@ -1245,9 +1246,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             badgeImagePreview.startsWith("data:")
                               ? badgeImagePreview
-                              : badgeImagePreview.startsWith("/")
-                              ? badgeImagePreview
-                              : `/${badgeImagePreview}`
+                              : getImagePath(badgeImagePreview, "")
                           }
                           alt="Badge preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
@@ -1339,9 +1338,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   ingredient.image_preview
                                     ? ingredient.image_preview
                                     : typeof ingredient.image === "string"
-                                    ? ingredient.image.startsWith("/")
-                                      ? ingredient.image
-                                      : `/${ingredient.image}`
+                                    ? getImagePath(ingredient.image, "")
                                     : ""
                                 }
                                 alt={`Ingredient ${index + 1}`}
@@ -1594,7 +1591,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   review.avatar_preview
                                     ? review.avatar_preview
                                     : typeof review.avatar === "string"
-                                    ? `/images/avatars/${review.avatar}`
+                                    ? getImagePath(review.avatar, "")
                                     : ""
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
