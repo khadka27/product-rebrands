@@ -1,24 +1,28 @@
-import sharp from "sharp"
-import fs from "fs"
-import path from "path"
-import { randomInt } from "crypto"
-import type { Express } from "express"
+import sharp from "sharp";
+import fs from "fs";
+import path from "path";
+import { randomInt } from "crypto";
+import type { Express } from "express";
 
 // Ensure directory exists
 export function ensureDirectoryExists(directory: string): void {
   if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true })
+    fs.mkdirSync(directory, { recursive: true });
   }
 }
 
 // Process and resize image
-export async function processImage(file: Express.Multer.File, targetDir: string, filename: string): Promise<string> {
+export async function processImage(
+  file: Express.Multer.File,
+  targetDir: string,
+  filename: string
+): Promise<string> {
   // Ensure directory exists
-  ensureDirectoryExists(targetDir)
+  ensureDirectoryExists(targetDir);
 
-  const ext = path.extname(file.originalname).toLowerCase()
-  const fullFilename = `${filename}${ext}`
-  const outputPath = path.join(targetDir, fullFilename)
+  const ext = path.extname(file.originalname).toLowerCase();
+  const fullFilename = `${filename}${ext}`;
+  const outputPath = path.join(targetDir, fullFilename);
 
   // If it's a PNG, resize to 500x500
   if (ext === ".png") {
@@ -28,17 +32,23 @@ export async function processImage(file: Express.Multer.File, targetDir: string,
         background: { r: 255, g: 255, b: 255, alpha: 0 },
       })
       .png()
-      .toFile(outputPath)
+      .toFile(outputPath);
   } else {
     // For other formats, just save the file
-    fs.writeFileSync(outputPath, file.buffer)
+    fs.writeFileSync(outputPath, file.buffer);
   }
 
-  // Return the relative path to the file
-  return path.join(targetDir.replace("public", ""), fullFilename).replace(/\\/g, "/")
+  // Return the relative path to the file (without leading slash)
+  const relativePath = path
+    .join(targetDir.replace("public", ""), fullFilename)
+    .replace(/\\/g, "/");
+  // Remove leading slash if present
+  return relativePath.startsWith("/")
+    ? relativePath.substring(1)
+    : relativePath;
 }
 
 // Generate a random product ID (3-6 digits)
 export function generateProductId(): string {
-  return randomInt(100, 999999).toString()
+  return randomInt(100, 999999).toString();
 }

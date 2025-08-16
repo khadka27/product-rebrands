@@ -19,6 +19,7 @@ import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ProductSuccessModal } from "./product-success-modal";
 
 interface IngredientWithPreview {
   id?: string;
@@ -120,6 +121,14 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const [paragraphError, setParagraphError] = useState("");
   const [bulletPointsError, setBulletPointsError] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdProductData, setCreatedProductData] = useState<{
+    name: string;
+    generated_link: string;
+    productId: string;
+  } | null>(null);
 
   // Add name validation effect
   useEffect(() => {
@@ -935,9 +944,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       }
 
       toast.success(productId ? "Product updated!" : "Product created!");
-      // Redirect to product page or dashboard
-      router.push("/dashboard");
-      router.refresh();
+
+      // If it's a new product creation (not update), show success modal
+      if (!productId) {
+        setCreatedProductData({
+          name: formData.name,
+          generated_link: formData.generated_link,
+          productId: data.productId || "unknown",
+        });
+        setShowSuccessModal(true);
+      } else {
+        // For updates, redirect to dashboard immediately
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
       setErrors({ general: "Failed to submit form" });
@@ -948,404 +968,677 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Tabs value={currentStep} onValueChange={setCurrentStep}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-          <TabsTrigger value="why-choose">Why Choose</TabsTrigger>
-          <TabsTrigger value="reviews">Customer Reviews</TabsTrigger>
-        </TabsList>
+    <>
+      <form onSubmit={handleSubmit}>
+        <Tabs value={currentStep} onValueChange={setCurrentStep}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+            <TabsTrigger value="why-choose">Why Choose</TabsTrigger>
+            <TabsTrigger value="reviews">Customer Reviews</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {productId ? "Edit Product" : "Create New Product"}
-              </CardTitle>
-              <CardDescription>
-                {productId
-                  ? "Update your product information"
-                  : "Add a new product to your catalog"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Product Name</Label>
-                <div className="relative">
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter product name"
-                    required
-                    className={`mt-1 block w-full rounded-md border ${
-                      nameError ? "border-red-500" : "border-gray-300"
-                    } shadow-sm focus:border-blue-500 focus:ring-blue-500`}
-                  />
-                  {isCheckingName && (
-                    <div className="absolute right-2 top-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-                    </div>
-                  )}
-                </div>
-                {nameError && (
-                  <p className="mt-1 text-sm text-red-500">{nameError}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Product Description</Label>
-                <div className="space-y-6">
-                  {/* Paragraph Section */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label
-                        htmlFor="paragraph"
-                        className="text-sm font-medium"
-                      >
-                        Introduction Paragraph
-                      </Label>
-                      <span
-                        className={`text-sm ${
-                          formData.paragraph.length > 160
-                            ? "text-red-500"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {formData.paragraph.length}/160 characters
-                      </span>
-                    </div>
-                    <Textarea
-                      id="paragraph"
-                      name="paragraph"
-                      value={formData.paragraph}
-                      onChange={(e) => handleParagraphChange(e.target.value)}
-                      placeholder="Enter a detailed introduction paragraph about your product (max 160 characters)"
-                      rows={4}
-                      maxLength={160}
-                      className={paragraphError ? "border-red-500" : ""}
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {productId ? "Edit Product" : "Create New Product"}
+                </CardTitle>
+                <CardDescription>
+                  {productId
+                    ? "Update your product information"
+                    : "Add a new product to your catalog"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name</Label>
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter product name"
+                      required
+                      className={`mt-1 block w-full rounded-md border ${
+                        nameError ? "border-red-500" : "border-gray-300"
+                      } shadow-sm focus:border-blue-500 focus:ring-blue-500`}
                     />
-                    {paragraphError && (
-                      <p className="text-sm text-red-500">{paragraphError}</p>
+                    {isCheckingName && (
+                      <div className="absolute right-2 top-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                      </div>
                     )}
-                    <p className="text-sm text-gray-500">
-                      Write a compelling introduction paragraph that describes
-                      your product. Maximum 160 characters allowed.
-                    </p>
                   </div>
+                  {nameError && (
+                    <p className="mt-1 text-sm text-red-500">{nameError}</p>
+                  )}
+                </div>
 
-                  {/* Bullet Points Section */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Key Features (4-7 bullet points)
-                    </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Product Description</Label>
+                  <div className="space-y-6">
+                    {/* Paragraph Section */}
                     <div className="space-y-2">
-                      {formData.bullet_points.map((point, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Input
-                            value={point}
-                            onChange={(e) =>
-                              handleBulletPointChange(index, e.target.value)
-                            }
-                            placeholder={`Feature ${index + 1}`}
-                            className={
-                              bulletPointsError ? "border-red-500" : ""
-                            }
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => removeBulletPoint(index)}
-                            disabled={formData.bullet_points.length <= 4}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                      <div className="flex justify-between items-center">
+                        <Label
+                          htmlFor="paragraph"
+                          className="text-sm font-medium"
+                        >
+                          Introduction Paragraph
+                        </Label>
+                        <span
+                          className={`text-sm ${
+                            formData.paragraph.length > 160
+                              ? "text-red-500"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {formData.paragraph.length}/160 characters
+                        </span>
+                      </div>
+                      <Textarea
+                        id="paragraph"
+                        name="paragraph"
+                        value={formData.paragraph}
+                        onChange={(e) => handleParagraphChange(e.target.value)}
+                        placeholder="Enter a detailed introduction paragraph about your product (max 160 characters)"
+                        rows={4}
+                        maxLength={160}
+                        className={paragraphError ? "border-red-500" : ""}
+                      />
+                      {paragraphError && (
+                        <p className="text-sm text-red-500">{paragraphError}</p>
+                      )}
+                      <p className="text-sm text-gray-500">
+                        Write a compelling introduction paragraph that describes
+                        your product. Maximum 160 characters allowed.
+                      </p>
                     </div>
 
-                    {formData.bullet_points.length < 7 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addBulletPoint}
-                        className="w-full"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Add Feature Point
-                      </Button>
-                    )}
+                    {/* Bullet Points Section */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Key Features (4-7 bullet points)
+                      </Label>
+                      <div className="space-y-2">
+                        {formData.bullet_points.map((point, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              value={point}
+                              onChange={(e) =>
+                                handleBulletPointChange(index, e.target.value)
+                              }
+                              placeholder={`Feature ${index + 1}`}
+                              className={
+                                bulletPointsError ? "border-red-500" : ""
+                              }
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => removeBulletPoint(index)}
+                              disabled={formData.bullet_points.length <= 4}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
 
-                    {bulletPointsError && (
-                      <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{bulletPointsError}</AlertDescription>
-                      </Alert>
-                    )}
+                      {formData.bullet_points.length < 7 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addBulletPoint}
+                          className="w-full"
+                        >
+                          <Plus className="mr-2 h-4 w-4" /> Add Feature Point
+                        </Button>
+                      )}
 
-                    <p className="text-sm text-gray-500">
-                      Add 4-7 key features or benefits of your product. Each
-                      point should be clear and concise.
-                    </p>
+                      {bulletPointsError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {bulletPointsError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <p className="text-sm text-gray-500">
+                        Add 4-7 key features or benefits of your product. Each
+                        point should be clear and concise.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="redirect_link">Redirect Link</Label>
-                <Input
-                  id="redirect_link"
-                  name="redirect_link"
-                  value={formData.redirect_link}
-                  onChange={handleChange}
-                  placeholder="https://example.com/checkout"
-                  required
-                />
-                {errors.redirect_link && (
-                  <p className="text-red-500 text-sm">{errors.redirect_link}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="generated_link">Product Link</Label>
-                <div className="flex gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="redirect_link">Redirect Link</Label>
                   <Input
-                    id="generated_link"
-                    name="generated_link"
-                    value={formData.generated_link}
+                    id="redirect_link"
+                    name="redirect_link"
+                    value={formData.redirect_link}
                     onChange={handleChange}
-                    placeholder="Product link will be generated automatically"
-                    readOnly
-                    className="bg-gray-50"
+                    placeholder="https://example.com/checkout"
+                    required
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (formData.generated_link) {
-                        window.open(formData.generated_link, "_blank");
-                      }
-                    }}
-                    disabled={!formData.generated_link}
-                  >
-                    Preview
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={copyLinkToClipboard}
-                    disabled={!formData.generated_link}
-                  >
-                    {linkCopied ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-500">
-                  This link will be automatically generated based on your
-                  product name
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="money_back_days">
-                  Money Back Guarantee (Days)
-                </Label>
-                <Input
-                  id="money_back_days"
-                  name="money_back_days"
-                  type="number"
-                  value={formData.money_back_days}
-                  onChange={handleChange}
-                  min={0}
-                  required
-                />
-                {errors.money_back_days && (
-                  <p className="text-red-500 text-sm">
-                    {errors.money_back_days}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="image">Product Image</Label>
-                  <Input
-                    id="image"
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    required={!productId}
-                    className={imageError ? "border-red-500" : ""}
-                  />
-                  {imageError && (
-                    <p className="text-sm text-red-500">{imageError}</p>
-                  )}
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500 mb-1">Preview:</p>
-                      <img
-                        src={
-                          imagePreview.startsWith("data:")
-                            ? imagePreview
-                            : `/${imagePreview}`
-                        }
-                        alt="Product preview"
-                        className="max-w-xs max-h-40 object-contain border rounded-md"
-                      />
-                    </div>
+                  {errors.redirect_link && (
+                    <p className="text-red-500 text-sm">
+                      {errors.redirect_link}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="badge_image">Badge Image</Label>
-                  <Input
-                    id="badge_image"
-                    name="badge_image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                  {badgeImagePreview && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500 mb-1">Preview:</p>
-                      <img
-                        src={
-                          badgeImagePreview.startsWith("data:")
-                            ? badgeImagePreview
-                            : `/${badgeImagePreview}`
-                        }
-                        alt="Badge preview"
-                        className="max-w-xs max-h-40 object-contain border rounded-md"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {errors.general && (
-                <p className="text-red-500">{errors.general}</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ingredients">
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Ingredients</CardTitle>
-              <CardDescription>
-                Add the key ingredients of your product
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {ingredients.map((ingredient, index) => (
-                  <div key={index} className="p-4 border rounded-lg relative">
+                  <Label htmlFor="generated_link">Product Link</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="generated_link"
+                      name="generated_link"
+                      value={formData.generated_link}
+                      onChange={handleChange}
+                      placeholder="Product link will be generated automatically"
+                      readOnly
+                      className="bg-gray-50"
+                    />
                     <Button
                       type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeIngredient(index)}
+                      variant="outline"
+                      onClick={() => {
+                        if (formData.generated_link) {
+                          window.open(formData.generated_link, "_blank");
+                        }
+                      }}
+                      disabled={!formData.generated_link}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Preview
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={copyLinkToClipboard}
+                      disabled={!formData.generated_link}
+                    >
+                      {linkCopied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    This link will be automatically generated based on your
+                    product name
+                  </p>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="money_back_days">
+                    Money Back Guarantee (Days)
+                  </Label>
+                  <Input
+                    id="money_back_days"
+                    name="money_back_days"
+                    type="number"
+                    value={formData.money_back_days}
+                    onChange={handleChange}
+                    min={0}
+                    required
+                  />
+                  {errors.money_back_days && (
+                    <p className="text-red-500 text-sm">
+                      {errors.money_back_days}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Product Image</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      required={!productId}
+                      className={imageError ? "border-red-500" : ""}
+                    />
+                    {imageError && (
+                      <p className="text-sm text-red-500">{imageError}</p>
+                    )}
+                    {imagePreview && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 mb-1">Preview:</p>
+                        <img
+                          src={
+                            imagePreview.startsWith("data:")
+                              ? imagePreview
+                              : imagePreview.startsWith("/")
+                              ? imagePreview
+                              : `/${imagePreview}`
+                          }
+                          alt="Product preview"
+                          className="max-w-xs max-h-40 object-contain border rounded-md"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="badge_image">Badge Image</Label>
+                    <Input
+                      id="badge_image"
+                      name="badge_image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    {badgeImagePreview && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 mb-1">Preview:</p>
+                        <img
+                          src={
+                            badgeImagePreview.startsWith("data:")
+                              ? badgeImagePreview
+                              : badgeImagePreview.startsWith("/")
+                              ? badgeImagePreview
+                              : `/${badgeImagePreview}`
+                          }
+                          alt="Badge preview"
+                          className="max-w-xs max-h-40 object-contain border rounded-md"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {errors.general && (
+                  <p className="text-red-500">{errors.general}</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ingredients">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Ingredients</CardTitle>
+                <CardDescription>
+                  Add the key ingredients of your product
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {ingredients.map((ingredient, index) => (
+                    <div key={index} className="p-4 border rounded-lg relative">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeIngredient(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`ingredient-title-${index}`}>
+                            Title
+                          </Label>
+                          <Input
+                            id={`ingredient-title-${index}`}
+                            value={ingredient.title}
+                            onChange={(e) =>
+                              handleIngredientChange(
+                                index,
+                                "title",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Ingredient name"
+                            className={
+                              ingredientErrors[index]?.title
+                                ? "border-red-500"
+                                : ""
+                            }
+                          />
+                          {ingredientErrors[index]?.title && (
+                            <p className="text-red-500 text-sm">
+                              {ingredientErrors[index].title}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`ingredient-image-${index}`}>
+                            Image
+                          </Label>
+                          <Input
+                            id={`ingredient-image-${index}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleIngredientImageChange(index, e)
+                            }
+                          />
+                          {(ingredient.image_preview ||
+                            (typeof ingredient.image === "string" &&
+                              ingredient.image)) && (
+                            <div className="mt-2">
+                              <p className="text-sm text-gray-500 mb-1">
+                                Preview:
+                              </p>
+                              <img
+                                src={
+                                  ingredient.image_preview
+                                    ? ingredient.image_preview
+                                    : typeof ingredient.image === "string"
+                                    ? ingredient.image.startsWith("/")
+                                      ? ingredient.image
+                                      : `/${ingredient.image}`
+                                    : ""
+                                }
+                                alt={`Ingredient ${index + 1}`}
+                                className="max-w-xs max-h-20 object-contain border rounded-md"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor={`ingredient-description-${index}`}>
+                          Description
+                        </Label>
+                        <Textarea
+                          id={`ingredient-description-${index}`}
+                          value={ingredient.description}
+                          onChange={(e) =>
+                            handleIngredientChange(
+                              index,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Describe the ingredient and its benefits"
+                          rows={3}
+                          className={
+                            ingredientErrors[index]?.description
+                              ? "border-red-500"
+                              : ""
+                          }
+                        />
+                        {ingredientErrors[index]?.description && (
+                          <p className="text-red-500 text-sm">
+                            {ingredientErrors[index].description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addIngredient}
+                    className="w-full"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Ingredient
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="why-choose">
+            <Card>
+              <CardHeader>
+                <CardTitle>Why Choose This Product</CardTitle>
+                <CardDescription>
+                  Add reasons why customers should choose this product
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {whyChoose.map((item, index) => (
+                    <div key={index} className="p-4 border rounded-lg relative">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeWhyChoose(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+
                       <div className="space-y-2">
-                        <Label htmlFor={`ingredient-title-${index}`}>
+                        <Label htmlFor={`why-choose-title-${index}`}>
                           Title
                         </Label>
                         <Input
-                          id={`ingredient-title-${index}`}
-                          value={ingredient.title}
+                          id={`why-choose-title-${index}`}
+                          value={item.title}
                           onChange={(e) =>
-                            handleIngredientChange(
+                            handleWhyChooseChange(
                               index,
                               "title",
                               e.target.value
                             )
                           }
-                          placeholder="Ingredient name"
+                          placeholder="Feature or benefit title"
                           className={
-                            ingredientErrors[index]?.title
+                            whyChooseErrors[index]?.title
                               ? "border-red-500"
                               : ""
                           }
                         />
-                        {ingredientErrors[index]?.title && (
+                        {whyChooseErrors[index]?.title && (
                           <p className="text-red-500 text-sm">
-                            {ingredientErrors[index].title}
+                            {whyChooseErrors[index].title}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor={`why-choose-description-${index}`}>
+                          Description
+                        </Label>
+                        <Textarea
+                          id={`why-choose-description-${index}`}
+                          value={item.description}
+                          onChange={(e) =>
+                            handleWhyChooseChange(
+                              index,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Explain this feature or benefit"
+                          rows={3}
+                          className={
+                            whyChooseErrors[index]?.description
+                              ? "border-red-500"
+                              : ""
+                          }
+                        />
+                        {whyChooseErrors[index]?.description && (
+                          <p className="text-red-500 text-sm">
+                            {whyChooseErrors[index].description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addWhyChoose}
+                    className="w-full"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Reason
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Reviews</CardTitle>
+                <CardDescription>
+                  Add customer reviews to build trust and showcase product
+                  effectiveness
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {reviews.map((review, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border border-gray-200 rounded-lg space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-semibold">
+                        Review #{index + 1}
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeReview(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`review-name-${index}`}>
+                          Customer Name
+                        </Label>
+                        <Input
+                          id={`review-name-${index}`}
+                          value={review.name}
+                          onChange={(e) =>
+                            handleReviewChange(index, "name", e.target.value)
+                          }
+                          placeholder="John D."
+                          className={`${
+                            reviewErrors[index]?.name ? "border-red-500" : ""
+                          }`}
+                        />
+                        {reviewErrors[index]?.name && (
+                          <p className="text-sm text-red-600">
+                            {reviewErrors[index].name}
                           </p>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor={`ingredient-image-${index}`}>
-                          Image
+                        <Label htmlFor={`review-address-${index}`}>
+                          Location
                         </Label>
                         <Input
-                          id={`ingredient-image-${index}`}
-                          type="file"
-                          accept="image/*"
+                          id={`review-address-${index}`}
+                          value={review.address}
                           onChange={(e) =>
-                            handleIngredientImageChange(index, e)
+                            handleReviewChange(index, "address", e.target.value)
                           }
+                          placeholder="42, New York, NY"
+                          className={`${
+                            reviewErrors[index]?.address ? "border-red-500" : ""
+                          }`}
                         />
-                        {(ingredient.image_preview ||
-                          (typeof ingredient.image === "string" &&
-                            ingredient.image)) && (
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-500 mb-1">
-                              Preview:
+                        {reviewErrors[index]?.address && (
+                          <p className="text-sm text-red-600">
+                            {reviewErrors[index].address}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Avatar Upload Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`review-avatar-${index}`}>
+                        Customer Avatar
+                      </Label>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <Input
+                            id={`review-avatar-${index}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleReviewAvatarChange(index, e)}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Upload customer photo (max 2MB, optional)
+                          </p>
+                        </div>
+                        {(review.avatar_preview ||
+                          (typeof review.avatar === "string" &&
+                            review.avatar)) && (
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                              <img
+                                src={
+                                  review.avatar_preview
+                                    ? review.avatar_preview
+                                    : typeof review.avatar === "string"
+                                    ? `/images/avatars/${review.avatar}`
+                                    : ""
+                                }
+                                alt={`${review.name || "Customer"} Avatar`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-xs text-center text-gray-500 mt-1">
+                              Preview
                             </p>
-                            <img
-                              src={
-                                ingredient.image_preview
-                                  ? ingredient.image_preview
-                                  : typeof ingredient.image === "string"
-                                  ? `/${ingredient.image}`
-                                  : ""
-                              }
-                              alt={`Ingredient ${index + 1}`}
-                              className="max-w-xs max-h-20 object-contain border rounded-md"
-                            />
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor={`ingredient-description-${index}`}>
-                        Description
+                    <div className="space-y-2">
+                      <Label>Rating</Label>
+                      {renderStarRating(index, review.rating)}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`review-text-${index}`}>
+                        Review Text
                       </Label>
                       <Textarea
-                        id={`ingredient-description-${index}`}
-                        value={ingredient.description}
+                        id={`review-text-${index}`}
+                        value={review.review_text}
                         onChange={(e) =>
-                          handleIngredientChange(
+                          handleReviewChange(
                             index,
-                            "description",
+                            "review_text",
                             e.target.value
                           )
                         }
-                        placeholder="Describe the ingredient and its benefits"
-                        rows={3}
-                        className={
-                          ingredientErrors[index]?.description
+                        placeholder="I've been using this product for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed..."
+                        rows={4}
+                        className={`${
+                          reviewErrors[index]?.review_text
                             ? "border-red-500"
                             : ""
-                        }
+                        }`}
                       />
-                      {ingredientErrors[index]?.description && (
-                        <p className="text-red-500 text-sm">
-                          {ingredientErrors[index].description}
+                      {reviewErrors[index]?.review_text && (
+                        <p className="text-sm text-red-600">
+                          {reviewErrors[index].review_text}
                         </p>
                       )}
                     </div>
@@ -1355,357 +1648,126 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={addIngredient}
+                  onClick={addReview}
                   className="w-full"
                 >
-                  <Plus className="mr-2 h-4 w-4" /> Add Ingredient
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Review
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="why-choose">
-          <Card>
-            <CardHeader>
-              <CardTitle>Why Choose This Product</CardTitle>
-              <CardDescription>
-                Add reasons why customers should choose this product
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {whyChoose.map((item, index) => (
-                  <div key={index} className="p-4 border rounded-lg relative">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeWhyChoose(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`why-choose-title-${index}`}>Title</Label>
-                      <Input
-                        id={`why-choose-title-${index}`}
-                        value={item.title}
-                        onChange={(e) =>
-                          handleWhyChooseChange(index, "title", e.target.value)
-                        }
-                        placeholder="Feature or benefit title"
-                        className={
-                          whyChooseErrors[index]?.title ? "border-red-500" : ""
-                        }
-                      />
-                      {whyChooseErrors[index]?.title && (
-                        <p className="text-red-500 text-sm">
-                          {whyChooseErrors[index].title}
+                {/* Review Validation Status */}
+                <div className="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    {reviews.length === 0 ? (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                        <p className="text-sm text-amber-700 font-medium">
+                          Add at least one customer review to enable submission
                         </p>
-                      )}
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor={`why-choose-description-${index}`}>
-                        Description
-                      </Label>
-                      <Textarea
-                        id={`why-choose-description-${index}`}
-                        value={item.description}
-                        onChange={(e) =>
-                          handleWhyChooseChange(
-                            index,
-                            "description",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Explain this feature or benefit"
-                        rows={3}
-                        className={
-                          whyChooseErrors[index]?.description
-                            ? "border-red-500"
-                            : ""
-                        }
-                      />
-                      {whyChooseErrors[index]?.description && (
-                        <p className="text-red-500 text-sm">
-                          {whyChooseErrors[index].description}
+                      </>
+                    ) : areReviewsValid ? (
+                      <>
+                        <Check className="w-5 h-5 text-green-500" />
+                        <p className="text-sm text-green-700 font-medium">
+                          All customer reviews are complete! Ready to submit.
                         </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addWhyChoose}
-                  className="w-full"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Reason
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reviews">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-              <CardDescription>
-                Add customer reviews to build trust and showcase product
-                effectiveness
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reviews.map((review, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-lg space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-semibold">
-                      Review #{index + 1}
-                    </h4>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeReview(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`review-name-${index}`}>
-                        Customer Name
-                      </Label>
-                      <Input
-                        id={`review-name-${index}`}
-                        value={review.name}
-                        onChange={(e) =>
-                          handleReviewChange(index, "name", e.target.value)
-                        }
-                        placeholder="John D."
-                        className={`${
-                          reviewErrors[index]?.name ? "border-red-500" : ""
-                        }`}
-                      />
-                      {reviewErrors[index]?.name && (
-                        <p className="text-sm text-red-600">
-                          {reviewErrors[index].name}
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                        <p className="text-sm text-red-700 font-medium">
+                          Please complete all required fields in the customer
+                          reviews
                         </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`review-address-${index}`}>
-                        Location
-                      </Label>
-                      <Input
-                        id={`review-address-${index}`}
-                        value={review.address}
-                        onChange={(e) =>
-                          handleReviewChange(index, "address", e.target.value)
-                        }
-                        placeholder="42, New York, NY"
-                        className={`${
-                          reviewErrors[index]?.address ? "border-red-500" : ""
-                        }`}
-                      />
-                      {reviewErrors[index]?.address && (
-                        <p className="text-sm text-red-600">
-                          {reviewErrors[index].address}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Avatar Upload Section */}
-                  <div className="space-y-2">
-                    <Label htmlFor={`review-avatar-${index}`}>
-                      Customer Avatar
-                    </Label>
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <Input
-                          id={`review-avatar-${index}`}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleReviewAvatarChange(index, e)}
-                          className="w-full"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Upload customer photo (max 2MB, optional)
-                        </p>
-                      </div>
-                      {(review.avatar_preview ||
-                        (typeof review.avatar === "string" &&
-                          review.avatar)) && (
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
-                            <img
-                              src={
-                                review.avatar_preview
-                                  ? review.avatar_preview
-                                  : typeof review.avatar === "string"
-                                  ? `/images/avatars/${review.avatar}`
-                                  : ""
-                              }
-                              alt={`${review.name || "Customer"} Avatar`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="text-xs text-center text-gray-500 mt-1">
-                            Preview
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Rating</Label>
-                    {renderStarRating(index, review.rating)}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor={`review-text-${index}`}>Review Text</Label>
-                    <Textarea
-                      id={`review-text-${index}`}
-                      value={review.review_text}
-                      onChange={(e) =>
-                        handleReviewChange(index, "review_text", e.target.value)
-                      }
-                      placeholder="I've been using this product for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed..."
-                      rows={4}
-                      className={`${
-                        reviewErrors[index]?.review_text ? "border-red-500" : ""
-                      }`}
-                    />
-                    {reviewErrors[index]?.review_text && (
-                      <p className="text-sm text-red-600">
-                        {reviewErrors[index].review_text}
-                      </p>
+                      </>
                     )}
                   </div>
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
+        <div className="mt-6 flex justify-between gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard")}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+
+          <div className="flex gap-4">
+            {currentStep !== "general" && (
               <Button
                 type="button"
                 variant="outline"
-                onClick={addReview}
-                className="w-full"
+                onClick={handlePreviousStep}
+                disabled={isLoading}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Review
+                Previous
               </Button>
+            )}
 
-              {/* Review Validation Status */}
-              <div className="mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
-                <div className="flex items-center gap-2">
-                  {reviews.length === 0 ? (
-                    <>
-                      <AlertCircle className="w-5 h-5 text-amber-500" />
-                      <p className="text-sm text-amber-700 font-medium">
-                        Add at least one customer review to enable submission
-                      </p>
-                    </>
-                  ) : areReviewsValid ? (
-                    <>
-                      <Check className="w-5 h-5 text-green-500" />
-                      <p className="text-sm text-green-700 font-medium">
-                        All customer reviews are complete! Ready to submit.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-5 h-5 text-red-500" />
-                      <p className="text-sm text-red-700 font-medium">
-                        Please complete all required fields in the customer
-                        reviews
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-6 flex justify-between gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/dashboard")}
-          disabled={isLoading}
-        >
-          Cancel
-        </Button>
-
-        <div className="flex gap-4">
-          {currentStep !== "general" && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePreviousStep}
-              disabled={isLoading}
-            >
-              Previous
-            </Button>
-          )}
-
-          {currentStep !== "reviews" ? (
-            <Button
-              type="button"
-              onClick={handleNextStep}
-              disabled={
-                isLoading ||
-                nameError !== "" ||
-                isCheckingName ||
-                paragraphError !== "" || // Disable if paragraph has errors
-                bulletPointsError !== "" || // Disable if bullet points have errors
-                // Check for image only on create and if on general tab
-                (currentStep === "general" &&
-                  !productId &&
-                  !formData.image &&
-                  !imagePreview)
-              }
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              disabled={
-                isLoading ||
-                nameError !== "" ||
-                isCheckingName ||
-                paragraphError !== "" || // Disable if paragraph has errors
-                bulletPointsError !== "" || // Disable if bullet points have errors
-                // Check for image only on create
-                (!productId && !formData.image && !imagePreview) ||
-                // Disable if reviews are not valid when on reviews tab
-                !areReviewsValid
-              }
-            >
-              {isLoading
-                ? "Saving..."
-                : productId
-                ? "Update Product"
-                : "Create Product"}
-            </Button>
-          )}
+            {currentStep !== "reviews" ? (
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                disabled={
+                  isLoading ||
+                  nameError !== "" ||
+                  isCheckingName ||
+                  paragraphError !== "" || // Disable if paragraph has errors
+                  bulletPointsError !== "" || // Disable if bullet points have errors
+                  // Check for image only on create and if on general tab
+                  (currentStep === "general" &&
+                    !productId &&
+                    !formData.image &&
+                    !imagePreview)
+                }
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={
+                  isLoading ||
+                  nameError !== "" ||
+                  isCheckingName ||
+                  paragraphError !== "" || // Disable if paragraph has errors
+                  bulletPointsError !== "" || // Disable if bullet points have errors
+                  // Check for image only on create
+                  (!productId && !formData.image && !imagePreview) ||
+                  // Disable if reviews are not valid when on reviews tab
+                  !areReviewsValid
+                }
+              >
+                {isLoading
+                  ? "Saving..."
+                  : productId
+                  ? "Update Product"
+                  : "Create Product"}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      {/* Success Modal */}
+      {createdProductData && (
+        <ProductSuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          productData={createdProductData}
+          onGoToDashboard={() => {
+            setShowSuccessModal(false);
+            router.push("/dashboard");
+            router.refresh();
+          }}
+        />
+      )}
+    </>
   );
 }
