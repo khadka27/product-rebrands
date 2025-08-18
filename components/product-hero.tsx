@@ -91,9 +91,9 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <SafeImage
                   src={getImagePath(
                     product?.product_image,
-                    "/images/products/placeholder.png"
+                    "/supplement-bottles.png"
                   )}
-                  fallback="/images/products/placeholder.png"
+                  fallback="/supplement-bottles.png"
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"

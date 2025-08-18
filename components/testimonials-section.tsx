@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
-import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
+import { getImagePath } from "@/lib/utils";
 import { Product } from "@/lib/models/product";
 
 interface TestimonialsSectionProps {
@@ -24,10 +25,7 @@ export default function TestimonialsSection({
           rating: review.rating,
           image:
             review.avatar && review.avatar.trim() !== ""
-              ? review.avatar.startsWith("/images/") ||
-                review.avatar.startsWith("/")
-                ? review.avatar
-                : `/images/${review.avatar}`
+              ? getImagePath(review.avatar, "/placeholder-user.jpg")
               : "/placeholder-user.jpg",
         }))
       : [
@@ -90,8 +88,12 @@ export default function TestimonialsSection({
 
                 <div className="flex items-center mb-3 md:mb-4">
                   <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-purple-500/30 mr-2 md:mr-4">
-                    <Image
-                      src={testimonial.image || "/placeholder.svg"}
+                    <SafeImage
+                      src={getImagePath(
+                        testimonial.image,
+                        "/placeholder-user.jpg"
+                      )}
+                      fallback="/placeholder-user.jpg"
                       alt={`${testimonial.name} photo`}
                       width={64}
                       height={64}

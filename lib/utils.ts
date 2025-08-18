@@ -105,7 +105,7 @@ export function cn(...inputs: ClassValue[]) {
 // Utility function to handle image paths consistently
 export function getImagePath(
   imagePath: string | null | undefined,
-  fallback: string = "/images/placeholder.png"
+  fallback: string = "/placeholder.jpg"
 ): string {
   if (!imagePath) return fallback;
 
@@ -139,8 +139,8 @@ export function getImagePath(
       if (lower.startsWith("avatar_")) {
         return `/images/avatars/${cleanPath}`;
       }
-      // Unknown but valid image filename: default to root public
-      return `/${cleanPath}`;
+      // Unknown but valid image filename: default to products directory
+      return `/images/products/${cleanPath}`;
     }
   }
 

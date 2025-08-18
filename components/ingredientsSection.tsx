@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
 import { getImagePath } from "@/lib/utils";
 
 import { type Ingredient as DBIngredient } from "@/lib/models/ingredient";
@@ -102,12 +103,19 @@ export default function IngredientsSection({
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 md:gap-6">
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-blue-500/30">
-                      <Image
+                      <SafeImage
                         src={
                           typeof ingredient.image === "string"
-                            ? getImagePath(ingredient.image, "/placeholder.svg")
-                            : getImagePath(productImage, "/placeholder.svg")
+                            ? getImagePath(
+                                ingredient.image,
+                                "/images/ingredients/placeholder.png"
+                              )
+                            : getImagePath(
+                                productImage,
+                                "/images/ingredients/placeholder.png"
+                              )
                         }
+                        fallback="/images/ingredients/placeholder.png"
                         alt={getIngredientTitle(ingredient)}
                         width={96}
                         height={96}

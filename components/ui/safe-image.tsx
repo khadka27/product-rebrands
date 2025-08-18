@@ -10,7 +10,12 @@ type SafeImageProps = Omit<ImageProps, "src" | "alt"> & {
   fallback?: string;
 };
 
-export function SafeImage({ src, alt, fallback = "/images/placeholder.png", ...rest }: SafeImageProps) {
+export function SafeImage({
+  src,
+  alt,
+  fallback = "/placeholder.jpg",
+  ...rest
+}: SafeImageProps) {
   const [hasError, setHasError] = useState(false);
 
   const resolvedSrc = useMemo(() => {
@@ -29,5 +34,3 @@ export function SafeImage({ src, alt, fallback = "/images/placeholder.png", ...r
 }
 
 export default SafeImage;
-
-

@@ -115,9 +115,9 @@ export default function NewCta({ product }: NewCtaProps) {
                 <SafeImage
                   src={getImagePath(
                     product?.product_image,
-                    "/images/products/placeholder.png"
+                    "/supplement-bottles.png"
                   )}
-                  fallback="/images/products/placeholder.png"
+                  fallback="/supplement-bottles.png"
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
@@ -127,9 +127,9 @@ export default function NewCta({ product }: NewCtaProps) {
                 <SafeImage
                   src={getImagePath(
                     product?.product_badge,
-                    "/images/new-badge.png"
+                    "/images/New-and-Improved-Badge.png"
                   )}
-                  fallback="/images/new-badge.png"
+                  fallback="/images/New-and-Improved-Badge.png"
                   alt="New Product Badge"
                   fill
                   className="object-contain"
