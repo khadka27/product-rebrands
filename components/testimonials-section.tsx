@@ -87,7 +87,6 @@ export default function TestimonialsSection({
                   <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-purple-500/30 mr-2 md:mr-4">
                     <SafeImage
                       src={resolveAvatarImagePath(testimonial.image)}
-                      fallback=""
                       alt={`${testimonial.name} photo`}
                       width={64}
                       height={64}

@@ -111,7 +111,6 @@ export default function IngredientsSection({
                             ? resolveIngredientImagePath(ingredient.image)
                             : resolveProductImagePath(productImage)
                         }
-                        fallback=""
                         alt={getIngredientTitle(ingredient)}
                         width={96}
                         height={96}

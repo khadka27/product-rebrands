@@ -85,7 +85,6 @@ export default function CallToAction({ product }: CallToActionProps) {
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
                   src={resolveProductImagePath(product?.product_image)}
-                  fallback=""
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"

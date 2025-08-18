@@ -114,7 +114,6 @@ export default function NewCta({ product }: NewCtaProps) {
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
                   src={resolveProductImagePath(product?.product_image)}
-                  fallback=""
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
@@ -123,7 +122,6 @@ export default function NewCta({ product }: NewCtaProps) {
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <SafeImage
                   src={resolveBadgeImagePath(product?.product_badge)}
-                  fallback=""
                   alt="New Product Badge"
                   fill
                   className="object-contain"

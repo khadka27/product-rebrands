@@ -90,7 +90,6 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-600/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
                   src={resolveProductImagePath(product?.product_image)}
-                  fallback=""
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
@@ -100,7 +99,6 @@ export default function ProductHero({ product }: ProductHeroProps) {
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <SafeImage
                   src={resolveBadgeImagePath(product?.product_badge)}
-                  fallback=""
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"
