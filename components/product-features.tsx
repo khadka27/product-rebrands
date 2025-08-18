@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
 import { Check } from "lucide-react";
 import type { Product } from "@/lib/models/product";
-import { getImagePath } from "@/lib/utils";
+import { resolveProductImagePath } from "@/lib/utils";
 
 interface ProductFeaturesProps {
   product: Product;
@@ -99,11 +100,8 @@ export default function ProductFeatures({ product }: ProductFeaturesProps) {
                 {/* Responsive bottle size - enhanced for mobile */}
                 <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
                   <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-700/20 rounded-full filter blur-[60px] opacity-70"></div>
-                  <Image
-                    src={getImagePath(
-                      product?.product_image,
-                      "/placeholder.svg"
-                    )}
+                  <SafeImage
+                    src={resolveProductImagePath(product?.product_image)}
                     alt="Product Image"
                     fill
                     className="object-contain z-10"

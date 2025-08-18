@@ -156,7 +156,13 @@ function resolveImageByCategory(
   // Prefer DB-provided value; no hardcoded defaults here
   if (imagePath && imagePath.startsWith("http")) return imagePath;
   if (imagePath && imagePath.trim() !== "") {
-    const clean = imagePath.trim().replace(/^\/+/, "");
+    // Normalize slashes and strip leading public/ if present
+    const normalized = imagePath
+      .trim()
+      .replace(/\\/g, "/")
+      .replace(/^\/+/, "")
+      .replace(/^public\//, "");
+    const clean = normalized;
     if (clean.startsWith("images/")) return `/${clean}`;
     if (clean.includes("/")) return `/${clean}`;
     return `/images/${category}/${clean}`;
