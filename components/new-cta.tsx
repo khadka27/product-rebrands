@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
 import type { Product } from "@/lib/models/product";
 import { getImagePath } from "@/lib/utils";
 
@@ -111,22 +112,24 @@ export default function NewCta({ product }: NewCtaProps) {
               {/* Responsive bottle size - enhanced for mobile */}
               <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
-                <Image
+                <SafeImage
                   src={getImagePath(
                     product?.product_image,
-                    "/images/placeholder.png"
+                    "/images/products/placeholder.png"
                   )}
+                  fallback="/images/products/placeholder.png"
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
                 />
               </div>
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
-                <Image
+                <SafeImage
                   src={getImagePath(
                     product?.product_badge,
                     "/images/new-badge.png"
                   )}
+                  fallback="/images/new-badge.png"
                   alt="New Product Badge"
                   fill
                   className="object-contain"

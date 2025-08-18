@@ -1,6 +1,5 @@
 "use client";
-
-import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import CountdownTimer from "./countdown-timer";
@@ -37,8 +36,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
               {product?.bullet_points && product.bullet_points.length > 0 && (
                 <ul className="space-y-2 md:space-y-3">
-                  {product.bullet_points.map((point, index) => (
-                    <li key={index} className="flex items-start gap-2">
+                  {product.bullet_points.map((point) => (
+                    <li key={`bp-${point}`} className="flex items-start gap-2">
                       <span className="text-blue-400 mt-1">•</span>
                       <span className="text-sm md:text-base text-white">
                         {point}
@@ -89,11 +88,12 @@ export default function ProductHero({ product }: ProductHeroProps) {
               {/* Responsive bottle size - enhanced for mobile */}
               <div className="relative w-48 h-60 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-600/20 rounded-full filter blur-[60px] opacity-70"></div>
-                <Image
+                <SafeImage
                   src={getImagePath(
                     product?.product_image,
-                    "/images/product.png"
+                    "/images/products/placeholder.png"
                   )}
+                  fallback="/images/products/placeholder.png"
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
@@ -101,11 +101,12 @@ export default function ProductHero({ product }: ProductHeroProps) {
               </div>
 
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
-                <Image
+                <SafeImage
                   src={getImagePath(
                     product?.product_badge,
                     "/images/New-and-Improved-Badge.png"
                   )}
+                  fallback="/images/New-and-Improved-Badge.png"
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"

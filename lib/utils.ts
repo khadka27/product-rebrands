@@ -114,15 +114,36 @@ export function getImagePath(
     return imagePath;
   }
 
-  // Clean the path and ensure it starts with /
-  const cleanPath = imagePath.replace(/^\//, "");
+  // Normalize and route legacy filenames to correct subdirectories
+  const cleanPath = imagePath.trim().replace(/^\/+/, "");
 
-  // For production deployment, ensure paths are properly formatted
-  if (process.env.NODE_ENV === "production") {
-    // Make sure the path exists in the public directory
+  // If path already points inside images/, just ensure leading slash
+  if (cleanPath.startsWith("images/")) {
     return `/${cleanPath}`;
   }
 
-  // For development, ensure it starts with /
+  // If it's a bare filename (no directory), infer subdirectory by naming convention
+  if (!cleanPath.includes("/")) {
+    const lower = cleanPath.toLowerCase();
+    const isImageFile = /\.(png|jpe?g|webp|gif|svg)$/.test(lower);
+    if (isImageFile) {
+      if (lower.startsWith("badge_")) {
+        return `/images/badges/${cleanPath}`;
+      }
+      if (lower.startsWith("product_")) {
+        return `/images/products/${cleanPath}`;
+      }
+      if (lower.startsWith("ingredient_")) {
+        return `/images/ingredients/${cleanPath}`;
+      }
+      if (lower.startsWith("avatar_")) {
+        return `/images/avatars/${cleanPath}`;
+      }
+      // Unknown but valid image filename: default to root public
+      return `/${cleanPath}`;
+    }
+  }
+
+  // Default: ensure leading slash
   return `/${cleanPath}`;
 }
