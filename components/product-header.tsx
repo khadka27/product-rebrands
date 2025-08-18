@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { getImagePath } from "@/lib/utils";
 
 interface ProductHeaderProps {
   productName: string;
@@ -45,8 +46,8 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
 
           <p className="text-lg mb-6">
             In an effort to combat counterfeit versions of this popular male
-            enhancement formula, we have rebranded to
-            <span className="font-bold"> Tribal Force X</span>. This ensures you
+            enhancement formula, we have rebranded to{" "}
+            <span className="font-bold">Tribal Force X</span>. This ensures you
             receive the highest quality, original product.
           </p>
 
@@ -80,7 +81,7 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
         <div className="relative order-1 md:order-2 flex justify-center">
           <div className="relative w-48 h-64">
             <Image
-              src="/images/TRIBAL_FORCE_X.png"
+              src={getImagePath("/images/TRIBAL_FORCE_X.png")}
               alt="Tribal Force X Product"
               fill
               className="object-contain"
@@ -89,7 +90,7 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
 
           <div className="absolute -bottom-4 right-0 md:right-10 w-24 h-24">
             <Image
-              src="/images/New-and-Improved-Badge.png"
+              src={getImagePath("/images/New-and-Improved-Badge.png")}
               alt="New and Improved Badge"
               fill
               className="object-contain"

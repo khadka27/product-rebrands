@@ -103,14 +103,26 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Utility function to handle image paths consistently
-export function getImagePath(imagePath: string | null | undefined, fallback: string = "/images/placeholder.png"): string {
+export function getImagePath(
+  imagePath: string | null | undefined,
+  fallback: string = "/images/placeholder.png"
+): string {
   if (!imagePath) return fallback;
-  
+
   // If it's already a full URL, return as is
-  if (imagePath.startsWith('http')) {
+  if (imagePath.startsWith("http")) {
     return imagePath;
   }
-  
-  // If it's a relative path, ensure it starts with /
-  return `/${imagePath.replace(/^\//, '')}`;
+
+  // Clean the path and ensure it starts with /
+  const cleanPath = imagePath.replace(/^\//, "");
+
+  // For production deployment, ensure paths are properly formatted
+  if (process.env.NODE_ENV === "production") {
+    // Make sure the path exists in the public directory
+    return `/${cleanPath}`;
+  }
+
+  // For development, ensure it starts with /
+  return `/${cleanPath}`;
 }

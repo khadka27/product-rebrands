@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Clock, Package } from "lucide-react";
+import { getImagePath } from "@/lib/utils";
 
 interface PricingSectionProps {
   productName: string;
@@ -70,7 +71,7 @@ export default function PricingSection({
           <div className="border border-indigo-500 dark:border-indigo-400 rounded-xl p-4 mb-10 flex items-center justify-center bg-white/5 backdrop-blur-sm">
             <div className="flex-shrink-0 mr-4">
               <Image
-                src="/red-truck-free-shipping.png"
+                src={getImagePath("/red-truck-free-shipping.png")}
                 alt="Free Shipping"
                 width={100}
                 height={60}
@@ -116,7 +117,7 @@ export default function PricingSection({
                   </div>
                 </div>
                 <Image
-                  src="/images/TRIBAL_FORCE_X.png"
+                  src={getImagePath("/images/TRIBAL_FORCE_X.png")}
                   alt="1 Bottle of Tribal Force X"
                   width={150}
                   height={200}
@@ -173,7 +174,7 @@ export default function PricingSection({
                   </div>
                 </div>
                 <Image
-                  src="/supplement-bottles.png"
+                  src={getImagePath("/supplement-bottles.png")}
                   alt="6 Bottles of Tribal Force X"
                   width={200}
                   height={200}
@@ -242,7 +243,7 @@ export default function PricingSection({
                   </div>
                 </div>
                 <Image
-                  src="/supplement-bottles.png"
+                  src={getImagePath("/supplement-bottles.png")}
                   alt="3 Bottles of Tribal Force X"
                   width={200}
                   height={200}

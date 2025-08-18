@@ -52,8 +52,8 @@ export default function LandingPage() {
             <Image
               src="https://images.unsplash.com/photo-1624362772755-4d5843e67047?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8c3VwcGxlbWVudHN8ZW58MHwwfDB8fHww"
               alt="Abstract background"
-              layout="fill"
-              objectFit="cover"
+              fill
+              className="object-cover"
               priority
             />
           </div>
@@ -203,9 +203,8 @@ export default function LandingPage() {
                 <Image
                   src="https://plus.unsplash.com/premium_photo-1670459706285-5a62ed024286?q=80&w=1997&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                   alt="VitalityBoost X Product"
-                  layout="fill"
-                  objectFit="contain"
-                  className="rounded-lg shadow-2xl"
+                  fill
+                  className="object-contain rounded-lg shadow-2xl"
                 />
               </div>
             </div>
@@ -275,7 +274,7 @@ export default function LandingPage() {
                         <div className="flex">
                           {[...Array(5)].map((_, i) => (
                             <Star
-                              key={i}
+                              key={`star-${testimonial.name}-${i}`}
                               className={`h-5 w-5 ${
                                 i < testimonial.rating
                                   ? "text-yellow-400 fill-yellow-400"
