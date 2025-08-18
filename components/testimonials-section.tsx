@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 import SafeImage from "@/components/ui/safe-image";
-import { getImagePath } from "@/lib/utils";
+import { resolveAvatarImagePath } from "@/lib/utils";
 import { Product } from "@/lib/models/product";
 
 interface TestimonialsSectionProps {
@@ -23,10 +23,7 @@ export default function TestimonialsSection({
           name: review.name,
           location: review.address,
           rating: review.rating,
-          image:
-            review.avatar && review.avatar.trim() !== ""
-              ? getImagePath(review.avatar, "/placeholder-user.jpg")
-              : "/placeholder-user.jpg",
+          image: resolveAvatarImagePath(review.avatar || ""),
         }))
       : [
           // Fallback testimonials if no reviews in database
@@ -75,12 +72,12 @@ export default function TestimonialsSection({
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.map((testimonial) => (
               <motion.div
-                key={index}
+                key={`${testimonial.name}-${testimonial.location}`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
+                transition={{ duration: 0.2 }}
                 viewport={{ once: true, amount: 0.1 }}
                 className="bg-[#1e2633] p-3 md:p-6 rounded-lg md:rounded-2xl border border-purple-500/20 backdrop-blur-sm group hover:bg-[#243040] transition-all duration-300 relative"
               >
@@ -89,11 +86,8 @@ export default function TestimonialsSection({
                 <div className="flex items-center mb-3 md:mb-4">
                   <div className="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-purple-500/30 mr-2 md:mr-4">
                     <SafeImage
-                      src={getImagePath(
-                        testimonial.image,
-                        "/placeholder-user.jpg"
-                      )}
-                      fallback="/placeholder-user.jpg"
+                      src={resolveAvatarImagePath(testimonial.image)}
+                      fallback=""
                       alt={`${testimonial.name} photo`}
                       width={64}
                       height={64}
@@ -113,7 +107,7 @@ export default function TestimonialsSection({
                 <div className="flex mb-2 md:mb-3">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
-                      key={i}
+                      key={`star-${testimonial.name}-${i}`}
                       className={`w-3 h-3 md:w-5 md:h-5 ${
                         i < testimonial.rating
                           ? "fill-yellow-400 text-yellow-400"

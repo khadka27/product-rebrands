@@ -23,6 +23,10 @@ export function SafeImage({
     return getImagePath(src || "", fallback);
   }, [hasError, src, fallback]);
 
+  if (!resolvedSrc) {
+    return null;
+  }
+
   return (
     <Image
       {...rest}

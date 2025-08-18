@@ -147,3 +147,48 @@ export function getImagePath(
   // Default: ensure leading slash
   return `/${cleanPath}`;
 }
+
+function resolveImageByCategory(
+  imagePath: string | null | undefined,
+  category: "products" | "badges" | "avatars" | "ingredients",
+  fallback?: string
+): string {
+  // Prefer DB-provided value; no hardcoded defaults here
+  if (imagePath && imagePath.startsWith("http")) return imagePath;
+  if (imagePath && imagePath.trim() !== "") {
+    const clean = imagePath.trim().replace(/^\/+/, "");
+    if (clean.startsWith("images/")) return `/${clean}`;
+    if (clean.includes("/")) return `/${clean}`;
+    return `/images/${category}/${clean}`;
+  }
+  // If empty, return normalized fallback or empty string
+  return fallback ? getImagePath(fallback) : "";
+}
+
+export function resolveProductImagePath(
+  imagePath: string | null | undefined,
+  fallback?: string
+): string {
+  return resolveImageByCategory(imagePath, "products", fallback);
+}
+
+export function resolveBadgeImagePath(
+  imagePath: string | null | undefined,
+  fallback?: string
+): string {
+  return resolveImageByCategory(imagePath, "badges", fallback);
+}
+
+export function resolveAvatarImagePath(
+  imagePath: string | null | undefined,
+  fallback?: string
+): string {
+  return resolveImageByCategory(imagePath, "avatars", fallback);
+}
+
+export function resolveIngredientImagePath(
+  imagePath: string | null | undefined,
+  fallback?: string
+): string {
+  return resolveImageByCategory(imagePath, "ingredients", fallback);
+}

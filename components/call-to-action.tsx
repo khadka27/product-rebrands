@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
-import Image from "next/image";
+// no-op
 import SafeImage from "@/components/ui/safe-image";
 import type { Product } from "@/lib/models/product";
-import { getImagePath } from "@/lib/utils";
+import { resolveProductImagePath } from "@/lib/utils";
 
 interface CallToActionProps {
   product: Product;
@@ -84,11 +84,8 @@ export default function CallToAction({ product }: CallToActionProps) {
               <div className="relative w-48 h-60 sm:w-56 sm:h-72 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
-                  src={getImagePath(
-                    product?.product_image,
-                    "/supplement-bottles.png"
-                  )}
-                  fallback="/supplement-bottles.png"
+                  src={resolveProductImagePath(product?.product_image)}
+                  fallback=""
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"

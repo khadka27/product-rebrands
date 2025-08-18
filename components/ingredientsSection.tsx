@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import SafeImage from "@/components/ui/safe-image";
-import { getImagePath } from "@/lib/utils";
+import {
+  resolveIngredientImagePath,
+  resolveProductImagePath,
+} from "@/lib/utils";
 
 import { type Ingredient as DBIngredient } from "@/lib/models/ingredient";
 
@@ -106,16 +108,10 @@ export default function IngredientsSection({
                       <SafeImage
                         src={
                           typeof ingredient.image === "string"
-                            ? getImagePath(
-                                ingredient.image,
-                                "/images/ingredients/placeholder.png"
-                              )
-                            : getImagePath(
-                                productImage,
-                                "/images/ingredients/placeholder.png"
-                              )
+                            ? resolveIngredientImagePath(ingredient.image)
+                            : resolveProductImagePath(productImage)
                         }
-                        fallback="/images/ingredients/placeholder.png"
+                        fallback=""
                         alt={getIngredientTitle(ingredient)}
                         width={96}
                         height={96}

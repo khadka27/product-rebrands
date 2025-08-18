@@ -6,7 +6,7 @@ import { Check, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import SafeImage from "@/components/ui/safe-image";
 import type { Product } from "@/lib/models/product";
-import { getImagePath } from "@/lib/utils";
+import { resolveProductImagePath, resolveBadgeImagePath } from "@/lib/utils";
 
 interface NewCtaProps {
   product: Product;
@@ -113,11 +113,8 @@ export default function NewCta({ product }: NewCtaProps) {
               <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
-                  src={getImagePath(
-                    product?.product_image,
-                    "/supplement-bottles.png"
-                  )}
-                  fallback="/supplement-bottles.png"
+                  src={resolveProductImagePath(product?.product_image)}
+                  fallback=""
                   alt={product?.name + " Product"}
                   fill
                   className="object-contain z-10"
@@ -125,11 +122,8 @@ export default function NewCta({ product }: NewCtaProps) {
               </div>
               <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <SafeImage
-                  src={getImagePath(
-                    product?.product_badge,
-                    "/images/New-and-Improved-Badge.png"
-                  )}
-                  fallback="/images/New-and-Improved-Badge.png"
+                  src={resolveBadgeImagePath(product?.product_badge)}
+                  fallback=""
                   alt="New Product Badge"
                   fill
                   className="object-contain"
