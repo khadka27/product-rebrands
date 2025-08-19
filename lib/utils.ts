@@ -115,7 +115,11 @@ export function getImagePath(
   }
 
   // Normalize and route legacy filenames to correct subdirectories
-  const cleanPath = imagePath.trim().replace(/^\/+/, "");
+  // Strip leading slashes and any leading `public/` so URLs don’t include the build-time folder name
+  const cleanPath = imagePath
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/^public\//, "");
 
   // If path already points inside images/, just ensure leading slash
   if (cleanPath.startsWith("images/")) {
