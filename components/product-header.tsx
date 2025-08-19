@@ -85,6 +85,7 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
               alt="Tribal Force X Product"
               fill
               className="object-contain"
+              unoptimized
             />
           </div>
 
@@ -94,6 +95,7 @@ export default function ProductHeader({ productName }: ProductHeaderProps) {
               alt="New and Improved Badge"
               fill
               className="object-contain"
+              unoptimized
             />
           </div>
         </div>
