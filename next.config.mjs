@@ -41,12 +41,6 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: "https://www.verifiedsupplements.store/",
-        port: "",
-        pathname: "/**",
-      },
     ],
   },
 }
