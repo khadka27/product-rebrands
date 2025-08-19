@@ -93,6 +93,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
                   alt={`${product?.name || "product"} Product`}
                   fill
                   className="object-contain z-10"
+                  unoptimized
                 />
               </div>
 
@@ -102,6 +103,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
                   alt="New and Improved Badge"
                   fill
                   className="object-contain"
+                  unoptimized
                 />
               </div>
             </motion.div>
