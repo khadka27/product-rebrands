@@ -17,12 +17,27 @@ export async function processImage(
   targetDir: string,
   filename: string
 ): Promise<string> {
+  // Normalize target directory to always write under public/images/<category>
+  const normalizedDir = (() => {
+    const td = targetDir.replace(/\\/g, "/").replace(/^\/+/, "");
+    // If already starts with public/
+    if (td.startsWith("public/")) return td;
+    // If starts with images/
+    if (td.startsWith("images/")) return `public/${td}`;
+    // If is a bare category (products|badges|avatars|ingredients)
+    if (["products", "badges", "avatars", "ingredients"].includes(td)) {
+      return `public/images/${td}`;
+    }
+    // Default: place under public/images/<td>
+    return `public/images/${td}`;
+  })();
+
   // Ensure directory exists
-  ensureDirectoryExists(targetDir);
+  ensureDirectoryExists(normalizedDir);
 
   const ext = path.extname(file.originalname).toLowerCase();
   const fullFilename = `${filename}${ext}`;
-  const outputPath = path.join(targetDir, fullFilename);
+  const outputPath = path.join(normalizedDir, fullFilename);
 
   // If it's a PNG, resize to 500x500
   if (ext === ".png") {
@@ -38,9 +53,10 @@ export async function processImage(
     fs.writeFileSync(outputPath, file.buffer);
   }
 
-  // Return the relative path to the file (without leading slash)
+  // Return the relative public path for serving (images/<category>/filename)
+  const publicRelativeDir = normalizedDir.replace(/^public\/?/, "");
   const relativePath = path
-    .join(targetDir.replace("public", ""), fullFilename)
+    .join(publicRelativeDir, fullFilename)
     .replace(/\\/g, "/");
   // Remove leading slash if present
   return relativePath.startsWith("/")
