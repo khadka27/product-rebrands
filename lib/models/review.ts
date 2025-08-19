@@ -23,12 +23,51 @@ async function withConnection<T>(
   }
 }
 
+// Ensure the reviews table exists (fallback safety for environments where
+// global initialization didn't run). Uses the provided connection.
+async function ensureReviewsTableExists(connection: any): Promise<void> {
+  // Create table if it doesn't exist
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      product_id VARCHAR(255) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      address VARCHAR(500) NOT NULL,
+      rating INT NOT NULL,
+      review_text TEXT NOT NULL,
+      avatar VARCHAR(500) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_product_id (product_id),
+      CONSTRAINT fk_reviews_product FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+    )
+  `);
+
+  // Ensure avatar column exists (ignore if already there)
+  try {
+    await connection.query(
+      `ALTER TABLE reviews ADD COLUMN avatar VARCHAR(500) NULL`
+    );
+  } catch (error: any) {
+    if (
+      !error ||
+      !String(error.message || error)
+        .toLowerCase()
+        .includes("duplicate column")
+    ) {
+      // Non-duplicate error should bubble up
+      // But if it's a different DB that already has the column, we ignore
+    }
+  }
+}
+
 export async function createReview(
   review: Omit<Review, "id" | "created_at" | "updated_at">,
   existingConnection?: any
 ): Promise<Review> {
   if (existingConnection) {
     // Use existing connection (for transactions)
+    await ensureReviewsTableExists(existingConnection);
     const query = `
       INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
@@ -59,6 +98,7 @@ export async function createReview(
   } else {
     // Use new connection (for standalone operations)
     return withConnection(async (connection) => {
+      await ensureReviewsTableExists(connection);
       const query = `
         INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
@@ -85,6 +125,7 @@ export async function createReview(
 
 export async function getReviewById(id: number): Promise<Review | null> {
   return withConnection(async (connection) => {
+    await ensureReviewsTableExists(connection);
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
@@ -106,6 +147,7 @@ export async function getReviewsByProductId(
   productId: string
 ): Promise<Review[]> {
   return withConnection(async (connection) => {
+    await ensureReviewsTableExists(connection);
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
@@ -123,6 +165,7 @@ export async function updateReview(
   review: Partial<Omit<Review, "id" | "created_at" | "updated_at">>
 ): Promise<Review | null> {
   return withConnection(async (connection) => {
+    await ensureReviewsTableExists(connection);
     const fields = [];
     const values = [];
 
@@ -167,6 +210,7 @@ export async function updateReview(
 
 export async function deleteReview(id: number): Promise<boolean> {
   return withConnection(async (connection) => {
+    await ensureReviewsTableExists(connection);
     const query = "DELETE FROM reviews WHERE id = ?";
     const [result] = await connection.execute(query, [id]);
     return (result as any).affectedRows > 0;
@@ -179,12 +223,14 @@ export async function deleteReviewsByProductId(
 ): Promise<boolean> {
   if (existingConnection) {
     // Use existing connection (for transactions)
+    await ensureReviewsTableExists(existingConnection);
     const query = "DELETE FROM reviews WHERE product_id = ?";
     const [result] = await existingConnection.execute(query, [productId]);
     return (result as any).affectedRows >= 0;
   } else {
     // Use new connection (for standalone operations)
     return withConnection(async (connection) => {
+      await ensureReviewsTableExists(connection);
       const query = "DELETE FROM reviews WHERE product_id = ?";
       const [result] = await connection.execute(query, [productId]);
       return (result as any).affectedRows >= 0;
