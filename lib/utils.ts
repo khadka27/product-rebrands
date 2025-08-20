@@ -116,10 +116,14 @@ export function getImagePath(
 
   // Normalize and route legacy filenames to correct subdirectories
   // Strip leading slashes and any leading `public/` so URLs don’t include the build-time folder name
-  const cleanPath = imagePath
-    .trim()
-    .replace(/^\/+/, "")
-    .replace(/^public\//, "");
+  const normalizedInput = imagePath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+
+  // If the path already points to our API static endpoint, return as-is with a single leading slash
+  if (normalizedInput.startsWith("api/static/")) {
+    return `/${normalizedInput}`;
+  }
+
+  const cleanPath = normalizedInput.replace(/^public\//, "");
 
   // If path already points inside images/, route through API static endpoint
   if (cleanPath.startsWith("images/")) {
@@ -149,7 +153,7 @@ export function getImagePath(
   }
 
   // Default: ensure leading slash
-  return `/api/static/${cleanPath}`;
+  return cleanPath.startsWith("api/static/") ? `/${cleanPath}` : `/api/static/${cleanPath}`;
 }
 
 function resolveImageByCategory(
@@ -166,6 +170,7 @@ function resolveImageByCategory(
       .replace(/\\/g, "/")
       .replace(/^\/+/, "")
       .replace(/^public\//, "");
+    if (normalized.startsWith("api/static/")) return `/${normalized}`;
     const clean = normalized;
     if (clean.startsWith("images/")) return `/api/static/${clean}`;
     if (clean.includes("/")) return `/api/static/${clean}`;
