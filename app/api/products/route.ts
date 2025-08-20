@@ -552,8 +552,8 @@ export async function POST(req: NextRequest) {
     console.log("Received product data:", {
       ...body,
       // Don't log file objects, just their presence
-      image: body.image instanceof File ? `[File: ${body.image.name}]` : body.image,
-      badge_image: body.badge_image instanceof File ? `[File: ${body.badge_image.name}]` : body.badge_image
+      image: (body.image && typeof body.image === 'object' && body.image.name) ? `[File: ${body.image.name}]` : body.image,
+      badge_image: (body.badge_image && typeof body.badge_image === 'object' && body.badge_image.name) ? `[File: ${body.badge_image.name}]` : body.badge_image
     });
 
     // Validate required fields
@@ -573,7 +573,7 @@ export async function POST(req: NextRequest) {
     let badgeImagePath = '';
 
     // Process main product image
-    if (body.image && body.image instanceof File) {
+    if (body.image && typeof body.image === 'object' && body.image.arrayBuffer) {
       console.log("Processing product image...");
       const buffer = Buffer.from(await body.image.arrayBuffer());
       const file = {
@@ -590,7 +590,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Process badge image
-    if (body.badge_image && body.badge_image instanceof File) {
+    if (body.badge_image && typeof body.badge_image === 'object' && body.badge_image.arrayBuffer) {
       console.log("Processing badge image...");
       const buffer = Buffer.from(await body.badge_image.arrayBuffer());
       const file = {
@@ -614,7 +614,7 @@ export async function POST(req: NextRequest) {
         
         // Check for ingredient image file
         const ingredientImageKey = `ingredient_image_${index}`;
-        if (body[ingredientImageKey] && body[ingredientImageKey] instanceof File) {
+        if (body[ingredientImageKey] && typeof body[ingredientImageKey] === 'object' && body[ingredientImageKey].arrayBuffer) {
           console.log(`Processing ingredient ${index} image...`);
           const buffer = Buffer.from(await body[ingredientImageKey].arrayBuffer());
           const file = {
@@ -645,7 +645,7 @@ export async function POST(req: NextRequest) {
         
         // Check for review avatar file
         const avatarKey = `review_avatar_${index}`;
-        if (body[avatarKey] && body[avatarKey] instanceof File) {
+        if (body[avatarKey] && typeof body[avatarKey] === 'object' && body[avatarKey].arrayBuffer) {
           console.log(`Processing review ${index} avatar...`);
           const buffer = Buffer.from(await body[avatarKey].arrayBuffer());
           const file = {
