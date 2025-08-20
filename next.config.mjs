@@ -8,6 +8,19 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Add static file serving configuration
+  async rewrites() {
+    return [
+      {
+        source: '/images/:path*',
+        destination: '/images/:path*',
+      },
+    ];
+  },
+  // Ensure static files are served correctly
+  experimental: {
+    outputFileTracingRoot: undefined,
+  },
   images: {
     unoptimized: true,
     domains: ['www.verifiedsupplements.store'],
