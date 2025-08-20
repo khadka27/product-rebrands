@@ -10,6 +10,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['www.verifiedsupplements.store'],
     remotePatterns: [
       {
         protocol: "https",
