@@ -13,7 +13,7 @@ const pool = new Pool({
   max: 10, // maximum number of clients in the pool
   idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
   connectionTimeoutMillis: 30000, // how long to wait for a connection
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_HOST && process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : false, // Enable SSL for cloud databases
 });
 
 // Test the connection with detailed error handling
