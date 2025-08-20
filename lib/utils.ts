@@ -121,9 +121,9 @@ export function getImagePath(
     .replace(/^\/+/, "")
     .replace(/^public\//, "");
 
-  // If path already points inside images/, just ensure leading slash
+  // If path already points inside images/, route through API static endpoint
   if (cleanPath.startsWith("images/")) {
-    return `/${cleanPath}`;
+    return `/api/static/${cleanPath}`;
   }
 
   // If it's a bare filename (no directory), infer subdirectory by naming convention
@@ -132,24 +132,24 @@ export function getImagePath(
     const isImageFile = /\.(png|jpe?g|webp|gif|svg)$/.test(lower);
     if (isImageFile) {
       if (lower.startsWith("badge_")) {
-        return `/images/badges/${cleanPath}`;
+        return `/api/static/images/badges/${cleanPath}`;
       }
       if (lower.startsWith("product_")) {
-        return `/images/products/${cleanPath}`;
+        return `/api/static/images/products/${cleanPath}`;
       }
       if (lower.startsWith("ingredient_")) {
-        return `/images/ingredients/${cleanPath}`;
+        return `/api/static/images/ingredients/${cleanPath}`;
       }
       if (lower.startsWith("avatar_")) {
-        return `/images/avatars/${cleanPath}`;
+        return `/api/static/images/avatars/${cleanPath}`;
       }
       // Unknown but valid image filename: default to products directory
-      return `/images/products/${cleanPath}`;
+      return `/api/static/images/products/${cleanPath}`;
     }
   }
 
   // Default: ensure leading slash
-  return `/${cleanPath}`;
+  return `/api/static/${cleanPath}`;
 }
 
 function resolveImageByCategory(
@@ -167,9 +167,9 @@ function resolveImageByCategory(
       .replace(/^\/+/, "")
       .replace(/^public\//, "");
     const clean = normalized;
-    if (clean.startsWith("images/")) return `/${clean}`;
-    if (clean.includes("/")) return `/${clean}`;
-    return `/images/${category}/${clean}`;
+    if (clean.startsWith("images/")) return `/api/static/${clean}`;
+    if (clean.includes("/")) return `/api/static/${clean}`;
+    return `/api/static/images/${category}/${clean}`;
   }
   // If empty, return normalized fallback or empty string
   return fallback ? getImagePath(fallback) : "";
