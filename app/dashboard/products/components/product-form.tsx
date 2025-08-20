@@ -733,7 +733,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   };
 
   // Handle step navigation
-  const handleNextStep = () => {
+  const handleNextStep = (e?: React.MouseEvent) => {
+    // Prevent form submission if this is called from a button click
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (validateCurrentStep()) {
       const steps = ["general", "ingredients", "why-choose", "reviews"];
       const currentIndex = steps.indexOf(currentStep);
@@ -743,7 +749,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
-  const handlePreviousStep = () => {
+  const handlePreviousStep = (e?: React.MouseEvent) => {
+    // Prevent form submission if this is called from a button click
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     const steps = ["general", "ingredients", "why-choose", "reviews"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
@@ -763,14 +775,23 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   // Prevent form submission on Enter key in input fields
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && currentStep !== 'general') {
-      e.preventDefault();
+    if (e.key === 'Enter') {
+      // Only allow Enter to submit on the reviews tab (final step)
+      if (currentStep !== 'reviews') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   };
 
   // Handle form submission - Update to send paragraph and bullet_points separately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if we're not on the final step (reviews)
+    if (currentStep !== 'reviews') {
+      return;
+    }
 
     if (nameError) {
       toast.error("Please fix the product name error before submitting");
@@ -977,7 +998,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
         <Tabs value={currentStep} onValueChange={setCurrentStep}>
           <TabsList className="mb-4">
             <TabsTrigger value="general">General</TabsTrigger>
@@ -1714,7 +1735,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handlePreviousStep}
+                onClick={(e) => handlePreviousStep(e)}
                 disabled={isLoading}
               >
                 Previous
@@ -1724,13 +1745,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             {currentStep !== "reviews" ? (
               <Button
                 type="button"
-                onClick={handleNextStep}
+                onClick={(e) => handleNextStep(e)}
                 disabled={
                   isLoading ||
                   nameError !== "" ||
                   isCheckingName ||
                   paragraphError !== "" || // Disable if paragraph has errors
-                  bulletPointsError !== "" || // Disable if bullet points have errors
+                  bulletPointsError !== "" || // Disable if bullet points has errors
                   // Check for image only on create and if on general tab
                   (currentStep === "general" &&
                     !productId &&
