@@ -9,6 +9,7 @@ import StickyOrderButton from "@/components/sticky-order-button";
 import CtaBoxes from "@/components/cta-boxes";
 import ProductFeatures from "@/components/product-features";
 import RenameInfoModal from "@/components/rename-info-modal";
+import ThemeNavigation from "@/components/theme-navigation";
 import NewCta from "@/components/new-cta";
 import Footer from "@/components/footer";
 import BuyNotification from "@/components/buy-notification";
@@ -58,6 +59,8 @@ export default async function PreviewPage({
 
           {/* Content */}
           <div className="relative max-w-6xl mx-auto px-4 py-4 md:py-8">
+            <ThemeNavigation />
+
             <div className="text-center mb-6 md:mb-12 pt-4 md:pt-8">
               <BuyerAlert product={product} />
 
