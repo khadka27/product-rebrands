@@ -29,34 +29,59 @@ async function ensureReviewsTableExists(connection: any): Promise<void> {
   // Create table if it doesn't exist
   await connection.query(`
     CREATE TABLE IF NOT EXISTS reviews (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       product_id VARCHAR(255) NOT NULL,
       name VARCHAR(255) NOT NULL,
       address VARCHAR(500) NOT NULL,
-      rating INT NOT NULL,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
       review_text TEXT NOT NULL,
-      avatar VARCHAR(500) NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      INDEX idx_product_id (product_id),
-      CONSTRAINT fk_reviews_product FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+      avatar VARCHAR(500),
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
     )
+  `);
+
+  // Create index if it doesn't exist
+  await connection.query(`
+    CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id)
+  `);
+
+  // Create or replace the update trigger function
+  await connection.query(`
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+  `);
+
+  // Create trigger for updated_at on reviews table
+  await connection.query(`
+    DROP TRIGGER IF EXISTS update_reviews_updated_at ON reviews;
+    CREATE TRIGGER update_reviews_updated_at
+      BEFORE UPDATE ON reviews
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
   `);
 
   // Ensure avatar column exists (ignore if already there)
   try {
     await connection.query(
-      `ALTER TABLE reviews ADD COLUMN avatar VARCHAR(500) NULL`
+      `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS avatar VARCHAR(500)`
     );
   } catch (error: any) {
+    // PostgreSQL handles IF NOT EXISTS, so we shouldn't get duplicate column errors
+    // But we'll keep this for safety
     if (
       !error ||
       !String(error.message || error)
         .toLowerCase()
-        .includes("duplicate column")
+        .includes("already exists")
     ) {
-      // Non-duplicate error should bubble up
-      // But if it's a different DB that already has the column, we ignore
+      // Log but don't throw - the column might already exist
+      console.log("Note: Avatar column might already exist");
     }
   }
 }
@@ -70,10 +95,11 @@ export async function createReview(
     await ensureReviewsTableExists(existingConnection);
     const query = `
       INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+      RETURNING *
     `;
 
-    const [result] = await existingConnection.execute(query, [
+    const result = await existingConnection.query(query, [
       review.product_id,
       review.name,
       review.address,
@@ -82,29 +108,22 @@ export async function createReview(
       review.avatar || null,
     ]);
 
-    const insertId = (result as any).insertId;
-
-    // Get the created review using the same connection
-    const [rows] = await existingConnection.execute(
-      "SELECT * FROM reviews WHERE id = ?",
-      [insertId]
-    );
-
-    if (!rows[0]) {
+    if (!result.rows[0]) {
       throw new Error("Failed to create review");
     }
 
-    return rows[0] as Review;
+    return result.rows[0] as Review;
   } else {
     // Use new connection (for standalone operations)
     return withConnection(async (connection) => {
       await ensureReviewsTableExists(connection);
       const query = `
         INSERT INTO reviews (product_id, name, address, rating, review_text, avatar, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        RETURNING *
       `;
 
-      const [result] = await connection.execute(query, [
+      const result = await connection.query(query, [
         review.product_id,
         review.name,
         review.address,
@@ -113,12 +132,11 @@ export async function createReview(
         review.avatar || null,
       ]);
 
-      const insertId = (result as any).insertId;
-      const newReview = await getReviewById(insertId);
-      if (!newReview) {
+      if (!result.rows[0]) {
         throw new Error("Failed to create review");
       }
-      return newReview;
+      
+      return result.rows[0] as Review;
     });
   }
 }
@@ -129,17 +147,16 @@ export async function getReviewById(id: number): Promise<Review | null> {
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
-      WHERE id = ?
+      WHERE id = $1
     `;
 
-    const [rows] = await connection.execute(query, [id]);
-    const reviewRows = rows as any[];
+    const result = await connection.query(query, [id]);
 
-    if (reviewRows.length === 0) {
+    if (result.rows.length === 0) {
       return null;
     }
 
-    return reviewRows[0];
+    return result.rows[0] as Review;
   });
 }
 
@@ -151,12 +168,12 @@ export async function getReviewsByProductId(
     const query = `
       SELECT id, product_id, name, address, rating, review_text, avatar, created_at, updated_at
       FROM reviews
-      WHERE product_id = ?
+      WHERE product_id = $1
       ORDER BY created_at DESC
     `;
 
-    const [rows] = await connection.execute(query, [productId]);
-    return rows as Review[];
+    const result = await connection.query(query, [productId]);
+    return result.rows as Review[];
   });
 }
 
@@ -168,25 +185,26 @@ export async function updateReview(
     await ensureReviewsTableExists(connection);
     const fields = [];
     const values = [];
+    let paramCount = 1;
 
     if (review.name !== undefined) {
-      fields.push("name = ?");
+      fields.push(`name = $${paramCount++}`);
       values.push(review.name);
     }
     if (review.address !== undefined) {
-      fields.push("address = ?");
+      fields.push(`address = $${paramCount++}`);
       values.push(review.address);
     }
     if (review.rating !== undefined) {
-      fields.push("rating = ?");
+      fields.push(`rating = $${paramCount++}`);
       values.push(review.rating);
     }
     if (review.review_text !== undefined) {
-      fields.push("review_text = ?");
+      fields.push(`review_text = $${paramCount++}`);
       values.push(review.review_text);
     }
     if (review.avatar !== undefined) {
-      fields.push("avatar = ?");
+      fields.push(`avatar = $${paramCount++}`);
       values.push(review.avatar);
     }
 
@@ -194,26 +212,27 @@ export async function updateReview(
       return getReviewById(id);
     }
 
-    fields.push("updated_at = NOW()");
+    // Add the id parameter at the end
     values.push(id);
 
     const query = `
       UPDATE reviews
       SET ${fields.join(", ")}
-      WHERE id = ?
+      WHERE id = $${paramCount}
+      RETURNING *
     `;
 
-    await connection.execute(query, values);
-    return getReviewById(id);
+    const result = await connection.query(query, values);
+    return result.rows[0] as Review || null;
   });
 }
 
 export async function deleteReview(id: number): Promise<boolean> {
   return withConnection(async (connection) => {
     await ensureReviewsTableExists(connection);
-    const query = "DELETE FROM reviews WHERE id = ?";
-    const [result] = await connection.execute(query, [id]);
-    return (result as any).affectedRows > 0;
+    const query = "DELETE FROM reviews WHERE id = $1";
+    const result = await connection.query(query, [id]);
+    return result.rowCount > 0;
   });
 }
 
@@ -224,16 +243,16 @@ export async function deleteReviewsByProductId(
   if (existingConnection) {
     // Use existing connection (for transactions)
     await ensureReviewsTableExists(existingConnection);
-    const query = "DELETE FROM reviews WHERE product_id = ?";
-    const [result] = await existingConnection.execute(query, [productId]);
-    return (result as any).affectedRows >= 0;
+    const query = "DELETE FROM reviews WHERE product_id = $1";
+    const result = await existingConnection.query(query, [productId]);
+    return result.rowCount >= 0;
   } else {
     // Use new connection (for standalone operations)
     return withConnection(async (connection) => {
       await ensureReviewsTableExists(connection);
-      const query = "DELETE FROM reviews WHERE product_id = ?";
-      const [result] = await connection.execute(query, [productId]);
-      return (result as any).affectedRows >= 0;
+      const query = "DELETE FROM reviews WHERE product_id = $1";
+      const result = await connection.query(query, [productId]);
+      return result.rowCount >= 0;
     });
   }
 }

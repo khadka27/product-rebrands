@@ -11,48 +11,44 @@ export async function PUT(
 
     try {
       // Get existing product
-      const [rows]: any = await connection.query(
-        "SELECT product_id FROM products WHERE id = ?",
+      const productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
         [params.id]
       );
 
-      if (rows.length === 0) {
+      if (productResult.rows.length === 0) {
         return NextResponse.json(
           { error: "Product not found" },
           { status: 404 }
         );
       }
 
-      const product_id = rows[0].product_id;
+      const product_id = productResult.rows[0].product_id;
 
-      // Update or insert theme in product_themes table
-      const [result]: any = await connection.query(
-        `INSERT INTO product_themes (product_id, ${Object.keys(theme).join(
-          ", "
-        )})
-         VALUES (?, ${Object.keys(theme)
-           .map(() => "?")
-           .join(", ")})
-         ON DUPLICATE KEY UPDATE ${Object.keys(theme)
-           .map((key) => `${key} = ?`)
-           .join(", ")}`,
-        [product_id, ...Object.values(theme), ...Object.values(theme)]
-      );
+      // Build the INSERT query with ON CONFLICT for PostgreSQL
+      const columns = Object.keys(theme);
+      const values = Object.values(theme);
+      const placeholders = values.map((_, index) => `$${index + 2}`);
+      const updateClauses = columns.map((col, index) => `${col} = $${index + 2}`);
 
-      if (result.affectedRows === 0) {
+      const insertQuery = `
+        INSERT INTO product_themes (product_id, ${columns.join(", ")})
+        VALUES ($1, ${placeholders.join(", ")})
+        ON CONFLICT (product_id) 
+        DO UPDATE SET ${updateClauses.join(", ")}
+        RETURNING *
+      `;
+
+      const result = await connection.query(insertQuery, [product_id, ...values]);
+
+      if (result.rows.length === 0) {
         return NextResponse.json(
           { error: "Failed to update theme" },
           { status: 500 }
         );
       }
 
-      // Get updated theme
-      const [updatedTheme]: any = await connection.query(
-        "SELECT * FROM product_themes WHERE product_id = ?",
-        [product_id]
-      );
-
-      return NextResponse.json(updatedTheme[0]);
+      return NextResponse.json(result.rows[0]);
     } finally {
       connection.release();
     }

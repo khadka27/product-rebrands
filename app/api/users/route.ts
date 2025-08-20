@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user into database
-    await pool.query("INSERT INTO users (username, password) VALUES (?, ?)", [
+    await pool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [
       username,
       hashedPassword,
     ]);
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Error creating user:", error);
 
-    // Handle duplicate username
-    if (error.code === "ER_DUP_ENTRY") {
+    // Handle duplicate username (PostgreSQL error code)
+    if (error.code === "23505") { // Unique violation in PostgreSQL
       return NextResponse.json(
         { error: "Username already exists" },
         { status: 400 }
@@ -47,11 +47,11 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const [users] = await pool.query(
+    const result = await pool.query(
       "SELECT id, username, created_at FROM users"
     );
 
-    return NextResponse.json(users);
+    return NextResponse.json(result.rows);
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(

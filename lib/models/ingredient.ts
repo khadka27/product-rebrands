@@ -24,14 +24,14 @@ export async function getIngredientsByProductId(
   productId: string
 ): Promise<Ingredient[]> {
   return withConnection(async (connection) => {
-    const [rows] = await connection.query(
+    const result = await connection.query(
       `SELECT id, product_id, title, description, image, display_order 
        FROM ingredients 
-       WHERE product_id = ? 
+       WHERE product_id = $1 
        ORDER BY display_order ASC`,
       [productId]
     );
-    return rows as Ingredient[];
+    return result.rows as Ingredient[];
   });
 }
 
@@ -41,9 +41,10 @@ export async function createIngredient(
 ): Promise<Ingredient> {
   const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await conn.query(
+    const result = await conn.query(
       `INSERT INTO ingredients (product_id, title, description, image, display_order)
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
       [
         ingredient.product_id,
         ingredient.title,
@@ -53,10 +54,7 @@ export async function createIngredient(
       ]
     );
 
-    return {
-      id: result.insertId.toString(),
-      ...ingredient,
-    };
+    return result.rows[0] as Ingredient;
   } finally {
     if (!connection) conn.release(); // Only release if connection was obtained here
   }
@@ -67,23 +65,30 @@ export async function updateIngredient(
   ingredient: Partial<Ingredient>
 ): Promise<boolean> {
   return withConnection(async (connection) => {
-    const setClause = Object.entries(ingredient)
-      .filter(([key]) => key !== "id" && key !== "product_id")
-      .map(([key]) => `${key} = ?`)
-      .join(", ");
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    let paramCount = 1;
 
-    const values = Object.entries(ingredient)
-      .filter(([key]) => key !== "id" && key !== "product_id")
-      .map(([, value]) => value);
+    // Build the SET clause dynamically
+    Object.entries(ingredient).forEach(([key, value]) => {
+      if (key !== "id" && key !== "product_id") {
+        updateFields.push(`${key} = $${paramCount++}`);
+        updateValues.push(value);
+      }
+    });
 
-    values.push(id);
+    if (updateFields.length === 0) {
+      return false; // Nothing to update
+    }
 
-    const [result]: any = await connection.query(
-      `UPDATE ingredients SET ${setClause} WHERE id = ?`,
-      values
+    updateValues.push(id);
+
+    const result = await connection.query(
+      `UPDATE ingredients SET ${updateFields.join(", ")} WHERE id = $${paramCount}`,
+      updateValues
     );
 
-    return result.affectedRows > 0;
+    return result.rowCount > 0;
   });
 }
 
@@ -93,11 +98,11 @@ export async function deleteIngredient(
 ): Promise<boolean> {
   const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await conn.query(
-      "DELETE FROM ingredients WHERE id = ?",
+    const result = await conn.query(
+      "DELETE FROM ingredients WHERE id = $1",
       [id]
     );
-    return result.affectedRows > 0;
+    return result.rowCount > 0;
   } finally {
     if (!connection) conn.release();
   }
@@ -109,11 +114,11 @@ export async function deleteIngredientByProductId(
 ): Promise<boolean> {
   const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await conn.query(
-      "DELETE FROM ingredients WHERE product_id = ?",
+    const result = await conn.query(
+      "DELETE FROM ingredients WHERE product_id = $1",
       [productId]
     );
-    return result.affectedRows > 0; // Or return true if successful
+    return result.rowCount >= 0; // Return true if successful (even if 0 rows affected)
   } finally {
     if (!connection) conn.release();
   }

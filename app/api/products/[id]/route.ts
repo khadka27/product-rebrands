@@ -12,12 +12,12 @@ export async function GET(
 
     try {
       // Fetch product
-      const [productRows]: any = await connection.query(
-        "SELECT * FROM products WHERE product_id = ?",
+      const productResult = await connection.query(
+        "SELECT * FROM products WHERE product_id = $1",
         [productId]
       );
 
-      if (productRows.length === 0) {
+      if (productResult.rows.length === 0) {
         connection.release();
         return NextResponse.json(
           { error: "Product not found" },
@@ -25,9 +25,9 @@ export async function GET(
         );
       }
 
-      const product = productRows[0];
+      const product = productResult.rows[0];
 
-      // Parse bullet_points if it's a JSON string
+      // Parse bullet_points if it's a JSON string (for backward compatibility)
       if (product.bullet_points && typeof product.bullet_points === "string") {
         try {
           product.bullet_points = JSON.parse(product.bullet_points);
@@ -38,23 +38,23 @@ export async function GET(
       }
 
       // Fetch related data
-      const [themeRows]: any = await connection.query(
-        "SELECT * FROM product_themes WHERE product_id = ?",
+      const themeResult = await connection.query(
+        "SELECT * FROM product_themes WHERE product_id = $1",
         [productId]
       );
 
-      const [ingredientsRows]: any = await connection.query(
-        "SELECT * FROM ingredients WHERE product_id = ? ORDER BY display_order",
+      const ingredientsResult = await connection.query(
+        "SELECT * FROM ingredients WHERE product_id = $1 ORDER BY display_order",
         [productId]
       );
 
-      const [whyChooseRows]: any = await connection.query(
-        "SELECT * FROM why_choose WHERE product_id = ? ORDER BY display_order",
+      const whyChooseResult = await connection.query(
+        "SELECT * FROM why_choose WHERE product_id = $1 ORDER BY display_order",
         [productId]
       );
 
-      const [reviewsRows]: any = await connection.query(
-        "SELECT * FROM reviews WHERE product_id = ? ORDER BY id",
+      const reviewsResult = await connection.query(
+        "SELECT * FROM reviews WHERE product_id = $1 ORDER BY id",
         [productId]
       );
 
@@ -62,10 +62,10 @@ export async function GET(
 
       return NextResponse.json({
         ...product,
-        theme: themeRows[0] || null,
-        ingredients: ingredientsRows,
-        why_choose: whyChooseRows,
-        reviews: reviewsRows,
+        theme: themeResult.rows[0] || null,
+        ingredients: ingredientsResult.rows,
+        why_choose: whyChooseResult.rows,
+        reviews: reviewsResult.rows,
       });
     } catch (error) {
       connection.release();
@@ -144,16 +144,16 @@ export async function PUT(
 
     try {
       // Start transaction
-      await connection.beginTransaction();
+      await connection.query('BEGIN');
 
       // Get current product to preserve existing images if no new ones uploaded
-      const [currentProductRows]: any = await connection.query(
-        "SELECT product_image, product_badge FROM products WHERE product_id = ?",
+      const currentProductResult = await connection.query(
+        "SELECT product_image, product_badge FROM products WHERE product_id = $1",
         [productId]
       );
 
-      if (currentProductRows.length === 0) {
-        await connection.rollback();
+      if (currentProductResult.rows.length === 0) {
+        await connection.query('ROLLBACK');
         connection.release();
         return NextResponse.json(
           { error: "Product not found" },
@@ -161,22 +161,21 @@ export async function PUT(
         );
       }
 
-      const currentProduct = currentProductRows[0];
+      const currentProduct = currentProductResult.rows[0];
 
       // Update product
       await connection.query(
         `UPDATE products 
         SET 
-          name = ?,
-          paragraph = ?,
-          bullet_points = ?,
-          redirect_link = ?,
-          generated_link = ?,
-          money_back_days = ?,
-          product_image = ?,
-          product_badge = ?,
-          updated_at = NOW()
-        WHERE product_id = ?`,
+          name = $1,
+          paragraph = $2,
+          bullet_points = $3,
+          redirect_link = $4,
+          generated_link = $5,
+          money_back_days = $6,
+          product_image = $7,
+          product_badge = $8
+        WHERE product_id = $9`,
         [
           name,
           paragraph,
@@ -198,7 +197,7 @@ export async function PUT(
 
           // Delete existing ingredients
           await connection.query(
-            "DELETE FROM ingredients WHERE product_id = ?",
+            "DELETE FROM ingredients WHERE product_id = $1",
             [productId]
           );
 
@@ -239,7 +238,7 @@ export async function PUT(
                 description,
                 image,
                 display_order
-              ) VALUES (?, ?, ?, ?, ?)`,
+              ) VALUES ($1, $2, $3, $4, $5)`,
               [
                 productId,
                 ingredient.title,
@@ -262,7 +261,7 @@ export async function PUT(
 
           // Delete existing why_choose items
           await connection.query(
-            "DELETE FROM why_choose WHERE product_id = ?",
+            "DELETE FROM why_choose WHERE product_id = $1",
             [productId]
           );
 
@@ -274,7 +273,7 @@ export async function PUT(
                 title,
                 description,
                 display_order
-              ) VALUES (?, ?, ?, ?)`,
+              ) VALUES ($1, $2, $3, $4)`,
               [productId, item.title, item.description, item.display_order]
             );
           }
@@ -290,7 +289,7 @@ export async function PUT(
           const reviews = JSON.parse(reviewsJson as string);
 
           // Delete existing reviews
-          await connection.query("DELETE FROM reviews WHERE product_id = ?", [
+          await connection.query("DELETE FROM reviews WHERE product_id = $1", [
             productId,
           ]);
 
@@ -330,7 +329,7 @@ export async function PUT(
                 avatar,
                 created_at,
                 updated_at
-              ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+              ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
               [
                 productId,
                 review.name,
@@ -347,7 +346,7 @@ export async function PUT(
       }
 
       // Commit the transaction
-      await connection.commit();
+      await connection.query('COMMIT');
       connection.release();
 
       return NextResponse.json({
@@ -356,7 +355,7 @@ export async function PUT(
       });
     } catch (error) {
       // Rollback the transaction on error
-      await connection.rollback();
+      await connection.query('ROLLBACK');
       connection.release();
       throw error;
     }
@@ -380,36 +379,36 @@ export async function DELETE(
 
     try {
       // Start transaction
-      await connection.beginTransaction();
+      await connection.query('BEGIN');
 
       // Delete related records first (using correct table names)
       await connection.query(
-        "DELETE FROM product_themes WHERE product_id = ?",
+        "DELETE FROM product_themes WHERE product_id = $1",
         [productId]
       );
-      await connection.query("DELETE FROM ingredients WHERE product_id = ?", [
+      await connection.query("DELETE FROM ingredients WHERE product_id = $1", [
         productId,
       ]);
-      await connection.query("DELETE FROM why_choose WHERE product_id = ?", [
+      await connection.query("DELETE FROM why_choose WHERE product_id = $1", [
         productId,
       ]);
-      await connection.query("DELETE FROM reviews WHERE product_id = ?", [
+      await connection.query("DELETE FROM reviews WHERE product_id = $1", [
         productId,
       ]);
 
       // Delete the product
-      await connection.query("DELETE FROM products WHERE product_id = ?", [
+      await connection.query("DELETE FROM products WHERE product_id = $1", [
         productId,
       ]);
 
       // Commit the transaction
-      await connection.commit();
+      await connection.query('COMMIT');
       connection.release();
 
       return NextResponse.json({ success: true });
     } catch (error) {
       // Rollback the transaction on error
-      await connection.rollback();
+      await connection.query('ROLLBACK');
       connection.release();
       throw error;
     }

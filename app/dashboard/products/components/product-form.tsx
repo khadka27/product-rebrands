@@ -761,6 +761,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     }
   };
 
+  // Prevent form submission on Enter key in input fields
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && currentStep !== 'general') {
+      e.preventDefault();
+    }
+  };
+
   // Handle form submission - Update to send paragraph and bullet_points separately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1300,6 +1307,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                 e.target.value
                               )
                             }
+                            onKeyDown={handleKeyDown}
                             placeholder="Ingredient name"
                             className={
                               ingredientErrors[index]?.title
@@ -1363,6 +1371,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               e.target.value
                             )
                           }
+                          onKeyDown={handleKeyDown}
                           placeholder="Describe the ingredient and its benefits"
                           rows={3}
                           className={
@@ -1429,6 +1438,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               e.target.value
                             )
                           }
+                          onKeyDown={handleKeyDown}
                           placeholder="Feature or benefit title"
                           className={
                             whyChooseErrors[index]?.title
@@ -1457,6 +1467,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               e.target.value
                             )
                           }
+                          onKeyDown={handleKeyDown}
                           placeholder="Explain this feature or benefit"
                           rows={3}
                           className={
@@ -1528,6 +1539,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           onChange={(e) =>
                             handleReviewChange(index, "name", e.target.value)
                           }
+                          onKeyDown={handleKeyDown}
                           placeholder="John D."
                           className={`${
                             reviewErrors[index]?.name ? "border-red-500" : ""
@@ -1550,6 +1562,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           onChange={(e) =>
                             handleReviewChange(index, "address", e.target.value)
                           }
+                          onKeyDown={handleKeyDown}
                           placeholder="42, New York, NY"
                           className={`${
                             reviewErrors[index]?.address ? "border-red-500" : ""
@@ -1625,6 +1638,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             e.target.value
                           )
                         }
+                        onKeyDown={handleKeyDown}
                         placeholder="I've been using this product for 3 weeks, and the results are amazing! It gave me the energy and confidence I needed..."
                         rows={4}
                         className={`${

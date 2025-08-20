@@ -2,9 +2,8 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { RowDataPacket } from "mysql2";
 
-interface User extends RowDataPacket {
+interface User {
   id: number;
   username: string;
   password: string;
@@ -47,10 +46,11 @@ const handler = NextAuth({
           console.log("Auth: Attempting to authenticate user:", credentials.username);
 
           // Get user from database
-          const [users] = await pool.query<User[]>(
-            "SELECT * FROM users WHERE username = ?",
+          const result = await pool.query(
+            "SELECT * FROM users WHERE username = $1",
             [credentials.username]
           );
+          const users = result.rows as User[];
 
           console.log("Auth: Query result:", {
             found: users.length > 0,

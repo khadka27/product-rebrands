@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ProductForm } from "../../components/product-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Home, Edit, Eye } from "lucide-react";
 import { getImagePath } from "@/lib/utils";
 
 interface Product {
   id: string;
+  product_id: string;
   name: string;
+  slug: string;
   paragraph: string;
   bullet_points: string[];
   redirect_link: string;
@@ -122,9 +127,12 @@ export default function EditProductPage({
         // Format the data
         const formattedData: Product = {
           ...data,
+          id: data.product_id, // Map product_id to id for frontend compatibility
+          product_id: data.product_id, // Keep original product_id
+          slug: data.slug || data.name.replace(/\s+/g, "-").toLowerCase(), // Ensure slug exists
           theme: data.theme || {
             theme_id: "",
-            product_id: data.id,
+            product_id: data.product_id,
             primary_bg_color: "#ffffff",
             secondary_bg_color: "#f44336",
             accent_bg_color: "#ffc107",
@@ -240,7 +248,48 @@ export default function EditProductPage({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-gray-200"></div>
+              <nav className="flex items-center space-x-1">
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <Home className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <span className="text-gray-400">/</span>
+                <Button variant="ghost" size="sm" disabled>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Product
+                </Button>
+              </nav>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Badge variant="secondary">{product.name}</Badge>
+              <Link href={`/preview/${product.slug || product.name.replace(/\s+/g, "-").toLowerCase()}`} target="_blank">
+                <Button variant="outline" size="sm">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Current Product Summary */}
       <Card>
         <CardHeader>
@@ -250,7 +299,7 @@ export default function EditProductPage({
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold">Product Details</h2>
-              <p>Product ID: {product.id}</p>
+              <p>Product ID: {product.product_id}</p>
               <p>Name: {product.name}</p>
               <p>Slug: {product.name.replace(/\s+/g, "-").toLowerCase()}</p>
               <p>Redirect Link: {product.redirect_link}</p>
@@ -443,7 +492,8 @@ export default function EditProductPage({
       {/* Edit Form */}
       <div>
         <h2 className="text-2xl font-bold mb-6">Edit Product</h2>
-        <ProductForm productId={product.id} initialData={product} />
+        <ProductForm productId={product.product_id} initialData={product} />
+      </div>
       </div>
     </div>
   );

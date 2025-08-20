@@ -15,16 +15,16 @@ export async function GET(req: NextRequest) {
 
   const connection = await db.getConnection();
   try {
-    let query = "SELECT COUNT(*) as count FROM products WHERE name = ?";
+    let query = "SELECT COUNT(*) as count FROM products WHERE name = $1";
     let params = [name];
 
     if (excludeId) {
-      query += " AND product_id != ?";
+      query += " AND product_id != $2";
       params.push(excludeId);
     }
 
-    const [rows]: any = await connection.query(query, params);
-    const exists = rows[0].count > 0;
+    const result = await connection.query(query, params);
+    const exists = result.rows[0].count > 0;
 
     return NextResponse.json({ exists });
   } catch (error) {

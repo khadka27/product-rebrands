@@ -11,7 +11,6 @@ import {
 import type { ProductTheme } from "@/lib/models/product-theme";
 import type { Ingredient } from "@/lib/models/ingredient";
 import type { WhyChoose } from "@/lib/models/why-choose";
-import { RowDataPacket } from "mysql2";
 
 // Define RouteParams here as well
 interface RouteParams {
@@ -20,12 +19,12 @@ interface RouteParams {
   };
 }
 
-interface ProductRow extends RowDataPacket {
+interface ProductRow {
   product_id: string;
   name: string;
   slug: string;
   paragraph: string;
-  bullet_points: string;
+  bullet_points: string | string[];
   redirect_link: string;
   generated_link: string;
   money_back_days: number;
@@ -33,8 +32,8 @@ interface ProductRow extends RowDataPacket {
   product_badge: string;
   created_at: Date;
   updated_at: Date;
-  ingredients: string;
-  why_choose: string;
+  ingredients: string | any[];
+  why_choose: string | any[];
   [key: string]: any; // For theme properties
 }
 
@@ -81,12 +80,16 @@ export async function GET(req: NextRequest) {
 
     // Otherwise, return all products
     try {
-      // First, let's check if the tables exist
-      const [tables] = await connection.query("SHOW TABLES");
-      console.log("Available tables:", tables);
+      // First, let's check if the tables exist using PostgreSQL syntax
+      const tablesResult = await connection.query(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public'
+      `);
+      console.log("Available tables:", tablesResult.rows.map(row => row.table_name));
 
-      // Modified query to be more resilient
-      const [rows] = await connection.query<ProductRow[]>(`
+      // Modified query to use PostgreSQL syntax
+      const result = await connection.query(`
         SELECT 
           p.product_id,
           p.name,
@@ -100,13 +103,13 @@ export async function GET(req: NextRequest) {
           p.product_badge,
           p.created_at,
           p.updated_at,
-          GROUP_CONCAT(
-            DISTINCT CONCAT_WS(':', i.id, i.title, i.description, i.image, i.display_order)
-            SEPARATOR ','
+          STRING_AGG(
+            DISTINCT CONCAT(i.id, ':', i.title, ':', i.description, ':', COALESCE(i.image, ''), ':', i.display_order),
+            ','
           ) as ingredients,
-          GROUP_CONCAT(
-            DISTINCT CONCAT_WS(':', w.id, w.title, w.description, w.display_order)
-            SEPARATOR ','
+          STRING_AGG(
+            DISTINCT CONCAT(w.id, ':', w.title, ':', w.description, ':', w.display_order),
+            ','
           ) as why_choose,
           MAX(t.primary_bg_color) as primary_bg_color,
           MAX(t.secondary_bg_color) as secondary_bg_color,
@@ -173,136 +176,197 @@ export async function GET(req: NextRequest) {
 
       console.log(
         "Query executed successfully, rows returned:",
-        Array.isArray(rows) ? rows.length : 0
+        result.rows.length
       );
 
+      if (result.rows.length === 0) {
+        console.log("No products found in the database");
+        return NextResponse.json([]);
+      }
+
       // Process the results
-      const products = (Array.isArray(rows) ? rows : []).map((row) => {
+      const products = result.rows.map((row: ProductRow) => {
         const product: any = { ...row };
 
-        // Process ingredients
-        if (row.ingredients) {
+        // Parse bullet_points if it's a JSON string (for backward compatibility)
+        if (product.bullet_points && typeof product.bullet_points === "string") {
           try {
-            product.ingredients = row.ingredients
-              .split(",")
-              .filter(Boolean)
-              .map((item: string) => {
-                const [id, title, description, image, display_order] =
-                  item.split(":");
-                return {
-                  id,
-                  title,
-                  description,
-                  image,
-                  display_order: parseInt(display_order) || 0,
-                };
-              });
-          } catch (error: any) {
-            console.error("Error processing ingredients:", error);
-            product.ingredients = [];
+            product.bullet_points = JSON.parse(product.bullet_points);
+          } catch (e) {
+            console.error("Failed to parse bullet_points JSON:", e);
+            product.bullet_points = [];
           }
+        }
+
+        // Parse ingredients
+        if (product.ingredients && typeof product.ingredients === 'string') {
+          const ingredientsArray = product.ingredients
+            .split(",")
+            .filter((item: string) => item.trim())
+            .map((item: string) => {
+              const parts = item.split(":");
+              if (parts.length >= 5) {
+                return {
+                  id: parts[0],
+                  title: parts[1],
+                  description: parts[2],
+                  image: parts[3] || null,
+                  display_order: parseInt(parts[4]) || 0,
+                };
+              }
+              return null;
+            })
+            .filter((item: any): item is NonNullable<typeof item> => item !== null);
+          product.ingredients = ingredientsArray;
         } else {
           product.ingredients = [];
         }
 
-        // Process why_choose
-        if (row.why_choose) {
-          try {
-            product.why_choose = row.why_choose
-              .split(",")
-              .filter(Boolean)
-              .map((item: string) => {
-                const [id, title, description, display_order] = item.split(":");
+        // Parse why_choose
+        if (product.why_choose && typeof product.why_choose === 'string') {
+          const whyChooseArray = product.why_choose
+            .split(",")
+            .filter((item: string) => item.trim())
+            .map((item: string) => {
+              const parts = item.split(":");
+              if (parts.length >= 4) {
                 return {
-                  id,
-                  title,
-                  description,
-                  display_order: parseInt(display_order) || 0,
+                  id: parts[0],
+                  title: parts[1],
+                  description: parts[2],
+                  display_order: parseInt(parts[3]) || 0,
                 };
-              });
-          } catch (error: any) {
-            console.error("Error processing why_choose:", error);
-            product.why_choose = [];
-          }
+              }
+              return null;
+            })
+            .filter((item: any): item is NonNullable<typeof item> => item !== null);
+          product.why_choose = whyChooseArray;
         } else {
           product.why_choose = [];
         }
 
-        // Extract theme data
-        const theme: Record<string, any> = {};
-        const themeKeys = [
-          "primary_bg_color",
-          "secondary_bg_color",
-          "accent_bg_color",
-          "primary_text_color",
-          "secondary_text_color",
-          "accent_text_color",
-          "link_color",
-          "link_hover_color",
-          "primary_button_bg",
-          "primary_button_text",
-          "primary_button_hover_bg",
-          "secondary_button_bg",
-          "secondary_button_text",
-          "secondary_button_hover_bg",
-          "card_bg_color",
-          "card_border_color",
-          "card_shadow_color",
-          "header_bg_color",
-          "header_text_color",
-          "footer_bg_color",
-          "footer_text_color",
-          "font_family",
-          "h1_font_size",
-          "h1_font_weight",
-          "h2_font_size",
-          "h2_font_weight",
-          "h3_font_size",
-          "h3_font_weight",
-          "body_font_size",
-          "body_line_height",
-          "section_padding",
-          "card_padding",
-          "button_padding",
-          "border_radius_sm",
-          "border_radius_md",
-          "border_radius_lg",
-          "border_radius_xl",
-          "max_width",
-          "container_padding",
-          "gradient_start",
-          "gradient_end",
-          "shadow_color",
-          "custom_css",
-        ];
+        // Handle theme data
+        const hasThemeData = product.primary_bg_color !== null;
+        if (hasThemeData) {
+          product.theme = {
+            product_id: product.product_id,
+            primary_bg_color: product.primary_bg_color,
+            secondary_bg_color: product.secondary_bg_color,
+            accent_bg_color: product.accent_bg_color,
+            primary_text_color: product.primary_text_color,
+            secondary_text_color: product.secondary_text_color,
+            accent_text_color: product.accent_text_color,
+            link_color: product.link_color,
+            link_hover_color: product.link_hover_color,
+            primary_button_bg: product.primary_button_bg,
+            primary_button_text: product.primary_button_text,
+            primary_button_hover_bg: product.primary_button_hover_bg,
+            secondary_button_bg: product.secondary_button_bg,
+            secondary_button_text: product.secondary_button_text,
+            secondary_button_hover_bg: product.secondary_button_hover_bg,
+            card_bg_color: product.card_bg_color,
+            card_border_color: product.card_border_color,
+            card_shadow_color: product.card_shadow_color,
+            header_bg_color: product.header_bg_color,
+            header_text_color: product.header_text_color,
+            footer_bg_color: product.footer_bg_color,
+            footer_text_color: product.footer_text_color,
+            font_family: product.font_family,
+            h1_font_size: product.h1_font_size,
+            h1_font_weight: product.h1_font_weight,
+            h2_font_size: product.h2_font_size,
+            h2_font_weight: product.h2_font_weight,
+            h3_font_size: product.h3_font_size,
+            h3_font_weight: product.h3_font_weight,
+            body_font_size: product.body_font_size,
+            body_line_height: product.body_line_height,
+            section_padding: product.section_padding,
+            card_padding: product.card_padding,
+            button_padding: product.button_padding,
+            border_radius_sm: product.border_radius_sm,
+            border_radius_md: product.border_radius_md,
+            border_radius_lg: product.border_radius_lg,
+            border_radius_xl: product.border_radius_xl,
+            max_width: product.max_width,
+            container_padding: product.container_padding,
+            gradient_start: product.gradient_start,
+            gradient_end: product.gradient_end,
+            shadow_color: product.shadow_color,
+            custom_css: product.custom_css,
+          };
 
-        let hasTheme = false;
-        for (const key of themeKeys) {
-          if (row[key] !== null && row[key] !== undefined) {
-            theme[key] = row[key];
-            hasTheme = true;
-          }
-        }
-
-        if (hasTheme) {
-          product.theme = theme;
+          // Remove theme properties from the main product object
+          [
+            "primary_bg_color",
+            "secondary_bg_color",
+            "accent_bg_color",
+            "primary_text_color",
+            "secondary_text_color",
+            "accent_text_color",
+            "link_color",
+            "link_hover_color",
+            "primary_button_bg",
+            "primary_button_text",
+            "primary_button_hover_bg",
+            "secondary_button_bg",
+            "secondary_button_text",
+            "secondary_button_hover_bg",
+            "card_bg_color",
+            "card_border_color",
+            "card_shadow_color",
+            "header_bg_color",
+            "header_text_color",
+            "footer_bg_color",
+            "footer_text_color",
+            "font_family",
+            "h1_font_size",
+            "h1_font_weight",
+            "h2_font_size",
+            "h2_font_weight",
+            "h3_font_size",
+            "h3_font_weight",
+            "body_font_size",
+            "body_line_height",
+            "section_padding",
+            "card_padding",
+            "button_padding",
+            "border_radius_sm",
+            "border_radius_md",
+            "border_radius_lg",
+            "border_radius_xl",
+            "max_width",
+            "container_padding",
+            "gradient_start",
+            "gradient_end",
+            "shadow_color",
+            "custom_css",
+          ].forEach((key) => delete product[key]);
         }
 
         return product;
       });
 
+      console.log("Products processed successfully:", products.length);
       return NextResponse.json(products);
     } catch (error: any) {
-      console.error("Error fetching products:", error);
+      console.error("Error executing products query:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        errno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+      });
+
       return NextResponse.json(
         { error: "Failed to fetch products", details: error.message },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error("Database connection error:", error);
+    console.error("Error in GET /api/products:", error);
     return NextResponse.json(
-      { error: "Database connection failed", details: error.message },
+      { error: "Internal Server Error", details: error.message },
       { status: 500 }
     );
   } finally {
@@ -312,7 +376,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Function to ensure all necessary tables exist - Modified to use connection.query
+// Function to ensure all necessary tables exist - Updated for PostgreSQL
 async function ensureTablesExist() {
   let connection;
   try {
@@ -326,34 +390,52 @@ async function ensureTablesExist() {
         name VARCHAR(255) NOT NULL,
         slug VARCHAR(255) NOT NULL UNIQUE,
         paragraph TEXT,
-        bullet_points JSON,
+        bullet_points JSONB,
         redirect_link VARCHAR(255),
         generated_link VARCHAR(255),
         product_image VARCHAR(255),
         product_badge VARCHAR(255),
-        money_back_days INT DEFAULT 60,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        money_back_days INTEGER DEFAULT 60,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       );
+    `);
+
+    // Create trigger for updated_at
+    await connection.query(`
+      CREATE OR REPLACE FUNCTION update_updated_at_column()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+    `);
+
+    await connection.query(`
+      DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+      CREATE TRIGGER update_products_updated_at
+        BEFORE UPDATE ON products
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     `);
 
     // Create visits table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS visits (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
         ip_address VARCHAR(45),
         user_agent VARCHAR(255),
         referrer VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT NOW()
       );
     `);
 
     // Create product_themes table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS product_themes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
+        id SERIAL PRIMARY KEY,
+        product_id VARCHAR(255) NOT NULL UNIQUE,
         primary_bg_color VARCHAR(7),
         secondary_bg_color VARCHAR(7),
         accent_bg_color VARCHAR(7),
@@ -370,492 +452,257 @@ async function ensureTablesExist() {
         secondary_button_hover_bg VARCHAR(7),
         card_bg_color VARCHAR(7),
         card_border_color VARCHAR(7),
-        card_shadow_color VARCHAR(7),
+        card_shadow_color VARCHAR(20),
         header_bg_color VARCHAR(7),
         header_text_color VARCHAR(7),
         footer_bg_color VARCHAR(7),
         footer_text_color VARCHAR(7),
-        font_family VARCHAR(255),
-        h1_font_size VARCHAR(20),
-        h1_font_weight VARCHAR(20),
-        h2_font_size VARCHAR(20),
-        h2_font_weight VARCHAR(20),
-        h3_font_size VARCHAR(20),
-        h3_font_weight VARCHAR(20),
-        body_font_size VARCHAR(20),
-        body_line_height VARCHAR(20),
+        font_family VARCHAR(50),
+        h1_font_size VARCHAR(10),
+        h1_font_weight VARCHAR(10),
+        h2_font_size VARCHAR(10),
+        h2_font_weight VARCHAR(10),
+        h3_font_size VARCHAR(10),
+        h3_font_weight VARCHAR(10),
+        body_font_size VARCHAR(10),
+        body_line_height VARCHAR(10),
         section_padding VARCHAR(20),
         card_padding VARCHAR(20),
         button_padding VARCHAR(20),
-        border_radius_sm VARCHAR(20),
-        border_radius_md VARCHAR(20),
-        border_radius_lg VARCHAR(20),
-        border_radius_xl VARCHAR(20),
+        border_radius_sm VARCHAR(10),
+        border_radius_md VARCHAR(10),
+        border_radius_lg VARCHAR(10),
+        border_radius_xl VARCHAR(10),
         max_width VARCHAR(20),
         container_padding VARCHAR(20),
         gradient_start VARCHAR(7),
         gradient_end VARCHAR(7),
-        shadow_color VARCHAR(7),
+        shadow_color VARCHAR(20),
         custom_css TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
       );
     `);
 
-    // Create ingredients table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS ingredients (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        image VARCHAR(255),
-        display_order INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Create why_choose table
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS why_choose (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        product_id VARCHAR(255) REFERENCES products(product_id) ON DELETE CASCADE,
-        title VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        display_order INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-    `);
-
-    console.log("Database tables checked/created successfully.");
-  } catch (error: unknown) {
+    console.log("All tables ensured to exist");
+  } catch (error) {
     console.error("Error ensuring tables exist:", error);
-    if (error && typeof error === "object" && "message" in error) {
-      console.error("Error details:", {
-        message: (error as { message: string }).message,
-        code: "code" in error ? (error as { code: string }).code : undefined,
-        errno:
-          "errno" in error ? (error as { errno: number }).errno : undefined,
-        sqlState:
-          "sqlState" in error
-            ? (error as { sqlState: string }).sqlState
-            : undefined,
-        sqlMessage:
-          "sqlMessage" in error
-            ? (error as { sqlMessage: string }).sqlMessage
-            : undefined,
-      });
-    }
     throw error;
   } finally {
-    if (connection) connection.release();
+    if (connection) {
+      try {
+        (connection as any).release();
+      } catch (releaseError) {
+        console.error("Error releasing connection:", releaseError);
+      }
+    }
   }
 }
 
 export async function POST(req: NextRequest) {
-  // Ensure tables exist before proceeding
-  await ensureTablesExist();
-  let connection; // Declare connection here
   try {
-    connection = await db.getConnection(); // Obtain connection
+    console.log("Attempting to create new product...");
+    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+    console.log("Request method:", req.method);
+    console.log("Content-Type:", req.headers.get('content-type'));
+    
+    // Check if this is FormData (multipart/form-data) or JSON
+    const contentType = req.headers.get('content-type') || '';
+    console.log("Detected content type:", contentType);
 
-    const formData = await req.formData();
-    const name = formData.get("name") as string;
-    // Get paragraph and bullet_points separately
-    const paragraph = formData.get("paragraph") as string;
-    const bullet_points_json = formData.get("bullet_points") as string;
+    let body: any = {};
 
-    console.log("POST: Received bullet_points_json:", bullet_points_json);
-
-    // Parse bullet points JSON, default to empty array if parsing fails or string is empty/null
-    let bullet_points: string[] = [];
-    if (bullet_points_json) {
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData for file uploads
+      console.log("Processing FormData request...");
+      const formData = await req.formData();
+      
+      // Convert FormData to a regular object
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith('ingredient_image_') || key.startsWith('review_avatar_') || key === 'image' || key === 'badge_image') {
+          // Handle file fields
+          body[key] = value;
+        } else if (key === 'bullet_points' || key === 'ingredients' || key === 'why_choose' || key === 'reviews') {
+          // Parse JSON strings
+          try {
+            body[key] = JSON.parse(value as string);
+          } catch {
+            body[key] = value;
+          }
+        } else {
+          body[key] = value;
+        }
+      }
+      console.log("Processed FormData keys:", Object.keys(body));
+    } else {
+      // Handle JSON requests
+      console.log("Processing JSON request...");
       try {
-        bullet_points = JSON.parse(bullet_points_json);
-      } catch (e) {
-        console.error("Failed to parse bullet_points JSON in POST:", e);
-        // Keep bullet_points as empty array
+        body = await req.json();
+      } catch (jsonError: any) {
+        console.error("JSON parsing error:", jsonError.message);
+        return NextResponse.json(
+          { error: "Invalid JSON in request body", details: jsonError.message },
+          { status: 400 }
+        );
       }
     }
 
-    console.log("POST: Parsed bullet_points array:", bullet_points);
+    console.log("Received product data:", {
+      ...body,
+      // Don't log file objects, just their presence
+      image: body.image instanceof File ? `[File: ${body.image.name}]` : body.image,
+      badge_image: body.badge_image instanceof File ? `[File: ${body.badge_image.name}]` : body.badge_image
+    });
 
-    const redirect_link = formData.get("redirect_link") as string;
-    // Remove description, get paragraph and bullet_points instead
-    // const description = formData.get("description") as string;
-    const money_back_days = Number.parseInt(
-      formData.get("money_back_days") as string
-    );
-    const imageFile = formData.get("image") as File;
-    const badgeImageFile = formData.get("badge_image") as File;
-    const themeData = formData.get("theme") as string;
-    const ingredientsData = formData.get("ingredients") as string;
-    const whyChooseData = formData.get("why_choose") as string;
-    const reviewsData = formData.get("reviews") as string;
-
-    // Generate slug and check for duplicates
-    const slug = generateSlug(name);
-    const existingProduct = await getProductBySlug(slug);
-    if (existingProduct) {
+    // Validate required fields
+    if (!body.name || !body.paragraph || !body.redirect_link) {
       return NextResponse.json(
-        { error: `Product with slug '${slug}' already exists.` },
-        { status: 409 } // Conflict
+        { error: "Missing required fields: name, paragraph, redirect_link" },
+        { status: 400 }
       );
     }
 
-    // Process and prepare data for createProduct
-    let imagePath = "";
-    if (imageFile) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
+    // Generate product ID for image processing (consistent with createProduct)
+    const productId = generateProductId();
+    console.log("Generated product_id for image processing:", productId);
+
+    // Process uploaded images and store file paths
+    let productImagePath = '';
+    let badgeImagePath = '';
+
+    // Process main product image
+    if (body.image && body.image instanceof File) {
+      console.log("Processing product image...");
+      const buffer = Buffer.from(await body.image.arrayBuffer());
       const file = {
         buffer,
-        originalname: imageFile.name,
-        mimetype: imageFile.type,
+        originalname: body.image.name,
+        mimetype: body.image.type,
       } as Express.Multer.File;
-      imagePath = await processImage(file, "public/images/products", slug);
+      productImagePath = await processImage(
+        file,
+        "public/images/products",
+        `${productId}`
+      );
+      console.log("Product image saved to:", productImagePath);
     }
 
-    let badgeImagePath = "";
-    if (badgeImageFile) {
-      const buffer = Buffer.from(await badgeImageFile.arrayBuffer());
+    // Process badge image
+    if (body.badge_image && body.badge_image instanceof File) {
+      console.log("Processing badge image...");
+      const buffer = Buffer.from(await body.badge_image.arrayBuffer());
       const file = {
         buffer,
-        originalname: badgeImageFile.name,
-        mimetype: badgeImageFile.type,
+        originalname: body.badge_image.name,
+        mimetype: body.badge_image.type,
       } as Express.Multer.File;
       badgeImagePath = await processImage(
         file,
         "public/images/badges",
-        `badge_${slug}`
+        `badge_${productId}`
       );
+      console.log("Badge image saved to:", badgeImagePath);
     }
 
-    const ingredients: Ingredient[] = ingredientsData
-      ? (JSON.parse(ingredientsData) as Ingredient[])
-      : [];
-    const why_choose: WhyChoose[] = whyChooseData
-      ? (JSON.parse(whyChooseData) as WhyChoose[])
-      : [];
-    const reviews: any[] = reviewsData
-      ? (JSON.parse(reviewsData) as any[])
-      : [];
-    const theme: ProductTheme | undefined = themeData
-      ? (JSON.parse(themeData) as ProductTheme)
-      : undefined;
+    // Process ingredient images
+    const processedIngredients = [];
+    if (body.ingredients && Array.isArray(body.ingredients)) {
+      for (const [index, ingredient] of body.ingredients.entries()) {
+        let ingredientImagePath = '';
+        
+        // Check for ingredient image file
+        const ingredientImageKey = `ingredient_image_${index}`;
+        if (body[ingredientImageKey] && body[ingredientImageKey] instanceof File) {
+          console.log(`Processing ingredient ${index} image...`);
+          const buffer = Buffer.from(await body[ingredientImageKey].arrayBuffer());
+          const file = {
+            buffer,
+            originalname: body[ingredientImageKey].name,
+            mimetype: body[ingredientImageKey].type,
+          } as Express.Multer.File;
+          ingredientImagePath = await processImage(
+            file,
+            "public/images/ingredients",
+            `${productId}_ingredient_${index}`
+          );
+          console.log(`Ingredient ${index} image saved to:`, ingredientImagePath);
+        }
 
-    // Process ingredient images and add to ingredients array
-    for (let i = 0; i < ingredients.length; i++) {
-      const ingredientImageFile = formData.get(`ingredient_image_${i}`) as File;
-      // Also check for existing image path if editing
-      const existingImagePath = formData.get(
-        `ingredient_image_${i}_existing`
-      ) as string;
-
-      if (ingredientImageFile) {
-        const buffer = Buffer.from(await ingredientImageFile.arrayBuffer());
-        const file = {
-          buffer,
-          originalname: ingredientImageFile.name,
-          mimetype: ingredientImageFile.type,
-        } as Express.Multer.File;
-        const ingredientImagePath = await processImage(
-          file,
-          "public/images/ingredients",
-          `${slug}_ingredient_${i}`
-        );
-        ingredients[i].image = ingredientImagePath; // Assuming 'image' field exists on Ingredient
-      } else if (existingImagePath) {
-        // If no new file, but an existing path is sent, keep the existing path
-        ingredients[i].image = existingImagePath;
-      } else {
-        // If no new file and no existing path, set image to null or undefined
-        ingredients[i].image = null; // Or undefined, depending on your schema/type
+        processedIngredients.push({
+          ...ingredient,
+          image: ingredientImagePath,
+        });
       }
     }
 
-    // Process review avatar images and add to reviews array
-    for (let i = 0; i < reviews.length; i++) {
-      const reviewAvatarFile = formData.get(`review_avatar_${i}`) as File;
-      // Also check for existing avatar path if editing
-      const existingAvatarPath = formData.get(
-        `review_avatar_${i}_existing`
-      ) as string;
+    // Process review avatar images
+    const processedReviews = [];
+    if (body.reviews && Array.isArray(body.reviews)) {
+      for (const [index, review] of body.reviews.entries()) {
+        let avatarPath = '';
+        
+        // Check for review avatar file
+        const avatarKey = `review_avatar_${index}`;
+        if (body[avatarKey] && body[avatarKey] instanceof File) {
+          console.log(`Processing review ${index} avatar...`);
+          const buffer = Buffer.from(await body[avatarKey].arrayBuffer());
+          const file = {
+            buffer,
+            originalname: body[avatarKey].name,
+            mimetype: body[avatarKey].type,
+          } as Express.Multer.File;
+          avatarPath = await processImage(
+            file,
+            "public/images/avatars",
+            `avatar_${productId}_${index}`
+          );
+          console.log(`Review ${index} avatar saved to:`, avatarPath);
+        }
 
-      if (reviewAvatarFile) {
-        const buffer = Buffer.from(await reviewAvatarFile.arrayBuffer());
-        const file = {
-          buffer,
-          originalname: reviewAvatarFile.name,
-          mimetype: reviewAvatarFile.type,
-        } as Express.Multer.File;
-
-        const avatarPath = await processImage(
-          file,
-          "public/images/avatars",
-          `avatar_${slug}_${i}`
-        );
-        reviews[i].avatar = avatarPath;
-      } else if (existingAvatarPath) {
-        // If no new file, but an existing path is sent, keep the existing path
-        reviews[i].avatar = existingAvatarPath;
-      } else {
-        // If no new file and no existing path, set avatar to null or undefined
-        reviews[i].avatar = null;
+        processedReviews.push({
+          ...review,
+          avatar: avatarPath,
+        });
       }
     }
 
-    // Construct the product object for createProduct
+    // Create product data with processed image paths
     const productData = {
-      name,
-      // Pass paragraph and bullet_points separately
-      paragraph,
-      bullet_points,
-      redirect_link,
-      generated_link: `${
-        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-      }/preview/${slug}`,
-      product_image: imagePath, // Assuming your DB column is product_image
-      product_badge: badgeImagePath, // Assuming your DB column is product_badge
-      money_back_days,
-      ingredients,
-      why_choose,
-      reviews,
-      theme,
+      ...body,
+      product_id: productId, // Use the same ID we used for image processing
+      product_image: productImagePath,
+      product_badge: badgeImagePath,
+      ingredients: processedIngredients,
+      reviews: processedReviews,
+      // Remove file objects and temp keys
+      image: undefined,
+      badge_image: undefined,
     };
 
-    // Use the refactored createProduct function and pass the connection
-    // Assuming createProduct accepts a connection as the second argument
-    // If createProduct obtains its own connection, you might not need to pass it.
-    // Based on lib/models/product.ts, createProduct uses withConnection, so no need to pass connection here.
-    const newProduct = await createProduct(productData);
+    // Remove all temporary file keys
+    Object.keys(productData).forEach(key => {
+      if (key.startsWith('ingredient_image_') || key.startsWith('review_avatar_')) {
+        delete productData[key];
+      }
+    });
 
-    return NextResponse.json(newProduct, { status: 201 }); // Created
-  } catch (error: unknown) {
+    console.log("Creating product with processed data:", {
+      ...productData,
+      ingredients: productData.ingredients?.length + ' ingredients',
+      reviews: productData.reviews?.length + ' reviews'
+    });
+
+    const product = await createProduct(productData);
+    console.log("Product created successfully:", product);
+
+    return NextResponse.json(product, { status: 201 });
+  } catch (error: any) {
     console.error("Error creating product:", error);
-    // Handle specific errors if needed, e.g., database errors
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: "Failed to create product", details: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
-  } // Release connection
-}
-
-export async function DELETE(request: Request, { params }: RouteParams) {
-  let connection; // Declare connection here
-  try {
-    connection = await db.getConnection(); // Obtain connection
-
-    // Delete related records first
-    await connection.query(
-      `DELETE FROM product_themes WHERE product_id = ${params.id}`
-    ); // Use connection.query
-    await connection.query(
-      `DELETE FROM ingredients WHERE product_id = ${params.id}`
-    ); // Use connection.query
-    await connection.query(
-      `DELETE FROM why_choose WHERE product_id = ${params.id}`
-    ); // Use connection.query
-
-    // Then delete the product
-    await connection.query(
-      `DELETE FROM products WHERE product_id = ${params.id}`
-    ); // Use connection.query
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    return NextResponse.json(
-      { error: "Failed to delete product" },
-      { status: 500 }
-    );
-  } finally {
-    if (connection) connection.release();
-  } // Release connection
-}
-
-export async function PUT(request: Request, { params }: RouteParams) {
-  let connection; // Declare connection here
-  try {
-    connection = await db.getConnection(); // Obtain connection
-
-    const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const paragraph = formData.get("paragraph") as string; // Get paragraph
-    const bullet_points_json = formData.get("bullet_points") as string; // Get bullet points JSON string
-
-    console.log("PUT: Received bullet_points_json:", bullet_points_json);
-
-    // Parse bullet points JSON, default to empty array if parsing fails or string is empty/null
-    let bullet_points: string[] = [];
-    if (bullet_points_json) {
-      try {
-        bullet_points = JSON.parse(bullet_points_json);
-      } catch (e) {
-        console.error("Failed to parse bullet_points JSON in PUT:", e);
-        // Keep bullet_points as empty array
-      }
-    }
-
-    console.log("PUT: Parsed bullet_points array:", bullet_points);
-
-    const redirect_link = formData.get("redirect_link") as string;
-    const generated_link = formData.get("generated_link") as string;
-    const money_back_days = parseInt(formData.get("money_back_days") as string);
-    const theme = formData.get("theme") as string;
-    const ingredients = formData.get("ingredients") as string;
-    const why_choose = formData.get("why_choose") as string;
-    const reviews = formData.get("reviews") as string;
-
-    // Update product
-    await connection.query(`
-      UPDATE products
-      SET
-        name = ${name},
-        paragraph = ${paragraph},
-        bullet_points = ${JSON.stringify(
-          bullet_points
-        )}, // Save bullet points as JSON string
-        redirect_link = ${redirect_link},
-        generated_link = ${generated_link},
-        money_back_days = ${money_back_days}
-      WHERE product_id = ${params.id}
-    `);
-
-    // ... existing update theme, ingredients, why choose ...
-
-    // Update theme
-    if (theme) {
-      const themeData = JSON.parse(theme);
-      await connection.query(`
-        UPDATE product_themes
-        SET
-          primary_bg_color = ${themeData.primary_bg_color},
-          secondary_bg_color = ${themeData.secondary_bg_color},
-          accent_bg_color = ${themeData.accent_bg_color},
-          primary_text_color = ${themeData.primary_text_color},
-          secondary_text_color = ${themeData.secondary_text_color},
-          accent_text_color = ${themeData.accent_text_color},
-          link_color = ${themeData.link_color},
-          link_hover_color = ${themeData.link_hover_color},
-          primary_button_bg = ${themeData.primary_button_bg},
-          primary_button_text = ${themeData.primary_button_text},
-          primary_button_hover_bg = ${themeData.primary_button_hover_bg},
-          secondary_button_bg = ${themeData.secondary_button_bg},
-          secondary_button_text = ${themeData.secondary_button_text},
-          secondary_button_hover_bg = ${themeData.secondary_button_hover_bg},
-          card_bg_color = ${themeData.card_bg_color},
-          card_border_color = ${themeData.card_border_color},
-          card_shadow_color = ${themeData.card_shadow_color},
-          header_bg_color = ${themeData.header_bg_color},
-          header_text_color = ${themeData.header_text_color},
-          footer_bg_color = ${themeData.footer_bg_color},
-          footer_text_color = ${themeData.footer_text_color},
-          font_family = ${themeData.font_family},
-          h1_font_size = ${themeData.h1_font_size},
-          h1_font_weight = ${themeData.h1_font_weight},
-          h2_font_size = ${themeData.h2_font_size},
-          h2_font_weight = ${themeData.h2_font_weight},
-          h3_font_size = ${themeData.h3_font_size},
-          h3_font_weight = ${themeData.h3_font_weight},
-          body_font_size = ${themeData.body_font_size},
-          body_line_height = ${themeData.body_line_height},
-          section_padding = ${themeData.section_padding},
-          card_padding = ${themeData.card_padding},
-          button_padding = ${themeData.button_padding},
-          border_radius_sm = ${themeData.border_radius_sm},
-          border_radius_md = ${themeData.border_radius_md},
-          border_radius_lg = ${themeData.border_radius_lg},
-          border_radius_xl = ${themeData.border_radius_xl},
-          max_width = ${themeData.max_width},
-          container_padding = ${themeData.container_padding},
-          gradient_start = ${themeData.gradient_start},
-          gradient_end = ${themeData.gradient_end},
-          shadow_color = ${themeData.shadow_color},
-          custom_css = ${themeData.custom_css}
-        WHERE product_id = ${params.id}
-      `);
-    }
-
-    // Update ingredients
-    if (ingredients) {
-      const ingredientsData = JSON.parse(ingredients);
-      // First delete existing ingredients
-      await connection.query(
-        `DELETE FROM ingredients WHERE product_id = ${params.id}`
-      );
-
-      // Then insert new ingredients
-      for (const ingredient of ingredientsData) {
-        await connection.query(`
-          INSERT INTO ingredients (
-            product_id, title, description, image, display_order
-          ) VALUES (
-            ${params.id}, ${ingredient.title}, ${ingredient.description},
-            ${ingredient.image}, ${ingredient.display_order}
-          )
-        `);
-      }
-    }
-
-    // Update why choose
-    if (why_choose) {
-      const whyChooseData = JSON.parse(why_choose);
-      // First delete existing why choose
-      await connection.query(
-        `DELETE FROM why_choose WHERE product_id = ${params.id}`
-      );
-
-      // Then insert new why choose
-      for (const item of whyChooseData) {
-        await connection.query(`
-          INSERT INTO why_choose (
-            product_id, title, description, display_order
-          ) VALUES (
-            ${params.id}, ${item.title}, ${item.description},
-            ${item.display_order}
-          )
-        `);
-      }
-    }
-
-    // Update reviews
-    if (reviews) {
-      const reviewsData = JSON.parse(reviews);
-      // First delete existing reviews
-      await connection.query(`DELETE FROM reviews WHERE product_id = ?`, [
-        params.id,
-      ]);
-
-      // Then insert new reviews
-      for (const review of reviewsData) {
-        await connection.query(
-          `
-          INSERT INTO reviews (
-            product_id, name, address, rating, review_text
-          ) VALUES (?, ?, ?, ?, ?)`,
-          [
-            params.id,
-            review.name,
-            review.address,
-            review.rating,
-            review.review_text,
-          ]
-        );
-      }
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error updating product:", error);
-    return NextResponse.json(
-      { error: "Failed to update product" },
-      { status: 500 }
-    );
-  } finally {
-    if (connection) connection.release();
-  } // Release connection
+  }
 }

@@ -267,8 +267,8 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
+                  {filteredProducts.map((product, index) => (
+                    <TableRow key={product.product_id || `product-${index}`}>
                       <TableCell>{product.product_id}</TableCell>
                       <TableCell className="font-medium">
                         {product.name}
@@ -281,6 +281,7 @@ export default function Dashboard() {
                         <div className="flex space-x-2">
                           <Link
                             href={`/dashboard/products/${product.product_id}`}
+                            key="edit-link"
                           >
                             <Button variant="outline" size="sm">
                               Edit
@@ -289,12 +290,14 @@ export default function Dashboard() {
                           <Link
                             href={`/preview/${product.slug}`}
                             target="_blank"
+                            key="view-link"
                           >
                             <Button variant="outline" size="sm">
                               View
                             </Button>
                           </Link>
                           <Button
+                            key="copy-button"
                             variant="outline"
                             size="sm"
                             onClick={() => copyToClipboard(product.slug, product.product_id)}
@@ -306,6 +309,7 @@ export default function Dashboard() {
                             )}
                           </Button>
                           <Button
+                            key="delete-button"
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDelete(product)}
@@ -351,8 +355,8 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats?.recentVisits?.map((visit: any) => (
-                    <TableRow key={visit.id}>
+                  {stats?.recentVisits?.map((visit: any, index: number) => (
+                    <TableRow key={visit.id || `visit-${index}`}>
                       <TableCell className="font-medium">
                         {visit.product_name}
                       </TableCell>
@@ -394,8 +398,8 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats?.productVisits?.map((stat: any) => (
-                    <TableRow key={stat.product_id}>
+                  {stats?.productVisits?.map((stat: any, index: number) => (
+                    <TableRow key={stat.product_id || `stat-${index}`}>
                       <TableCell className="font-medium">{stat.name}</TableCell>
                       <TableCell>{stat.product_id}</TableCell>
                       <TableCell>{stat.visit_count}</TableCell>

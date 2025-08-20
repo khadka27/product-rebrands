@@ -36,8 +36,8 @@ export default function ProductHero({ product }: ProductHeroProps) {
 
               {product?.bullet_points && product.bullet_points.length > 0 && (
                 <ul className="space-y-2 md:space-y-3">
-                  {product.bullet_points.map((point) => (
-                    <li key={`bp-${point}`} className="flex items-start gap-2">
+                  {product.bullet_points.map((point, index) => (
+                    <li key={`bullet-point-${index}`} className="flex items-start gap-2">
                       <span className="text-blue-400 mt-1">•</span>
                       <span className="text-sm md:text-base text-white">
                         {point}
@@ -64,9 +64,10 @@ export default function ProductHero({ product }: ProductHeroProps) {
                   variant="outline"
                   className="w-full relative overflow-hidden group bg-transparent border-2 border-blue-400/50 hover:bg-blue-500/10 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 text-blue-400 hover:text-blue-300"
                   onClick={() => {
-                    document
-                      .getElementById("rename-info-modal")
-                      ?.classList.remove("hidden");
+                    const modal = document.getElementById("rename-info-modal");
+                    if (modal) {
+                      modal.classList.remove("hidden");
+                    }
                   }}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl">

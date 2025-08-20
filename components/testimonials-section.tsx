@@ -72,9 +72,9 @@ export default function TestimonialsSection({
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {testimonials.map((testimonial) => (
+            {testimonials.map((testimonial, index) => (
               <motion.div
-                key={`${testimonial.name}-${testimonial.location}`}
+                key={`testimonial-${index}`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -106,7 +106,7 @@ export default function TestimonialsSection({
                 <div className="flex mb-2 md:mb-3">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
-                      key={`star-${testimonial.name}-${i}`}
+                      key={`star-${index}-${i}`}
                       className={`w-3 h-3 md:w-5 md:h-5 ${
                         i < testimonial.rating
                           ? "fill-yellow-400 text-yellow-400"

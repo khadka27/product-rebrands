@@ -20,9 +20,10 @@ export async function GET() {
   try {
     const connection = await db.getConnection();
     try {
-      const [products]: any[] = await connection.query(
+      const productsResult = await connection.query(
         "SELECT product_id, slug, name, product_image, product_badge FROM products ORDER BY created_at DESC"
       );
+      const products = productsResult.rows;
 
       const missing: Array<{
         product_id: string;
@@ -59,10 +60,12 @@ export async function GET() {
           });
         }
 
-        const [ingredients]: any[] = await connection.query(
-          "SELECT image FROM ingredients WHERE product_id = ?",
+        const ingredientsResult = await connection.query(
+          "SELECT image FROM ingredients WHERE product_id = $1",
           [pid]
         );
+        const ingredients = ingredientsResult.rows;
+        
         for (const ing of ingredients) {
           const img = toPublicRelative(ing.image);
           if (img && !fileExists(img)) {
@@ -76,10 +79,12 @@ export async function GET() {
           }
         }
 
-        const [reviews]: any[] = await connection.query(
-          "SELECT avatar FROM reviews WHERE product_id = ?",
+        const reviewsResult = await connection.query(
+          "SELECT avatar FROM reviews WHERE product_id = $1",
           [pid]
         );
+        const reviews = reviewsResult.rows;
+        
         for (const r of reviews) {
           const avatar = toPublicRelative(r.avatar);
           if (avatar && !fileExists(avatar)) {

@@ -24,7 +24,7 @@ export function SafeImage({
       return "/supplement-bottles.png";
     }
     if (s.includes("/images/badges") || s.startsWith("badge_")) {
-      return "/images/New-and-Improved-Badge.png";
+      return "/images/badges/New-and-Improved-Badge.png";
     }
     if (s.includes("/images/avatars") || s.startsWith("avatar_")) {
       return "/placeholder-user.jpg";
@@ -39,7 +39,9 @@ export function SafeImage({
 
   const resolvedSrc = useMemo(() => {
     if (hasError) return computedFallback;
-    return getImagePath(src || "", computedFallback);
+    const imagePath = getImagePath(src || "", computedFallback);
+    // Ensure we always have a valid fallback for deployment
+    return imagePath || computedFallback || "/placeholder.jpg";
   }, [hasError, src, computedFallback]);
 
   if (!resolvedSrc) {

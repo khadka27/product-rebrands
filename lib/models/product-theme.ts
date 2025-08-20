@@ -65,11 +65,11 @@ export async function getProductThemeByProductId(
 ): Promise<ProductTheme | null> {
   const conn = connection || (await db.getConnection());
   try {
-    const [rows]: any = await conn.query(
-      "SELECT * FROM product_themes WHERE product_id = ?",
+    const result = await conn.query(
+      "SELECT * FROM product_themes WHERE product_id = $1",
       [productId]
     );
-    return rows.length === 0 ? null : (rows[0] as ProductTheme);
+    return result.rows.length === 0 ? null : (result.rows[0] as ProductTheme);
   } finally {
     if (!connection) conn.release();
   }
@@ -89,25 +89,29 @@ export async function createOrUpdateProductTheme(
 
     if (existingTheme) {
       // Update existing theme
-      const setClause = Object.entries(theme)
-        .filter(([key]) => key !== "product_id")
-        .map(([key]) => `${key} = ?`)
-        .join(", ");
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramCount = 1;
 
-      const values = Object.entries(theme)
-        .filter(([key]) => key !== "product_id")
-        .map(([, value]) => value);
+      // Build the SET clause dynamically
+      Object.entries(theme).forEach(([key, value]) => {
+        if (key !== "product_id") {
+          updateFields.push(`${key} = $${paramCount++}`);
+          updateValues.push(value);
+        }
+      });
 
-      values.push(theme.product_id);
+      updateValues.push(theme.product_id);
 
-      await conn.query(
-        `UPDATE product_themes SET ${setClause} WHERE product_id = ?`,
-        values
+      const result = await conn.query(
+        `UPDATE product_themes SET ${updateFields.join(", ")} WHERE product_id = $${paramCount} RETURNING *`,
+        updateValues
       );
-      return { ...existingTheme, ...theme };
+
+      return result.rows[0] as ProductTheme;
     } else {
       // Create new theme
-      const [result]: any = await conn.query(
+      const result = await conn.query(
         `INSERT INTO product_themes (
            product_id, primary_bg_color, secondary_bg_color, accent_bg_color,
            primary_text_color, secondary_text_color, accent_text_color,
@@ -121,7 +125,8 @@ export async function createOrUpdateProductTheme(
            card_padding, button_padding, border_radius_sm, border_radius_md,
            border_radius_lg, border_radius_xl, max_width, container_padding,
            gradient_start, gradient_end, shadow_color, custom_css
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44)
+         RETURNING *`,
         [
           theme.product_id,
           theme.primary_bg_color,
@@ -170,10 +175,7 @@ export async function createOrUpdateProductTheme(
         ]
       );
 
-      return {
-        theme_id: result.insertId.toString(),
-        ...theme,
-      };
+      return result.rows[0] as ProductTheme;
     }
   } finally {
     if (!connection) conn.release();
@@ -186,11 +188,11 @@ export async function deleteProductThemeByProductId(
 ): Promise<boolean> {
   const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await conn.query(
-      "DELETE FROM product_themes WHERE product_id = ?",
+    const result = await conn.query(
+      "DELETE FROM product_themes WHERE product_id = $1",
       [productId]
     );
-    return result.affectedRows > 0;
+    return result.rowCount >= 0;
   } finally {
     if (!connection) conn.release();
   }
@@ -202,11 +204,11 @@ export async function deleteProductTheme(
 ): Promise<boolean> {
   const conn = connection || (await db.getConnection());
   try {
-    const [result]: any = await conn.query(
-      "DELETE FROM product_themes WHERE theme_id = ?",
+    const result = await conn.query(
+      "DELETE FROM product_themes WHERE id = $1",
       [themeId]
     );
-    return result.affectedRows > 0;
+    return result.rowCount > 0;
   } finally {
     if (!connection) conn.release();
   }

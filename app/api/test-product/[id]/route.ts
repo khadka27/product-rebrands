@@ -9,34 +9,38 @@ export async function GET(
     console.log("Testing database connection for product ID:", params.id);
 
     // Test basic connection
-    const [testResult]: any = await db.query("SELECT 1 as test");
-    console.log("Database connection test:", testResult);
+    const testResult = await db.query("SELECT 1 as test");
+    console.log("Database connection test:", testResult.rows);
 
     // Check if products table exists
-    const [tableCheck]: any = await db.query('SHOW TABLES LIKE "products"');
-    console.log("Products table check:", tableCheck);
+    const tableCheck = await db.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'products'
+    `);
+    console.log("Products table check:", tableCheck.rows);
 
     // Check if product exists
-    const [productCheck]: any = await db.query(
-      "SELECT product_id, name FROM products WHERE product_id = ?",
+    const productCheck = await db.query(
+      "SELECT product_id, name FROM products WHERE product_id = $1",
       [params.id]
     );
-    console.log("Product check result:", productCheck);
+    console.log("Product check result:", productCheck.rows);
 
     // Check all products
-    const [allProducts]: any = await db.query(
+    const allProducts = await db.query(
       "SELECT product_id, name FROM products LIMIT 5"
     );
-    console.log("All products (first 5):", allProducts);
+    console.log("All products (first 5):", allProducts.rows);
 
     return NextResponse.json({
       success: true,
       productId: params.id,
-      databaseConnected: testResult.length > 0,
-      productsTableExists: tableCheck.length > 0,
-      productExists: productCheck.length > 0,
-      productData: productCheck[0] || null,
-      allProducts: allProducts,
+      databaseConnected: testResult.rows.length > 0,
+      productsTableExists: tableCheck.rows.length > 0,
+      productExists: productCheck.rows.length > 0,
+      productData: productCheck.rows[0] || null,
+      allProducts: allProducts.rows,
     });
   } catch (error) {
     console.error("Database test error:", error);
