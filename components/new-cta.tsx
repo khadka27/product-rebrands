@@ -119,7 +119,7 @@ export default function NewCta({ product }: NewCtaProps) {
                   className="object-contain z-10"
                 />
               </div>
-              <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
+              <div className="absolute -top-2 mr-11 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <SafeImage
                   src={resolveBadgeImagePath(product?.product_badge)}
                   alt="New Product Badge"
