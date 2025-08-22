@@ -110,7 +110,7 @@ export default function NewCta({ product }: NewCtaProps) {
           <div className="flex justify-center mt-6 md:mt-0">
             <div className="relative">
               {/* Responsive bottle size - enhanced for mobile */}
-              <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-96">
+              <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-80 md:h-96 lg:w-96 lg:h-[28rem]">
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/20 to-indigo-700/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
                   src={resolveProductImagePath(product?.product_image)}

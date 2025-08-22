@@ -87,7 +87,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               className="relative"
             >
               {/* Responsive bottle size - enhanced for mobile */}
-              <div className="relative w-48 h-60 sm:w-56 sm:h-72 md:w-72 md:h-96">
+              <div className="relative w-56 h-72 sm:w-64 sm:h-80 md:w-80 md:h-96 lg:w-96 lg:h-[28rem]">
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-blue-600/20 rounded-full filter blur-[60px] opacity-70"></div>
                 <SafeImage
                   src={resolveProductImagePath(product?.product_image)}
@@ -98,7 +98,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 />
               </div>
 
-              <div className="absolute -top-2 -right-2 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
+              <div className="absolute -top-2 -right-2 mr-11 w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 z-20">
                 <SafeImage
                   src={resolveBadgeImagePath(product?.product_badge)}
                   alt="New and Improved Badge"
