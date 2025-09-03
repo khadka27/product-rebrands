@@ -455,35 +455,54 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   // Update handleImageChange to include validation
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("🔄 Image change triggered for field:", e.target.name);
+    
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const fieldName = e.target.name;
 
+      console.log("📁 File selected:", file.name, "Size:", file.size, "Type:", file.type);
+
       // Validate file type
       if (!file.type.startsWith("image/")) {
         setImageError("Please upload an image file");
+        console.error("❌ Invalid file type:", file.type);
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setImageError("Image size should be less than 5MB");
+        console.error("❌ File too large:", file.size);
         return;
       }
 
       setImageError("");
-      setFormData((prev) => ({ ...prev, [fieldName]: file }));
+      console.log("✅ File validation passed, updating form data");
+      
+      setFormData((prev) => {
+        const updated = { ...prev, [fieldName]: file };
+        console.log("📋 Updated form data:", updated);
+        return updated;
+      });
 
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
+        const result = event.target?.result as string;
+        console.log("🖼️ Preview created for field:", fieldName);
+        
         if (fieldName === "image") {
-          setImagePreview(event.target?.result as string);
+          setImagePreview(result);
+          console.log("🖼️ Main image preview set");
         } else if (fieldName === "badge_image") {
-          setBadgeImagePreview(event.target?.result as string);
+          setBadgeImagePreview(result);
+          console.log("🖼️ Badge image preview set");
         }
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log("❌ No file selected");
     }
   };
 
@@ -544,28 +563,38 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    console.log("🔄 Ingredient image change triggered for index:", index);
+    
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log("📁 Ingredient file selected:", file.name, "Size:", file.size, "Type:", file.type);
 
       setIngredients((prev) => {
         const updated = [...prev];
         updated[index] = { ...updated[index], image: file };
+        console.log("✅ Ingredient image added for index:", index, "Ingredient:", updated[index]);
         return updated;
       });
 
       // Create preview for the ingredient image
       const reader = new FileReader();
       reader.onload = (event) => {
+        const result = event.target?.result as string;
+        console.log("🖼️ Ingredient preview created for index:", index);
+        
         setIngredients((prev) => {
           const updated = [...prev];
           updated[index] = {
             ...updated[index],
-            image_preview: event.target?.result as string,
+            image_preview: result,
           };
+          console.log("🖼️ Ingredient preview set for index:", index);
           return updated;
         });
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log("❌ No ingredient file selected for index:", index);
     }
   };
 
