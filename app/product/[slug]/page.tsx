@@ -59,11 +59,11 @@ export default function EditProductPage({ params }: PageProps) {
   // Get proper image URL for display
   function getImageUrl(imagePath: string): string {
     // If it's a blob URL (newly selected file), return as is
-    if (imagePath.startsWith('blob:')) {
+    if (imagePath.startsWith("blob:")) {
       return imagePath;
     }
     // If it already starts with /api/static, return as is
-    if (imagePath.startsWith('/api/static/')) {
+    if (imagePath.startsWith("/api/static/")) {
       return imagePath;
     }
     // Otherwise, prepend the static API path
@@ -78,7 +78,7 @@ export default function EditProductPage({ params }: PageProps) {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      
+
       // Handle image upload - only append if a new file was selected
       if (image) {
         formData.append("image", image);
@@ -87,7 +87,7 @@ export default function EditProductPage({ params }: PageProps) {
         // Don't append the existing image path to FormData - the API will handle it
         // The API will check if there's a new image file, and if not, it will keep the existing one
       }
-      
+
       const res = await fetch(`/api/products/${params.slug}`, {
         method: "PUT",
         body: formData,
