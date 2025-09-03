@@ -111,6 +111,8 @@ export async function PUT(
 
     const imageFile = formData.get("image") as File;
     const badgeImageFile = formData.get("badge_image") as File;
+    const existingImagePath = formData.get("image_existing") as string;
+    const existingBadgeImagePath = formData.get("badge_image_existing") as string;
 
     if (imageFile && imageFile.size > 0) {
       const buffer = Buffer.from(await imageFile.arrayBuffer());
@@ -124,6 +126,9 @@ export async function PUT(
         "public/images/products",
         `product_${productId}`
       );
+    } else if (existingImagePath) {
+      // Use existing image path if no new image uploaded
+      productImagePath = existingImagePath;
     }
 
     if (badgeImageFile && badgeImageFile.size > 0) {
@@ -138,6 +143,9 @@ export async function PUT(
         "public/images/badges",
         `badge_${productId}`
       );
+    } else if (existingBadgeImagePath) {
+      // Use existing badge image path if no new image uploaded
+      badgeImagePath = existingBadgeImagePath;
     }
 
     const connection = await db.getConnection();
@@ -209,6 +217,10 @@ export async function PUT(
             const ingredientImageFile = formData.get(
               `ingredient_image_${index}`
             ) as File;
+            const existingIngredientImage = formData.get(
+              `ingredient_image_${index}_existing`
+            ) as string;
+
             if (ingredientImageFile && ingredientImageFile.size > 0) {
               const buffer = Buffer.from(
                 await ingredientImageFile.arrayBuffer()
@@ -223,11 +235,14 @@ export async function PUT(
                 "public/images/ingredients",
                 `ingredient_${productId}_${index}`
               );
+            } else if (existingIngredientImage) {
+              // Use existing ingredient image path
+              ingredientImagePath = existingIngredientImage;
             } else if (
               ingredient.image_preview &&
               !ingredient.image_preview.startsWith("blob:")
             ) {
-              // Keep existing image
+              // Keep existing image (fallback)
               ingredientImagePath = ingredient.image_preview;
             }
 
@@ -299,6 +314,10 @@ export async function PUT(
 
             // Check if there's a file for this review
             const avatarFile = formData.get(`review_avatar_${index}`) as File;
+            const existingAvatarPath = formData.get(
+              `review_avatar_${index}_existing`
+            ) as string;
+
             if (avatarFile && avatarFile.size > 0) {
               const buffer = Buffer.from(await avatarFile.arrayBuffer());
               const file = {
@@ -311,11 +330,14 @@ export async function PUT(
                 "public/images/avatars",
                 `avatar_${productId}_${index}`
               );
+            } else if (existingAvatarPath) {
+              // Use existing avatar path
+              avatarPath = existingAvatarPath;
             } else if (
               review.avatar_preview &&
               !review.avatar_preview.startsWith("blob:")
             ) {
-              // Keep existing avatar
+              // Keep existing avatar (fallback)
               avatarPath = review.avatar_preview;
             }
 
