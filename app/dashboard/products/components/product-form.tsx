@@ -393,7 +393,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Additional effect specifically for main product images
   useEffect(() => {
     if (productId && initialData) {
-      // Ensure main image preview is set correctly
+      // Ensure main image preview is set correctly (only if not already set)
       if (initialData.image && !imagePreview) {
         const mainImagePath =
           ensureStaticPath(initialData.image) ||
@@ -402,7 +402,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         setImagePreview(mainImagePath);
       }
 
-      // Ensure badge image preview is set correctly
+      // Ensure badge image preview is set correctly (only if not already set)
       if (initialData.badge_image && !badgeImagePreview) {
         const badgeImagePath =
           ensureStaticPath(initialData.badge_image) ||
@@ -411,7 +411,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         setBadgeImagePreview(badgeImagePath);
       }
     }
-  }, [productId, initialData, imagePreview, badgeImagePreview]);
+  }, [productId, initialData]); // Removed imagePreview and badgeImagePreview from dependencies
 
   // Add image validation state
   const [imageError, setImageError] = useState("");
@@ -487,6 +487,15 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       setImageError("");
       console.log("✅ File validation passed, updating form data");
 
+      // Clear the old preview immediately to prevent conflicts
+      if (fieldName === "image") {
+        setImagePreview(null);
+        console.log("🧹 Cleared main image preview");
+      } else if (fieldName === "badge_image") {
+        setBadgeImagePreview(null);
+        console.log("🧹 Cleared badge image preview");
+      }
+
       setFormData((prev) => {
         const updated = { ...prev, [fieldName]: file };
         console.log("📋 Updated form data:", updated);
@@ -497,14 +506,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        console.log("🖼️ Preview created for field:", fieldName);
+        console.log(
+          "🖼️ Preview created for field:",
+          fieldName,
+          "Data URL length:",
+          result.length
+        );
 
         if (fieldName === "image") {
           setImagePreview(result);
-          console.log("🖼️ Main image preview set");
+          console.log("🖼️ Main image preview set to new data URL");
         } else if (fieldName === "badge_image") {
           setBadgeImagePreview(result);
-          console.log("🖼️ Badge image preview set");
+          console.log("🖼️ Badge image preview set to new data URL");
         }
       };
       reader.readAsDataURL(file);
