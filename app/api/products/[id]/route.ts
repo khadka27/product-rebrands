@@ -112,7 +112,9 @@ export async function PUT(
     const imageFile = formData.get("image") as File;
     const badgeImageFile = formData.get("badge_image") as File;
     const existingImagePath = formData.get("image_existing") as string;
-    const existingBadgeImagePath = formData.get("badge_image_existing") as string;
+    const existingBadgeImagePath = formData.get(
+      "badge_image_existing"
+    ) as string;
 
     if (imageFile && imageFile.size > 0) {
       const buffer = Buffer.from(await imageFile.arrayBuffer());
@@ -152,7 +154,7 @@ export async function PUT(
 
     try {
       // Start transaction
-      await connection.query('BEGIN');
+      await connection.query("BEGIN");
 
       // Get current product to preserve existing images if no new ones uploaded
       const currentProductResult = await connection.query(
@@ -161,7 +163,7 @@ export async function PUT(
       );
 
       if (currentProductResult.rows.length === 0) {
-        await connection.query('ROLLBACK');
+        await connection.query("ROLLBACK");
         connection.release();
         return NextResponse.json(
           { error: "Product not found" },
@@ -368,7 +370,7 @@ export async function PUT(
       }
 
       // Commit the transaction
-      await connection.query('COMMIT');
+      await connection.query("COMMIT");
       connection.release();
 
       return NextResponse.json({
@@ -377,7 +379,7 @@ export async function PUT(
       });
     } catch (error) {
       // Rollback the transaction on error
-      await connection.query('ROLLBACK');
+      await connection.query("ROLLBACK");
       connection.release();
       throw error;
     }
@@ -401,7 +403,7 @@ export async function DELETE(
 
     try {
       // Start transaction
-      await connection.query('BEGIN');
+      await connection.query("BEGIN");
 
       // Delete related records first (using correct table names)
       await connection.query(
@@ -424,13 +426,13 @@ export async function DELETE(
       ]);
 
       // Commit the transaction
-      await connection.query('COMMIT');
+      await connection.query("COMMIT");
       connection.release();
 
       return NextResponse.json({ success: true });
     } catch (error) {
       // Rollback the transaction on error
-      await connection.query('ROLLBACK');
+      await connection.query("ROLLBACK");
       connection.release();
       throw error;
     }

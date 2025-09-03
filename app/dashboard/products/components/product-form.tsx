@@ -199,26 +199,28 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Initialize image previews for edit mode
   useEffect(() => {
     if (productId && initialData) {
-      console.log('🔧 Initializing image previews for edit mode:', productId);
-      
+      console.log("🔧 Initializing image previews for edit mode:", productId);
+
       // Set up ingredient image previews only if not already set
       if (
         initialData.ingredients &&
         ingredients.some((ing) => !ing.image_preview && ing.image)
       ) {
-        console.log('🥕 Setting up ingredient image previews');
-        const updatedIngredients = initialData.ingredients.map(
-          (ingredient) => {
-            const imagePath = ingredient.image && typeof ingredient.image === "string"
+        console.log("🥕 Setting up ingredient image previews");
+        const updatedIngredients = initialData.ingredients.map((ingredient) => {
+          const imagePath =
+            ingredient.image && typeof ingredient.image === "string"
               ? resolveIngredientImagePath(ingredient.image)
               : ingredient.image_preview;
-            console.log(`🖼️ Ingredient "${ingredient.title}" image path:`, imagePath);
-            return {
-              ...ingredient,
-              image_preview: imagePath,
-            };
-          }
-        );
+          console.log(
+            `🖼️ Ingredient "${ingredient.title}" image path:`,
+            imagePath
+          );
+          return {
+            ...ingredient,
+            image_preview: imagePath,
+          };
+        });
         setIngredients(updatedIngredients);
       }
 
@@ -227,11 +229,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         initialData.reviews &&
         reviews.some((rev) => !rev.avatar_preview && rev.avatar)
       ) {
-        console.log('👤 Setting up review avatar previews');
+        console.log("👤 Setting up review avatar previews");
         const updatedReviews = initialData.reviews.map((review) => {
-          const avatarPath = review.avatar && typeof review.avatar === "string"
-            ? resolveAvatarImagePath(review.avatar)
-            : review.avatar_preview;
+          const avatarPath =
+            review.avatar && typeof review.avatar === "string"
+              ? resolveAvatarImagePath(review.avatar)
+              : review.avatar_preview;
           console.log(`🖼️ Review "${review.name}" avatar path:`, avatarPath);
           return {
             ...review,
@@ -244,12 +247,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       // Set up main image and badge image previews if not already set
       if (initialData.image && !imagePreview) {
         const mainImagePath = getImagePath(initialData.image);
-        console.log('🖼️ Main product image path:', mainImagePath);
+        console.log("🖼️ Main product image path:", mainImagePath);
         setImagePreview(mainImagePath);
       }
       if (initialData.badge_image && !badgeImagePreview) {
         const badgeImagePath = resolveBadgeImagePath(initialData.badge_image);
-        console.log('🏷️ Badge image path:', badgeImagePath);
+        console.log("🏷️ Badge image path:", badgeImagePath);
         setBadgeImagePreview(badgeImagePath);
       }
     }
