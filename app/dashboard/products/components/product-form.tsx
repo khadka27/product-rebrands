@@ -18,7 +18,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, AlertCircle, Copy, Check } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
-import { getImagePath } from "@/lib/utils";
+import {
+  getImagePath,
+  resolveIngredientImagePath,
+  resolveAvatarImagePath,
+  resolveBadgeImagePath,
+} from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProductSuccessModal } from "./product-success-modal";
 
@@ -190,6 +195,58 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
     validateCurrentReviews();
   }, [reviews]);
+
+  // Initialize image previews for edit mode
+  useEffect(() => {
+    if (productId && initialData) {
+      // Set up ingredient image previews only if not already set
+      if (
+        initialData.ingredients &&
+        ingredients.some((ing) => !ing.image_preview && ing.image)
+      ) {
+        const updatedIngredients = initialData.ingredients.map(
+          (ingredient) => ({
+            ...ingredient,
+            image_preview:
+              ingredient.image && typeof ingredient.image === "string"
+                ? resolveIngredientImagePath(ingredient.image)
+                : ingredient.image_preview,
+          })
+        );
+        setIngredients(updatedIngredients);
+      }
+
+      // Set up review avatar previews only if not already set
+      if (
+        initialData.reviews &&
+        reviews.some((rev) => !rev.avatar_preview && rev.avatar)
+      ) {
+        const updatedReviews = initialData.reviews.map((review) => ({
+          ...review,
+          avatar_preview:
+            review.avatar && typeof review.avatar === "string"
+              ? resolveAvatarImagePath(review.avatar)
+              : review.avatar_preview,
+        }));
+        setReviews(updatedReviews);
+      }
+
+      // Set up main image and badge image previews if not already set
+      if (initialData.image && !imagePreview) {
+        setImagePreview(getImagePath(initialData.image));
+      }
+      if (initialData.badge_image && !badgeImagePreview) {
+        setBadgeImagePreview(resolveBadgeImagePath(initialData.badge_image));
+      }
+    }
+  }, [
+    productId,
+    initialData,
+    ingredients,
+    reviews,
+    imagePreview,
+    badgeImagePreview,
+  ]);
 
   // Add image validation state
   const [imageError, setImageError] = useState("");
@@ -739,7 +796,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (validateCurrentStep()) {
       const steps = ["general", "ingredients", "why-choose", "reviews"];
       const currentIndex = steps.indexOf(currentStep);
@@ -755,7 +812,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     const steps = ["general", "ingredients", "why-choose", "reviews"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
@@ -775,9 +832,9 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   // Prevent form submission on Enter key in input fields
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       // Only allow Enter to submit on the reviews tab (final step)
-      if (currentStep !== 'reviews') {
+      if (currentStep !== "reviews") {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -787,9 +844,9 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Handle form submission - Update to send paragraph and bullet_points separately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent submission if we're not on the final step (reviews)
-    if (currentStep !== 'reviews') {
+    if (currentStep !== "reviews") {
       return;
     }
 
@@ -845,12 +902,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       submitData.append("generated_link", formData.generated_link);
       submitData.append("money_back_days", formData.money_back_days.toString());
 
+      // Handle main product image
       if (formData.image) {
         submitData.append("image", formData.image);
+      } else if (productId && initialData?.image) {
+        // For edit mode, preserve existing image if no new one is selected
+        submitData.append("image_existing", initialData.image);
       }
 
+      // Handle badge image
       if (formData.badge_image) {
         submitData.append("badge_image", formData.badge_image);
+      } else if (productId && initialData?.badge_image) {
+        // For edit mode, preserve existing badge image if no new one is selected
+        submitData.append("badge_image_existing", initialData.badge_image);
       }
 
       // Add ingredients data
@@ -1274,7 +1339,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             badgeImagePreview.startsWith("data:")
                               ? badgeImagePreview
-                              : getImagePath(badgeImagePreview, "")
+                              : resolveBadgeImagePath(badgeImagePreview)
                           }
                           alt="Badge preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
@@ -1367,7 +1432,9 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   ingredient.image_preview
                                     ? ingredient.image_preview
                                     : typeof ingredient.image === "string"
-                                    ? getImagePath(ingredient.image, "")
+                                    ? resolveIngredientImagePath(
+                                        ingredient.image
+                                      )
                                     : ""
                                 }
                                 alt={`Ingredient ${index + 1}`}
@@ -1625,7 +1692,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   review.avatar_preview
                                     ? review.avatar_preview
                                     : typeof review.avatar === "string"
-                                    ? getImagePath(review.avatar, "")
+                                    ? resolveAvatarImagePath(review.avatar)
                                     : ""
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
