@@ -56,6 +56,20 @@ export default function EditProductPage({ params }: PageProps) {
     }
   }
 
+  // Get proper image URL for display
+  function getImageUrl(imagePath: string): string {
+    // If it's a blob URL (newly selected file), return as is
+    if (imagePath.startsWith('blob:')) {
+      return imagePath;
+    }
+    // If it already starts with /api/static, return as is
+    if (imagePath.startsWith('/api/static/')) {
+      return imagePath;
+    }
+    // Otherwise, prepend the static API path
+    return `/api/static/${imagePath}`;
+  }
+
   // Handle form submit
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -64,12 +78,16 @@ export default function EditProductPage({ params }: PageProps) {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      // Only append image if changed
+      
+      // Handle image upload - only append if a new file was selected
       if (image) {
         formData.append("image", image);
       } else if (product?.image) {
-        formData.append("image", product.image);
+        // If no new image selected, preserve existing image path
+        // Don't append the existing image path to FormData - the API will handle it
+        // The API will check if there's a new image file, and if not, it will keep the existing one
       }
+      
       const res = await fetch(`/api/products/${params.slug}`, {
         method: "PUT",
         body: formData,
@@ -110,7 +128,7 @@ export default function EditProductPage({ params }: PageProps) {
           </label>
           {preview && (
             <Image
-              src={preview}
+              src={getImageUrl(preview)}
               alt="Product Image"
               width={200}
               height={200}
