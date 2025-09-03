@@ -27,6 +27,10 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProductSuccessModal } from "./product-success-modal";
 
+// Placeholder image constants
+const INGREDIENT_PLACEHOLDER = "/api/static/placeholder.jpg";
+const AVATAR_PLACEHOLDER = "/api/static/placeholder-user.jpg";
+
 interface IngredientWithPreview {
   id?: string;
   title: string;
@@ -1527,7 +1531,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     ? resolveIngredientImagePath(
                                         ingredient.image
                                       )
-                                    : "/placeholder.jpg"
+                                    : INGREDIENT_PLACEHOLDER
                                 }
                                 alt={`Ingredient ${index + 1}`}
                                 className="max-w-xs max-h-20 object-contain border rounded-md"
@@ -1538,7 +1542,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     }`
                                   );
                                   (e.target as HTMLImageElement).src =
-                                    "/placeholder.jpg";
+                                    INGREDIENT_PLACEHOLDER;
                                 }}
                               />
                             </div>
@@ -1794,7 +1798,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     ? review.avatar_preview
                                     : typeof review.avatar === "string"
                                     ? resolveAvatarImagePath(review.avatar)
-                                    : "/placeholder-user.jpg"
+                                    : AVATAR_PLACEHOLDER
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
                                 className="w-full h-full object-cover"
@@ -1805,7 +1809,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     }`
                                   );
                                   (e.target as HTMLImageElement).src =
-                                    "/placeholder-user.jpg";
+                                    AVATAR_PLACEHOLDER;
                                 }}
                               />
                             </div>
