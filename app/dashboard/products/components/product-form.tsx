@@ -201,47 +201,66 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     if (productId && initialData) {
       console.log("🔧 Initializing image previews for edit mode:", productId);
 
-      // Set up ingredient image previews only if not already set
-      if (
-        initialData.ingredients &&
-        ingredients.some((ing) => !ing.image_preview && ing.image)
-      ) {
+      // Set up ingredient image previews
+      if (initialData.ingredients && initialData.ingredients.length > 0) {
         console.log("🥕 Setting up ingredient image previews");
         const updatedIngredients = initialData.ingredients.map((ingredient) => {
-          const imagePath =
-            ingredient.image && typeof ingredient.image === "string"
-              ? resolveIngredientImagePath(ingredient.image)
-              : ingredient.image_preview;
-          console.log(
-            `🖼️ Ingredient "${ingredient.title}" image path:`,
-            imagePath
-          );
-          return {
-            ...ingredient,
-            image_preview: imagePath,
-          };
+          // Only set preview if ingredient has an image but no preview yet
+          if (
+            ingredient.image &&
+            typeof ingredient.image === "string" &&
+            !ingredient.image_preview
+          ) {
+            const imagePath = resolveIngredientImagePath(ingredient.image);
+            console.log(
+              `🖼️ Ingredient "${ingredient.title}" image path:`,
+              imagePath
+            );
+            return {
+              ...ingredient,
+              image_preview: imagePath,
+            };
+          }
+          return ingredient;
         });
-        setIngredients(updatedIngredients);
+
+        // Only update if there are actual changes
+        const hasChanges = updatedIngredients.some(
+          (ing, index) =>
+            ing.image_preview !== ingredients[index]?.image_preview
+        );
+        if (hasChanges) {
+          setIngredients(updatedIngredients);
+        }
       }
 
-      // Set up review avatar previews only if not already set
-      if (
-        initialData.reviews &&
-        reviews.some((rev) => !rev.avatar_preview && rev.avatar)
-      ) {
+      // Set up review avatar previews
+      if (initialData.reviews && initialData.reviews.length > 0) {
         console.log("👤 Setting up review avatar previews");
         const updatedReviews = initialData.reviews.map((review) => {
-          const avatarPath =
-            review.avatar && typeof review.avatar === "string"
-              ? resolveAvatarImagePath(review.avatar)
-              : review.avatar_preview;
-          console.log(`🖼️ Review "${review.name}" avatar path:`, avatarPath);
-          return {
-            ...review,
-            avatar_preview: avatarPath,
-          };
+          // Only set preview if review has an avatar but no preview yet
+          if (
+            review.avatar &&
+            typeof review.avatar === "string" &&
+            !review.avatar_preview
+          ) {
+            const avatarPath = resolveAvatarImagePath(review.avatar);
+            console.log(`🖼️ Review "${review.name}" avatar path:`, avatarPath);
+            return {
+              ...review,
+              avatar_preview: avatarPath,
+            };
+          }
+          return review;
         });
-        setReviews(updatedReviews);
+
+        // Only update if there are actual changes
+        const hasChanges = updatedReviews.some(
+          (rev, index) => rev.avatar_preview !== reviews[index]?.avatar_preview
+        );
+        if (hasChanges) {
+          setReviews(updatedReviews);
+        }
       }
 
       // Set up main image and badge image previews if not already set
@@ -256,14 +275,70 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         setBadgeImagePreview(badgeImagePath);
       }
     }
-  }, [
-    productId,
-    initialData,
-    ingredients,
-    reviews,
-    imagePreview,
-    badgeImagePreview,
-  ]);
+  }, [productId, initialData]); // Simplified dependencies
+
+  // Additional effect to ensure image previews are set when ingredients/reviews are loaded
+  useEffect(() => {
+    if (productId) {
+      // Check and fix ingredient image previews
+      const needsIngredientUpdate = ingredients.some(
+        (ing) =>
+          ing.image && typeof ing.image === "string" && !ing.image_preview
+      );
+
+      if (needsIngredientUpdate) {
+        console.log("🔄 Fixing missing ingredient image previews");
+        const updatedIngredients = ingredients.map((ingredient) => {
+          if (
+            ingredient.image &&
+            typeof ingredient.image === "string" &&
+            !ingredient.image_preview
+          ) {
+            const imagePath = resolveIngredientImagePath(ingredient.image);
+            console.log(
+              `🖼️ Fixed ingredient "${ingredient.title}" image path:`,
+              imagePath
+            );
+            return {
+              ...ingredient,
+              image_preview: imagePath,
+            };
+          }
+          return ingredient;
+        });
+        setIngredients(updatedIngredients);
+      }
+
+      // Check and fix review avatar previews
+      const needsReviewUpdate = reviews.some(
+        (rev) =>
+          rev.avatar && typeof rev.avatar === "string" && !rev.avatar_preview
+      );
+
+      if (needsReviewUpdate) {
+        console.log("🔄 Fixing missing review avatar previews");
+        const updatedReviews = reviews.map((review) => {
+          if (
+            review.avatar &&
+            typeof review.avatar === "string" &&
+            !review.avatar_preview
+          ) {
+            const avatarPath = resolveAvatarImagePath(review.avatar);
+            console.log(
+              `🖼️ Fixed review "${review.name}" avatar path:`,
+              avatarPath
+            );
+            return {
+              ...review,
+              avatar_preview: avatarPath,
+            };
+          }
+          return review;
+        });
+        setReviews(updatedReviews);
+      }
+    }
+  }, [ingredients.length, reviews.length, productId]); // Run when arrays change in length
 
   // Add image validation state
   const [imageError, setImageError] = useState("");
@@ -1452,10 +1527,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     ? resolveIngredientImagePath(
                                         ingredient.image
                                       )
-                                    : ""
+                                    : "/placeholder.jpg"
                                 }
                                 alt={`Ingredient ${index + 1}`}
                                 className="max-w-xs max-h-20 object-contain border rounded-md"
+                                onError={(e) => {
+                                  console.error(
+                                    `Failed to load ingredient image: ${
+                                      (e.target as HTMLImageElement).src
+                                    }`
+                                  );
+                                  (e.target as HTMLImageElement).src =
+                                    "/placeholder.jpg";
+                                }}
                               />
                             </div>
                           )}
@@ -1710,10 +1794,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                     ? review.avatar_preview
                                     : typeof review.avatar === "string"
                                     ? resolveAvatarImagePath(review.avatar)
-                                    : ""
+                                    : "/placeholder-user.jpg"
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error(
+                                    `Failed to load review avatar: ${
+                                      (e.target as HTMLImageElement).src
+                                    }`
+                                  );
+                                  (e.target as HTMLImageElement).src =
+                                    "/placeholder-user.jpg";
+                                }}
                               />
                             </div>
                             <p className="text-xs text-center text-gray-500 mt-1">
