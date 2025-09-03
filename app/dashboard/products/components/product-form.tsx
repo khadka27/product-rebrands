@@ -456,12 +456,19 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Update handleImageChange to include validation
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log("🔄 Image change triggered for field:", e.target.name);
-    
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const fieldName = e.target.name;
 
-      console.log("📁 File selected:", file.name, "Size:", file.size, "Type:", file.type);
+      console.log(
+        "📁 File selected:",
+        file.name,
+        "Size:",
+        file.size,
+        "Type:",
+        file.type
+      );
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
@@ -479,7 +486,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
       setImageError("");
       console.log("✅ File validation passed, updating form data");
-      
+
       setFormData((prev) => {
         const updated = { ...prev, [fieldName]: file };
         console.log("📋 Updated form data:", updated);
@@ -491,7 +498,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       reader.onload = (event) => {
         const result = event.target?.result as string;
         console.log("🖼️ Preview created for field:", fieldName);
-        
+
         if (fieldName === "image") {
           setImagePreview(result);
           console.log("🖼️ Main image preview set");
@@ -564,15 +571,27 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     console.log("🔄 Ingredient image change triggered for index:", index);
-    
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      console.log("📁 Ingredient file selected:", file.name, "Size:", file.size, "Type:", file.type);
+      console.log(
+        "📁 Ingredient file selected:",
+        file.name,
+        "Size:",
+        file.size,
+        "Type:",
+        file.type
+      );
 
       setIngredients((prev) => {
         const updated = [...prev];
         updated[index] = { ...updated[index], image: file };
-        console.log("✅ Ingredient image added for index:", index, "Ingredient:", updated[index]);
+        console.log(
+          "✅ Ingredient image added for index:",
+          index,
+          "Ingredient:",
+          updated[index]
+        );
         return updated;
       });
 
@@ -581,7 +600,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       reader.onload = (event) => {
         const result = event.target?.result as string;
         console.log("🖼️ Ingredient preview created for index:", index);
-        
+
         setIngredients((prev) => {
           const updated = [...prev];
           updated[index] = {
@@ -708,40 +727,61 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    console.log("🔄 Review avatar change triggered for index:", index);
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      console.log(
+        "📁 Avatar file selected:",
+        file.name,
+        "Size:",
+        file.size,
+        "Type:",
+        file.type
+      );
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
+        console.error("❌ Invalid avatar file type:", file.type);
         toast.error("Please upload an image file for the avatar");
         return;
       }
 
       // Validate file size (max 2MB for avatars)
       if (file.size > 2 * 1024 * 1024) {
+        console.error("❌ Avatar file too large:", file.size);
         toast.error("Avatar image size should be less than 2MB");
         return;
       }
 
+      console.log("✅ Avatar file validation passed");
+
       setReviews((prev) => {
         const updated = [...prev];
         updated[index] = { ...updated[index], avatar: file };
+        console.log("✅ Avatar added for review index:", index);
         return updated;
       });
 
       // Create preview for the avatar image
       const reader = new FileReader();
       reader.onload = (event) => {
+        const result = event.target?.result as string;
+        console.log("🖼️ Avatar preview created for index:", index);
+
         setReviews((prev) => {
           const updated = [...prev];
           updated[index] = {
             ...updated[index],
-            avatar_preview: event.target?.result as string,
+            avatar_preview: result,
           };
+          console.log("🖼️ Avatar preview set for index:", index);
           return updated;
         });
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log("❌ No avatar file selected for index:", index);
     }
   };
 
@@ -1084,6 +1124,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
     setBulletPointsError(""); // Clear bullet points error
 
     try {
+      console.log("🚀 Starting form submission...");
+      console.log("📋 Current form data:", formData);
+      console.log("🖼️ Current image preview:", imagePreview);
+      console.log("🏆 Current badge preview:", badgeImagePreview);
+      console.log("🌿 Current ingredients:", ingredients);
+      console.log("⭐ Current reviews:", reviews);
+
       const submitData = new FormData();
       submitData.append("name", formData.name);
       // Append paragraph and bullet_points separately
@@ -1098,18 +1145,29 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
       // Handle main product image
       if (formData.image) {
+        console.log("✅ Adding main image file:", formData.image.name);
         submitData.append("image", formData.image);
       } else if (productId && initialData?.image) {
         // For edit mode, preserve existing image if no new one is selected
+        console.log("📁 Preserving existing main image:", initialData.image);
         submitData.append("image_existing", initialData.image);
+      } else {
+        console.log("❌ No main image to submit");
       }
 
       // Handle badge image
       if (formData.badge_image) {
+        console.log("✅ Adding badge image file:", formData.badge_image.name);
         submitData.append("badge_image", formData.badge_image);
       } else if (productId && initialData?.badge_image) {
         // For edit mode, preserve existing badge image if no new one is selected
+        console.log(
+          "📁 Preserving existing badge image:",
+          initialData.badge_image
+        );
         submitData.append("badge_image_existing", initialData.badge_image);
+      } else {
+        console.log("❌ No badge image to submit");
       }
 
       // Add ingredients data
@@ -1127,15 +1185,26 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       );
 
       // Add ingredient images
+      console.log("🌿 Processing ingredient images...");
       ingredients.forEach((ingredient, index) => {
         if (ingredient.image instanceof File) {
+          console.log(
+            `✅ Adding ingredient image ${index}:`,
+            ingredient.image.name
+          );
           submitData.append(`ingredient_image_${index}`, ingredient.image);
         } else if (typeof ingredient.image === "string") {
           // If it's an existing image path, send it back
+          console.log(
+            `📁 Preserving existing ingredient image ${index}:`,
+            ingredient.image
+          );
           submitData.append(
             `ingredient_image_${index}_existing`,
             ingredient.image
           );
+        } else {
+          console.log(`❌ No ingredient image for index ${index}`);
         }
       });
 
@@ -1168,12 +1237,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       );
 
       // Add review avatar images
+      console.log("⭐ Processing review avatar images...");
       reviews.forEach((review, index) => {
         if (review.avatar instanceof File) {
+          console.log(`✅ Adding review avatar ${index}:`, review.avatar.name);
           submitData.append(`review_avatar_${index}`, review.avatar);
         } else if (typeof review.avatar === "string") {
           // If it's an existing avatar path, send it back
+          console.log(
+            `📁 Preserving existing review avatar ${index}:`,
+            review.avatar
+          );
           submitData.append(`review_avatar_${index}_existing`, review.avatar);
+        } else {
+          console.log(`❌ No review avatar for index ${index}`);
         }
       });
 
