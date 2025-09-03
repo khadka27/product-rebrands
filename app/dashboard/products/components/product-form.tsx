@@ -31,6 +31,27 @@ import { ProductSuccessModal } from "./product-success-modal";
 const INGREDIENT_PLACEHOLDER = "/api/static/placeholder.jpg";
 const AVATAR_PLACEHOLDER = "/api/static/placeholder-user.jpg";
 
+// Helper function to ensure proper image path resolution
+const ensureStaticPath = (imagePath: string): string => {
+  if (!imagePath) return "";
+
+  // If already a full URL or starts with /api/static, return as is
+  if (imagePath.startsWith("http") || imagePath.startsWith("/api/static/")) {
+    return imagePath;
+  }
+
+  // If starts with /, remove it
+  const cleanPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+
+  // If it's already in the right format (images/category/file), use it
+  if (cleanPath.startsWith("images/")) {
+    return `/api/static/${cleanPath}`;
+  }
+
+  // Otherwise, let the resolver handle it
+  return imagePath;
+};
+
 interface IngredientWithPreview {
   id?: string;
   title: string;
@@ -204,78 +225,101 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   useEffect(() => {
     if (productId && initialData) {
       console.log("🔧 Initializing image previews for edit mode:", productId);
+      console.log("📋 Initial data received:", initialData);
 
       // Set up ingredient image previews
       if (initialData.ingredients && initialData.ingredients.length > 0) {
         console.log("🥕 Setting up ingredient image previews");
-        const updatedIngredients = initialData.ingredients.map((ingredient) => {
-          // Only set preview if ingredient has an image but no preview yet
-          if (
-            ingredient.image &&
-            typeof ingredient.image === "string" &&
-            !ingredient.image_preview
-          ) {
-            const imagePath = resolveIngredientImagePath(ingredient.image);
-            console.log(
-              `🖼️ Ingredient "${ingredient.title}" image path:`,
-              imagePath
-            );
-            return {
-              ...ingredient,
-              image_preview: imagePath,
-            };
-          }
-          return ingredient;
-        });
+        console.log("📋 Initial ingredients:", initialData.ingredients);
 
-        // Only update if there are actual changes
-        const hasChanges = updatedIngredients.some(
-          (ing, index) =>
-            ing.image_preview !== ingredients[index]?.image_preview
+        const updatedIngredients = initialData.ingredients.map(
+          (ingredient, index) => {
+            console.log(`🔍 Processing ingredient ${index}:`, ingredient);
+
+            // Always try to set up image preview if there's an image
+            if (ingredient.image && typeof ingredient.image === "string") {
+              // Try multiple path resolution methods
+              let imagePath = ensureStaticPath(ingredient.image);
+              if (!imagePath.startsWith("/api/static/")) {
+                imagePath = resolveIngredientImagePath(ingredient.image);
+              }
+
+              console.log(
+                `🖼️ Ingredient "${ingredient.title}" original image:`,
+                ingredient.image
+              );
+              console.log(
+                `🖼️ Ingredient "${ingredient.title}" resolved path:`,
+                imagePath
+              );
+              return {
+                ...ingredient,
+                image_preview: imagePath,
+              };
+            }
+            console.log(`❌ No image for ingredient "${ingredient.title}"`);
+            return ingredient;
+          }
         );
-        if (hasChanges) {
-          setIngredients(updatedIngredients);
-        }
+
+        console.log("📋 Updated ingredients:", updatedIngredients);
+        setIngredients(updatedIngredients);
       }
 
       // Set up review avatar previews
       if (initialData.reviews && initialData.reviews.length > 0) {
         console.log("👤 Setting up review avatar previews");
-        const updatedReviews = initialData.reviews.map((review) => {
-          // Only set preview if review has an avatar but no preview yet
-          if (
-            review.avatar &&
-            typeof review.avatar === "string" &&
-            !review.avatar_preview
-          ) {
-            const avatarPath = resolveAvatarImagePath(review.avatar);
-            console.log(`🖼️ Review "${review.name}" avatar path:`, avatarPath);
+        console.log("📋 Initial reviews:", initialData.reviews);
+
+        const updatedReviews = initialData.reviews.map((review, index) => {
+          console.log(`🔍 Processing review ${index}:`, review);
+
+          // Always try to set up avatar preview if there's an avatar
+          if (review.avatar && typeof review.avatar === "string") {
+            // Try multiple path resolution methods
+            let avatarPath = ensureStaticPath(review.avatar);
+            if (!avatarPath.startsWith("/api/static/")) {
+              avatarPath = resolveAvatarImagePath(review.avatar);
+            }
+
+            console.log(
+              `🖼️ Review "${review.name}" original avatar:`,
+              review.avatar
+            );
+            console.log(
+              `🖼️ Review "${review.name}" resolved path:`,
+              avatarPath
+            );
             return {
               ...review,
               avatar_preview: avatarPath,
             };
           }
+          console.log(`❌ No avatar for review "${review.name}"`);
           return review;
         });
 
-        // Only update if there are actual changes
-        const hasChanges = updatedReviews.some(
-          (rev, index) => rev.avatar_preview !== reviews[index]?.avatar_preview
-        );
-        if (hasChanges) {
-          setReviews(updatedReviews);
-        }
+        console.log("📋 Updated reviews:", updatedReviews);
+        setReviews(updatedReviews);
       }
 
       // Set up main image and badge image previews if not already set
-      if (initialData.image && !imagePreview) {
-        const mainImagePath = getImagePath(initialData.image);
-        console.log("🖼️ Main product image path:", mainImagePath);
+      if (initialData.image) {
+        let mainImagePath = ensureStaticPath(initialData.image);
+        if (!mainImagePath.startsWith("/api/static/")) {
+          mainImagePath = getImagePath(initialData.image);
+        }
+        console.log("🖼️ Main product original image:", initialData.image);
+        console.log("🖼️ Main product resolved path:", mainImagePath);
         setImagePreview(mainImagePath);
       }
-      if (initialData.badge_image && !badgeImagePreview) {
-        const badgeImagePath = resolveBadgeImagePath(initialData.badge_image);
-        console.log("🏷️ Badge image path:", badgeImagePath);
+      if (initialData.badge_image) {
+        let badgeImagePath = ensureStaticPath(initialData.badge_image);
+        if (!badgeImagePath.startsWith("/api/static/")) {
+          badgeImagePath = resolveBadgeImagePath(initialData.badge_image);
+        }
+        console.log("🏷️ Badge original image:", initialData.badge_image);
+        console.log("🏷️ Badge resolved path:", badgeImagePath);
         setBadgeImagePreview(badgeImagePath);
       }
     }
@@ -1528,7 +1572,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   ingredient.image_preview
                                     ? ingredient.image_preview
                                     : typeof ingredient.image === "string"
-                                    ? resolveIngredientImagePath(
+                                    ? ensureStaticPath(ingredient.image) ||
+                                      resolveIngredientImagePath(
                                         ingredient.image
                                       )
                                     : INGREDIENT_PLACEHOLDER
@@ -1797,7 +1842,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   review.avatar_preview
                                     ? review.avatar_preview
                                     : typeof review.avatar === "string"
-                                    ? resolveAvatarImagePath(review.avatar)
+                                    ? ensureStaticPath(review.avatar) ||
+                                      resolveAvatarImagePath(review.avatar)
                                     : AVATAR_PLACEHOLDER
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
