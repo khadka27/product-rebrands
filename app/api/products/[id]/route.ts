@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 import { processImage } from "@/lib/server-utils";
 
@@ -372,6 +373,28 @@ export async function PUT(
       // Commit the transaction
       await connection.query("COMMIT");
       connection.release();
+
+      // Revalidate the preview page to clear cache and show updated images
+      console.log("🔄 Revalidating preview page cache for product:", productId);
+
+      // Get the product slug to revalidate the correct path
+      const slugResult = await db.getConnection();
+      try {
+        const slugQuery = await slugResult.query(
+          "SELECT slug FROM products WHERE product_id = $1",
+          [productId]
+        );
+
+        if (slugQuery.rows.length > 0) {
+          const slug = slugQuery.rows[0].slug;
+          revalidatePath(`/preview/${slug}`);
+          console.log(`✅ Revalidated preview page: /preview/${slug}`);
+        }
+      } catch (slugError) {
+        console.error("Error getting slug for revalidation:", slugError);
+      } finally {
+        slugResult.release();
+      }
 
       return NextResponse.json({
         success: true,

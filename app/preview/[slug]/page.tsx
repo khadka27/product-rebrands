@@ -21,6 +21,9 @@ import {
   ReactPortal,
 } from "react";
 
+// Force dynamic rendering to prevent caching of images
+export const dynamic = "force-dynamic";
+
 // Helper to generate a robust key
 const generateItemKey = (item: any, index: number): string => {
   // Use item.id if it exists and is a string/number, otherwise use index
