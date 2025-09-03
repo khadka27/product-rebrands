@@ -122,10 +122,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image || null
+    initialData?.image ? getImagePath(initialData.image) : null
   );
   const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(
-    initialData?.badge_image || null
+    initialData?.badge_image
+      ? resolveBadgeImagePath(initialData.badge_image)
+      : null
   );
 
   const [ingredients, setIngredients] = useState<IngredientWithPreview[]>(
@@ -387,6 +389,29 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       }
     }
   }, [ingredients.length, reviews.length, productId]); // Run when arrays change in length
+
+  // Additional effect specifically for main product images
+  useEffect(() => {
+    if (productId && initialData) {
+      // Ensure main image preview is set correctly
+      if (initialData.image && !imagePreview) {
+        const mainImagePath =
+          ensureStaticPath(initialData.image) ||
+          getImagePath(initialData.image);
+        console.log("🔄 Setting main image preview:", mainImagePath);
+        setImagePreview(mainImagePath);
+      }
+
+      // Ensure badge image preview is set correctly
+      if (initialData.badge_image && !badgeImagePreview) {
+        const badgeImagePath =
+          ensureStaticPath(initialData.badge_image) ||
+          resolveBadgeImagePath(initialData.badge_image);
+        console.log("🔄 Setting badge image preview:", badgeImagePath);
+        setBadgeImagePreview(badgeImagePath);
+      }
+    }
+  }, [productId, initialData, imagePreview, badgeImagePreview]);
 
   // Add image validation state
   const [imageError, setImageError] = useState("");
@@ -1452,12 +1477,22 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             imagePreview.startsWith("data:")
                               ? imagePreview
-                              : imagePreview.startsWith("/")
+                              : imagePreview.startsWith("/api/static/")
                               ? imagePreview
-                              : `/${imagePreview}`
+                              : ensureStaticPath(imagePreview) ||
+                                getImagePath(imagePreview)
                           }
                           alt="Product preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
+                          onError={(e) => {
+                            console.error(
+                              `Failed to load main product image: ${
+                                (e.target as HTMLImageElement).src
+                              }`
+                            );
+                            (e.target as HTMLImageElement).src =
+                              "/api/static/placeholder.jpg";
+                          }}
                         />
                       </div>
                     )}
@@ -1479,10 +1514,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             badgeImagePreview.startsWith("data:")
                               ? badgeImagePreview
-                              : resolveBadgeImagePath(badgeImagePreview)
+                              : ensureStaticPath(badgeImagePreview) ||
+                                resolveBadgeImagePath(badgeImagePreview)
                           }
                           alt="Badge preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
+                          onError={(e) => {
+                            console.error(
+                              `Failed to load badge image: ${
+                                (e.target as HTMLImageElement).src
+                              }`
+                            );
+                            (e.target as HTMLImageElement).src =
+                              "/api/static/placeholder.jpg";
+                          }}
                         />
                       </div>
                     )}
