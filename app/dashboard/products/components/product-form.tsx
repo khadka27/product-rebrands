@@ -1333,7 +1333,82 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         });
         setShowSuccessModal(true);
       } else {
-        // For updates, redirect to dashboard immediately
+        // For updates, force refresh of image previews and redirect
+        console.log(
+          "🔄 Product updated successfully, refreshing image previews"
+        );
+
+        // Force update image previews with cache-busting
+        if (formData.image instanceof File) {
+          // If a new main image was uploaded, keep the data URL preview
+          console.log("✅ Main image was updated with new file");
+        } else if (initialData?.image) {
+          // If using existing image, refresh with cache-busting
+          const mainImagePath =
+            ensureStaticPath(initialData.image) ||
+            getImagePath(initialData.image);
+          setImagePreview(`${mainImagePath}?t=${Date.now()}`);
+          console.log("🔄 Refreshed main image preview:", mainImagePath);
+        }
+
+        if (formData.badge_image instanceof File) {
+          console.log("✅ Badge image was updated with new file");
+        } else if (initialData?.badge_image) {
+          const badgeImagePath =
+            ensureStaticPath(initialData.badge_image) ||
+            resolveBadgeImagePath(initialData.badge_image);
+          setBadgeImagePreview(`${badgeImagePath}?t=${Date.now()}`);
+          console.log("🔄 Refreshed badge image preview:", badgeImagePath);
+        }
+
+        // Refresh ingredient image previews
+        ingredients.forEach((ingredient, index) => {
+          if (ingredient.image instanceof File) {
+            console.log(
+              `✅ Ingredient ${index} image was updated with new file`
+            );
+          } else if (typeof ingredient.image === "string") {
+            const imagePath =
+              ensureStaticPath(ingredient.image) ||
+              resolveIngredientImagePath(ingredient.image);
+            setIngredients((prev) => {
+              const updated = [...prev];
+              updated[index] = {
+                ...updated[index],
+                image_preview: `${imagePath}?t=${Date.now()}`,
+              };
+              return updated;
+            });
+            console.log(
+              `🔄 Refreshed ingredient ${index} image preview:`,
+              imagePath
+            );
+          }
+        });
+
+        // Refresh review avatar previews
+        reviews.forEach((review, index) => {
+          if (review.avatar instanceof File) {
+            console.log(`✅ Review ${index} avatar was updated with new file`);
+          } else if (typeof review.avatar === "string") {
+            const avatarPath =
+              ensureStaticPath(review.avatar) ||
+              resolveAvatarImagePath(review.avatar);
+            setReviews((prev) => {
+              const updated = [...prev];
+              updated[index] = {
+                ...updated[index],
+                avatar_preview: `${avatarPath}?t=${Date.now()}`,
+              };
+              return updated;
+            });
+            console.log(
+              `🔄 Refreshed review ${index} avatar preview:`,
+              avatarPath
+            );
+          }
+        });
+
         router.push("/dashboard");
         router.refresh();
       }
@@ -1598,9 +1673,11 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             imagePreview.startsWith("data:")
                               ? imagePreview
                               : imagePreview.startsWith("/api/static/")
-                              ? imagePreview
-                              : ensureStaticPath(imagePreview) ||
-                                getImagePath(imagePreview)
+                              ? `${imagePreview}?t=${Date.now()}`
+                              : `${
+                                  ensureStaticPath(imagePreview) ||
+                                  getImagePath(imagePreview)
+                                }?t=${Date.now()}`
                           }
                           alt="Product preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
@@ -1634,8 +1711,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             badgeImagePreview.startsWith("data:")
                               ? badgeImagePreview
-                              : ensureStaticPath(badgeImagePreview) ||
-                                resolveBadgeImagePath(badgeImagePreview)
+                              : `${
+                                  ensureStaticPath(badgeImagePreview) ||
+                                  resolveBadgeImagePath(badgeImagePreview)
+                                }?t=${Date.now()}`
                           }
                           alt="Badge preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
@@ -1735,12 +1814,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               <img
                                 src={
                                   ingredient.image_preview
-                                    ? ingredient.image_preview
-                                    : typeof ingredient.image === "string"
-                                    ? ensureStaticPath(ingredient.image) ||
-                                      resolveIngredientImagePath(
-                                        ingredient.image
+                                    ? ingredient.image_preview.startsWith(
+                                        "data:"
                                       )
+                                      ? ingredient.image_preview
+                                      : `${
+                                          ingredient.image_preview
+                                        }?t=${Date.now()}`
+                                    : typeof ingredient.image === "string"
+                                    ? `${
+                                        ensureStaticPath(ingredient.image) ||
+                                        resolveIngredientImagePath(
+                                          ingredient.image
+                                        )
+                                      }?t=${Date.now()}`
                                     : INGREDIENT_PLACEHOLDER
                                 }
                                 alt={`Ingredient ${index + 1}`}
@@ -2005,10 +2092,16 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               <img
                                 src={
                                   review.avatar_preview
-                                    ? review.avatar_preview
+                                    ? review.avatar_preview.startsWith("data:")
+                                      ? review.avatar_preview
+                                      : `${
+                                          review.avatar_preview
+                                        }?t=${Date.now()}`
                                     : typeof review.avatar === "string"
-                                    ? ensureStaticPath(review.avatar) ||
-                                      resolveAvatarImagePath(review.avatar)
+                                    ? `${
+                                        ensureStaticPath(review.avatar) ||
+                                        resolveAvatarImagePath(review.avatar)
+                                      }?t=${Date.now()}`
                                     : AVATAR_PLACEHOLDER
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
