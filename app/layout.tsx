@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { NextAuthProvider } from "@/components/providers/next-auth-provider";
 import { SessionTimeout } from "@/components/session-timeout";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,13 +48,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <NextAuthProvider>
-          <ThemeProvider>
-            {children}
-            <SessionTimeout />
-          </ThemeProvider>
-          <Toaster />
-        </NextAuthProvider>
+        <AnalyticsProvider>
+          <NextAuthProvider>
+            <ThemeProvider>
+              {children}
+              <SessionTimeout />
+            </ThemeProvider>
+            <Toaster />
+          </NextAuthProvider>
+        </AnalyticsProvider>
       </body>
     </html>
   );

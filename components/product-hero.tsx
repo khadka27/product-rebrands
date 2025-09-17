@@ -5,12 +5,73 @@ import { motion } from "framer-motion";
 import CountdownTimer from "./countdown-timer";
 import type { Product } from "@/lib/models/product";
 import { resolveProductImagePath, resolveBadgeImagePath } from "@/lib/utils";
+import { useAnalytics } from "@/hooks/use-analytics";
+import { useEffect } from "react";
 
 interface ProductHeroProps {
   product?: Product;
 }
 
 export default function ProductHero({ product }: ProductHeroProps) {
+  const { trackProductView, trackCustomEvent } = useAnalytics();
+
+  useEffect(() => {
+    if (product) {
+      // Track product view when component mounts
+      trackProductView({
+        id: product.product_id || "unknown",
+        name: product.name || "Unknown Product",
+        price: 0, // Price not available in current Product model
+        category: "Supplements",
+        brand: "Verified Supplements",
+      });
+    }
+  }, [product, trackProductView]);
+
+  const handleOrderNow = () => {
+    if (product) {
+      // Track when user clicks ORDER NOW (external redirect)
+      trackCustomEvent("click_external_link", {
+        link_url: product.redirect_link,
+        link_text: "ORDER NOW",
+        product_id: product.product_id,
+        product_name: product.name,
+        click_location: "product_hero",
+      });
+
+      // Track as potential purchase intent
+      trackCustomEvent("begin_checkout", {
+        currency: "USD",
+        value: 0, // Price not available in current Product model
+        items: [
+          {
+            item_id: product.product_id || "unknown",
+            item_name: product.name || "Unknown Product",
+            category: "Supplements",
+            price: 0,
+            quantity: 1,
+          },
+        ],
+      });
+    }
+
+    window.open(product?.redirect_link);
+  };
+
+  const handleLearnMore = () => {
+    if (product) {
+      trackCustomEvent("click_learn_more", {
+        product_id: product.product_id,
+        product_name: product.name,
+        click_location: "product_hero",
+      });
+    }
+
+    const modal = document.getElementById("rename-info-modal");
+    if (modal) {
+      modal.classList.remove("hidden");
+    }
+  };
   return (
     <section className="mb-8 md:mb-20">
       <div className="relative backdrop-blur-sm bg-[#2a3441] border border-blue-500/30 rounded-xl md:rounded-3xl p-4 md:p-12 overflow-hidden">
@@ -37,7 +98,10 @@ export default function ProductHero({ product }: ProductHeroProps) {
               {product?.bullet_points && product.bullet_points.length > 0 && (
                 <ul className="space-y-2 md:space-y-3">
                   {product.bullet_points.map((point, index) => (
-                    <li key={`bullet-point-${index}`} className="flex items-start gap-2">
+                    <li
+                      key={`bullet-point-${index}`}
+                      className="flex items-start gap-2"
+                    >
                       <span className="text-blue-400 mt-1">•</span>
                       <span className="text-sm md:text-base text-white">
                         {point}
@@ -52,7 +116,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
               <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
                 <Button
                   className="w-full relative overflow-hidden group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:bg-gradient-to-r hover:from-yellow-600 hover:to-yellow-500 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 border border-yellow-400/20"
-                  onClick={() => window.open(product?.redirect_link)}
+                  onClick={handleOrderNow}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl text-black">
                     ORDER NOW
@@ -63,12 +127,7 @@ export default function ProductHero({ product }: ProductHeroProps) {
                 <Button
                   variant="outline"
                   className="w-full relative overflow-hidden group bg-transparent border-2 border-blue-400/50 hover:bg-blue-500/10 text-sm md:text-lg py-3 md:py-7 rounded-xl transition-all duration-300 text-blue-400 hover:text-blue-300"
-                  onClick={() => {
-                    const modal = document.getElementById("rename-info-modal");
-                    if (modal) {
-                      modal.classList.remove("hidden");
-                    }
-                  }}
+                  onClick={handleLearnMore}
                 >
                   <span className="relative z-10 font-bold tracking-wider text-sm md:text-xl">
                     LEARN MORE
