@@ -1,2 +1,6 @@
-[install]
+# This forces Nixpacks to use the correct install command and Node version
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
 cmds = ["pnpm install --no-frozen-lockfile"]
