@@ -28,15 +28,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProductSuccessModal } from "./product-success-modal";
 
 // Placeholder image constants
-const INGREDIENT_PLACEHOLDER = "/api/static/placeholder.jpg";
-const AVATAR_PLACEHOLDER = "/api/static/placeholder-user.jpg";
+const INGREDIENT_PLACEHOLDER = "/images/placeholder.jpg";
+const AVATAR_PLACEHOLDER = "/images/placeholder-user.jpg";
 
 // Helper function to ensure proper image path resolution
 const ensureStaticPath = (imagePath: string): string => {
   if (!imagePath) return "";
 
-  // If already a full URL or starts with /api/static, return as is
-  if (imagePath.startsWith("http") || imagePath.startsWith("/api/static/")) {
+  // If already a full URL (http/https), return as is
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  // If starts with /images/, return as is
+  if (imagePath.startsWith("/images/")) {
     return imagePath;
   }
 
@@ -45,7 +50,7 @@ const ensureStaticPath = (imagePath: string): string => {
 
   // If it's already in the right format (images/category/file), use it
   if (cleanPath.startsWith("images/")) {
-    return `/api/static/${cleanPath}`;
+    return `/${cleanPath}`;
   }
 
   // Otherwise, let the resolver handle it
@@ -122,20 +127,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image ? getImagePath(initialData.image) : null
+    initialData?.image ? getImagePath(initialData.image) : null,
   );
   const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(
     initialData?.badge_image
       ? resolveBadgeImagePath(initialData.badge_image)
-      : null
+      : null,
   );
 
   const [ingredients, setIngredients] = useState<IngredientWithPreview[]>(
-    initialData?.ingredients || []
+    initialData?.ingredients || [],
   );
 
   const [whyChoose, setWhyChoose] = useState<WhyChoose[]>(
-    initialData?.why_choose || []
+    initialData?.why_choose || [],
   );
 
   const [reviews, setReviews] = useState<Review[]>(initialData?.reviews || []);
@@ -176,7 +181,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         const response = await fetch(
           `/api/products/check-name?name=${encodeURIComponent(debouncedName)}${
             productId ? `&excludeId=${productId}` : ""
-          }`
+          }`,
         );
         const data = await response.json();
 
@@ -242,17 +247,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             if (ingredient.image && typeof ingredient.image === "string") {
               // Try multiple path resolution methods
               let imagePath = ensureStaticPath(ingredient.image);
-              if (!imagePath.startsWith("/api/static/")) {
+              if (
+                !imagePath.startsWith("/images/") &&
+                !imagePath.startsWith("http")
+              ) {
                 imagePath = resolveIngredientImagePath(ingredient.image);
               }
 
               console.log(
                 `🖼️ Ingredient "${ingredient.title}" original image:`,
-                ingredient.image
+                ingredient.image,
               );
               console.log(
                 `🖼️ Ingredient "${ingredient.title}" resolved path:`,
-                imagePath
+                imagePath,
               );
               return {
                 ...ingredient,
@@ -261,7 +269,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             }
             console.log(`❌ No image for ingredient "${ingredient.title}"`);
             return ingredient;
-          }
+          },
         );
 
         console.log("📋 Updated ingredients:", updatedIngredients);
@@ -280,17 +288,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           if (review.avatar && typeof review.avatar === "string") {
             // Try multiple path resolution methods
             let avatarPath = ensureStaticPath(review.avatar);
-            if (!avatarPath.startsWith("/api/static/")) {
+            if (
+              !avatarPath.startsWith("/images/") &&
+              !avatarPath.startsWith("http")
+            ) {
               avatarPath = resolveAvatarImagePath(review.avatar);
             }
 
             console.log(
               `🖼️ Review "${review.name}" original avatar:`,
-              review.avatar
+              review.avatar,
             );
             console.log(
               `🖼️ Review "${review.name}" resolved path:`,
-              avatarPath
+              avatarPath,
             );
             return {
               ...review,
@@ -308,7 +319,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       // Set up main image and badge image previews if not already set
       if (initialData.image) {
         let mainImagePath = ensureStaticPath(initialData.image);
-        if (!mainImagePath.startsWith("/api/static/")) {
+        if (
+          !mainImagePath.startsWith("/images/") &&
+          !mainImagePath.startsWith("http")
+        ) {
           mainImagePath = getImagePath(initialData.image);
         }
         console.log("🖼️ Main product original image:", initialData.image);
@@ -317,7 +331,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       }
       if (initialData.badge_image) {
         let badgeImagePath = ensureStaticPath(initialData.badge_image);
-        if (!badgeImagePath.startsWith("/api/static/")) {
+        if (
+          !badgeImagePath.startsWith("/images/") &&
+          !badgeImagePath.startsWith("http")
+        ) {
           badgeImagePath = resolveBadgeImagePath(initialData.badge_image);
         }
         console.log("🏷️ Badge original image:", initialData.badge_image);
@@ -333,7 +350,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       // Check and fix ingredient image previews
       const needsIngredientUpdate = ingredients.some(
         (ing) =>
-          ing.image && typeof ing.image === "string" && !ing.image_preview
+          ing.image && typeof ing.image === "string" && !ing.image_preview,
       );
 
       if (needsIngredientUpdate) {
@@ -347,7 +364,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             const imagePath = resolveIngredientImagePath(ingredient.image);
             console.log(
               `🖼️ Fixed ingredient "${ingredient.title}" image path:`,
-              imagePath
+              imagePath,
             );
             return {
               ...ingredient,
@@ -362,7 +379,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       // Check and fix review avatar previews
       const needsReviewUpdate = reviews.some(
         (rev) =>
-          rev.avatar && typeof rev.avatar === "string" && !rev.avatar_preview
+          rev.avatar && typeof rev.avatar === "string" && !rev.avatar_preview,
       );
 
       if (needsReviewUpdate) {
@@ -376,7 +393,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             const avatarPath = resolveAvatarImagePath(review.avatar);
             console.log(
               `🖼️ Fixed review "${review.name}" avatar path:`,
-              avatarPath
+              avatarPath,
             );
             return {
               ...review,
@@ -433,7 +450,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   // Handle form input changes
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -467,7 +484,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         "Size:",
         file.size,
         "Type:",
-        file.type
+        file.type,
       );
 
       // Validate file type
@@ -510,7 +527,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           "🖼️ Preview created for field:",
           fieldName,
           "Data URL length:",
-          result.length
+          result.length,
         );
 
         if (fieldName === "image") {
@@ -556,7 +573,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const handleIngredientChange = (
     index: number,
     field: string,
-    value: string
+    value: string,
   ) => {
     setIngredients((prev) => {
       const updated = [...prev];
@@ -582,7 +599,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Handle ingredient image changes
   const handleIngredientImageChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     console.log("🔄 Ingredient image change triggered for index:", index);
 
@@ -594,7 +611,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         "Size:",
         file.size,
         "Type:",
-        file.type
+        file.type,
       );
 
       setIngredients((prev) => {
@@ -604,7 +621,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           "✅ Ingredient image added for index:",
           index,
           "Ingredient:",
-          updated[index]
+          updated[index],
         );
         return updated;
       });
@@ -659,7 +676,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const handleWhyChooseChange = (
     index: number,
     field: string,
-    value: string
+    value: string,
   ) => {
     setWhyChoose((prev) => {
       const updated = [...prev];
@@ -713,7 +730,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   const handleReviewChange = (
     index: number,
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setReviews((prev) => {
       const updated = [...prev];
@@ -739,7 +756,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
   // Handle review avatar image changes
   const handleReviewAvatarChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     console.log("🔄 Review avatar change triggered for index:", index);
 
@@ -751,7 +768,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         "Size:",
         file.size,
         "Type:",
-        file.type
+        file.type,
       );
 
       // Validate file type
@@ -856,7 +873,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
 
   const removeBulletPoint = (index: number) => {
     const newBulletPoints = formData.bullet_points.filter(
-      (_, i) => i !== index
+      (_, i) => i !== index,
     );
     setFormData((prev) => ({ ...prev, bullet_points: newBulletPoints }));
 
@@ -1113,12 +1130,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
               !key.startsWith("why_choose_") &&
               !key.startsWith("review_")
             : step === "ingredients"
-            ? key.startsWith("ingredient_")
-            : step === "why-choose"
-            ? key.startsWith("why_choose_")
-            : step === "reviews"
-            ? key.startsWith("review_")
-            : false
+              ? key.startsWith("ingredient_")
+              : step === "why-choose"
+                ? key.startsWith("why_choose_")
+                : step === "reviews"
+                  ? key.startsWith("review_")
+                  : false,
         );
         if (
           stepErrors.length > 0 ||
@@ -1151,7 +1168,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       submitData.append("paragraph", formData.paragraph);
       submitData.append(
         "bullet_points",
-        JSON.stringify(formData.bullet_points)
+        JSON.stringify(formData.bullet_points),
       );
       submitData.append("redirect_link", formData.redirect_link);
       submitData.append("generated_link", formData.generated_link);
@@ -1177,7 +1194,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         // For edit mode, preserve existing badge image if no new one is selected
         console.log(
           "📁 Preserving existing badge image:",
-          initialData.badge_image
+          initialData.badge_image,
         );
         submitData.append("badge_image_existing", initialData.badge_image);
       } else {
@@ -1194,8 +1211,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             description: ing.description,
             display_order: ing.display_order,
             // We'll handle the image files separately
-          }))
-        )
+          })),
+        ),
       );
 
       // Add ingredient images
@@ -1204,18 +1221,18 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         if (ingredient.image instanceof File) {
           console.log(
             `✅ Adding ingredient image ${index}:`,
-            ingredient.image.name
+            ingredient.image.name,
           );
           submitData.append(`ingredient_image_${index}`, ingredient.image);
         } else if (typeof ingredient.image === "string") {
           // If it's an existing image path, send it back
           console.log(
             `📁 Preserving existing ingredient image ${index}:`,
-            ingredient.image
+            ingredient.image,
           );
           submitData.append(
             `ingredient_image_${index}_existing`,
-            ingredient.image
+            ingredient.image,
           );
         } else {
           console.log(`❌ No ingredient image for index ${index}`);
@@ -1231,8 +1248,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             title: wc.title,
             description: wc.description,
             display_order: wc.display_order,
-          }))
-        )
+          })),
+        ),
       );
 
       // Add reviews data
@@ -1246,8 +1263,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             rating: review.rating,
             review_text: review.review_text,
             // We'll handle the avatar files separately
-          }))
-        )
+          })),
+        ),
       );
 
       // Add review avatar images
@@ -1260,7 +1277,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
           // If it's an existing avatar path, send it back
           console.log(
             `📁 Preserving existing review avatar ${index}:`,
-            review.avatar
+            review.avatar,
           );
           submitData.append(`review_avatar_${index}_existing`, review.avatar);
         } else {
@@ -1298,12 +1315,12 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                     key !== "paragraph" &&
                     key !== "bullet_points" // General errors excluding paragraph/bullet_points
                   : step === "ingredients"
-                  ? key.startsWith("ingredient_") // Ingredient errors
-                  : step === "why-choose"
-                  ? key.startsWith("why_choose_")
-                  : step === "reviews"
-                  ? key.startsWith("review_")
-                  : false // Review errors
+                    ? key.startsWith("ingredient_") // Ingredient errors
+                    : step === "why-choose"
+                      ? key.startsWith("why_choose_")
+                      : step === "reviews"
+                        ? key.startsWith("review_")
+                        : false, // Review errors
             );
             // Check if the current step has errors or if it's the general step with paragraph/bullet point errors
             if (
@@ -1335,7 +1352,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
       } else {
         // For updates, force refresh of image previews and redirect
         console.log(
-          "🔄 Product updated successfully, refreshing image previews"
+          "🔄 Product updated successfully, refreshing image previews",
         );
 
         // Force update image previews with cache-busting
@@ -1365,7 +1382,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
         ingredients.forEach((ingredient, index) => {
           if (ingredient.image instanceof File) {
             console.log(
-              `✅ Ingredient ${index} image was updated with new file`
+              `✅ Ingredient ${index} image was updated with new file`,
             );
           } else if (typeof ingredient.image === "string") {
             const imagePath =
@@ -1381,7 +1398,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             });
             console.log(
               `🔄 Refreshed ingredient ${index} image preview:`,
-              imagePath
+              imagePath,
             );
           }
         });
@@ -1404,7 +1421,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
             });
             console.log(
               `🔄 Refreshed review ${index} avatar preview:`,
-              avatarPath
+              avatarPath,
             );
           }
         });
@@ -1672,12 +1689,13 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           src={
                             imagePreview.startsWith("data:")
                               ? imagePreview
-                              : imagePreview.startsWith("/api/static/")
-                              ? `${imagePreview}?t=${Date.now()}`
-                              : `${
-                                  ensureStaticPath(imagePreview) ||
-                                  getImagePath(imagePreview)
-                                }?t=${Date.now()}`
+                              : imagePreview.startsWith("/images/") ||
+                                  imagePreview.startsWith("http")
+                                ? `${imagePreview}?t=${Date.now()}`
+                                : `${
+                                    ensureStaticPath(imagePreview) ||
+                                    getImagePath(imagePreview)
+                                  }?t=${Date.now()}`
                           }
                           alt="Product preview"
                           className="max-w-xs max-h-40 object-contain border rounded-md"
@@ -1685,10 +1703,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             console.error(
                               `Failed to load main product image: ${
                                 (e.target as HTMLImageElement).src
-                              }`
+                              }`,
                             );
                             (e.target as HTMLImageElement).src =
-                              "/api/static/placeholder.jpg";
+                              "/images/placeholder.jpg";
                           }}
                         />
                       </div>
@@ -1722,10 +1740,10 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             console.error(
                               `Failed to load badge image: ${
                                 (e.target as HTMLImageElement).src
-                              }`
+                              }`,
                             );
                             (e.target as HTMLImageElement).src =
-                              "/api/static/placeholder.jpg";
+                              "/images/placeholder.jpg";
                           }}
                         />
                       </div>
@@ -1774,7 +1792,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                               handleIngredientChange(
                                 index,
                                 "title",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             onKeyDown={handleKeyDown}
@@ -1815,20 +1833,20 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                 src={
                                   ingredient.image_preview
                                     ? ingredient.image_preview.startsWith(
-                                        "data:"
+                                        "data:",
                                       )
                                       ? ingredient.image_preview
                                       : `${
                                           ingredient.image_preview
                                         }?t=${Date.now()}`
                                     : typeof ingredient.image === "string"
-                                    ? `${
-                                        ensureStaticPath(ingredient.image) ||
-                                        resolveIngredientImagePath(
-                                          ingredient.image
-                                        )
-                                      }?t=${Date.now()}`
-                                    : INGREDIENT_PLACEHOLDER
+                                      ? `${
+                                          ensureStaticPath(ingredient.image) ||
+                                          resolveIngredientImagePath(
+                                            ingredient.image,
+                                          )
+                                        }?t=${Date.now()}`
+                                      : INGREDIENT_PLACEHOLDER
                                 }
                                 alt={`Ingredient ${index + 1}`}
                                 className="max-w-xs max-h-20 object-contain border rounded-md"
@@ -1836,7 +1854,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   console.error(
                                     `Failed to load ingredient image: ${
                                       (e.target as HTMLImageElement).src
-                                    }`
+                                    }`,
                                   );
                                   (e.target as HTMLImageElement).src =
                                     INGREDIENT_PLACEHOLDER;
@@ -1858,7 +1876,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             handleIngredientChange(
                               index,
                               "description",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           onKeyDown={handleKeyDown}
@@ -1925,7 +1943,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             handleWhyChooseChange(
                               index,
                               "title",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           onKeyDown={handleKeyDown}
@@ -1954,7 +1972,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                             handleWhyChooseChange(
                               index,
                               "description",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           onKeyDown={handleKeyDown}
@@ -2098,11 +2116,11 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                           review.avatar_preview
                                         }?t=${Date.now()}`
                                     : typeof review.avatar === "string"
-                                    ? `${
-                                        ensureStaticPath(review.avatar) ||
-                                        resolveAvatarImagePath(review.avatar)
-                                      }?t=${Date.now()}`
-                                    : AVATAR_PLACEHOLDER
+                                      ? `${
+                                          ensureStaticPath(review.avatar) ||
+                                          resolveAvatarImagePath(review.avatar)
+                                        }?t=${Date.now()}`
+                                      : AVATAR_PLACEHOLDER
                                 }
                                 alt={`${review.name || "Customer"} Avatar`}
                                 className="w-full h-full object-cover"
@@ -2110,7 +2128,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                                   console.error(
                                     `Failed to load review avatar: ${
                                       (e.target as HTMLImageElement).src
-                                    }`
+                                    }`,
                                   );
                                   (e.target as HTMLImageElement).src =
                                     AVATAR_PLACEHOLDER;
@@ -2141,7 +2159,7 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                           handleReviewChange(
                             index,
                             "review_text",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         onKeyDown={handleKeyDown}
@@ -2264,8 +2282,8 @@ export function ProductForm({ productId, initialData }: ProductFormProps) {
                 {isLoading
                   ? "Saving..."
                   : productId
-                  ? "Update Product"
-                  : "Create Product"}
+                    ? "Update Product"
+                    : "Create Product"}
               </Button>
             )}
           </div>

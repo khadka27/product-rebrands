@@ -62,12 +62,16 @@ export default function EditProductPage({ params }: PageProps) {
     if (imagePath.startsWith("blob:")) {
       return imagePath;
     }
-    // If it already starts with /api/static, return as is
-    if (imagePath.startsWith("/api/static/")) {
+    // If it already starts with http:// or https://, return as is
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
       return imagePath;
     }
-    // Otherwise, prepend the static API path
-    return `/api/static/${imagePath}`;
+    // If it starts with /images/, return as is
+    if (imagePath.startsWith("/images/")) {
+      return imagePath;
+    }
+    // Otherwise, prepend /images/ path
+    return `/images/${imagePath.replace(/^\/+/, "")}`;
   }
 
   // Handle form submit
