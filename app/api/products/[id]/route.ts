@@ -5,24 +5,32 @@ import { processImage } from "@/lib/server-utils";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const productId = params.id;
     const connection = await db.getConnection();
 
     try {
-      // Fetch product
-      const productResult = await connection.query(
+      // Fetch product - try by product_id first, then by slug
+      let productResult = await connection.query(
         "SELECT * FROM products WHERE product_id = $1",
-        [productId]
+        [productId],
       );
+
+      // If not found by ID, try by slug
+      if (productResult.rows.length === 0) {
+        productResult = await connection.query(
+          "SELECT * FROM products WHERE slug = $1",
+          [productId],
+        );
+      }
 
       if (productResult.rows.length === 0) {
         connection.release();
         return NextResponse.json(
           { error: "Product not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -41,22 +49,22 @@ export async function GET(
       // Fetch related data
       const themeResult = await connection.query(
         "SELECT * FROM product_themes WHERE product_id = $1",
-        [productId]
+        [productId],
       );
 
       const ingredientsResult = await connection.query(
         "SELECT * FROM ingredients WHERE product_id = $1 ORDER BY display_order",
-        [productId]
+        [productId],
       );
 
       const whyChooseResult = await connection.query(
         "SELECT * FROM why_choose WHERE product_id = $1 ORDER BY display_order",
-        [productId]
+        [productId],
       );
 
       const reviewsResult = await connection.query(
         "SELECT * FROM reviews WHERE product_id = $1 ORDER BY id",
-        [productId]
+        [productId],
       );
 
       connection.release();
@@ -76,18 +84,43 @@ export async function GET(
     console.error("Error fetching product:", error);
     return NextResponse.json(
       { error: "Failed to fetch product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
-    const productId = params.id;
+    let productId = params.id;
     const formData = await request.formData();
+
+    // First, resolve slug to product_id if necessary
+    const resolveConnection = await db.getConnection();
+    try {
+      let productResult = await resolveConnection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [productId],
+      );
+
+      // If not found by ID, try by slug
+      if (productResult.rows.length === 0) {
+        productResult = await resolveConnection.query(
+          "SELECT product_id FROM products WHERE slug = $1",
+          [productId],
+        );
+
+        if (productResult.rows.length > 0) {
+          productId = productResult.rows[0].product_id;
+        }
+      }
+      resolveConnection.release();
+    } catch (error) {
+      resolveConnection.release();
+      console.error("Error resolving product ID:", error);
+    }
 
     const name = formData.get("name") as string;
     const paragraph = formData.get("paragraph") as string;
@@ -114,7 +147,7 @@ export async function PUT(
     const badgeImageFile = formData.get("badge_image") as File;
     const existingImagePath = formData.get("image_existing") as string;
     const existingBadgeImagePath = formData.get(
-      "badge_image_existing"
+      "badge_image_existing",
     ) as string;
 
     if (imageFile && imageFile.size > 0) {
@@ -127,7 +160,7 @@ export async function PUT(
       productImagePath = await processImage(
         file,
         "public/images/products",
-        `product_${productId}`
+        `product_${productId}`,
       );
     } else if (existingImagePath) {
       // Use existing image path if no new image uploaded
@@ -144,7 +177,7 @@ export async function PUT(
       badgeImagePath = await processImage(
         file,
         "public/images/badges",
-        `badge_${productId}`
+        `badge_${productId}`,
       );
     } else if (existingBadgeImagePath) {
       // Use existing badge image path if no new image uploaded
@@ -160,7 +193,7 @@ export async function PUT(
       // Get current product to preserve existing images if no new ones uploaded
       const currentProductResult = await connection.query(
         "SELECT product_image, product_badge FROM products WHERE product_id = $1",
-        [productId]
+        [productId],
       );
 
       if (currentProductResult.rows.length === 0) {
@@ -168,7 +201,7 @@ export async function PUT(
         connection.release();
         return NextResponse.json(
           { error: "Product not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -197,7 +230,7 @@ export async function PUT(
           productImagePath || currentProduct.product_image,
           badgeImagePath || currentProduct.product_badge,
           productId,
-        ]
+        ],
       );
 
       // Handle ingredients
@@ -209,7 +242,7 @@ export async function PUT(
           // Delete existing ingredients
           await connection.query(
             "DELETE FROM ingredients WHERE product_id = $1",
-            [productId]
+            [productId],
           );
 
           // Insert new ingredients
@@ -218,15 +251,15 @@ export async function PUT(
 
             // Check if there's a file for this ingredient
             const ingredientImageFile = formData.get(
-              `ingredient_image_${index}`
+              `ingredient_image_${index}`,
             ) as File;
             const existingIngredientImage = formData.get(
-              `ingredient_image_${index}_existing`
+              `ingredient_image_${index}_existing`,
             ) as string;
 
             if (ingredientImageFile && ingredientImageFile.size > 0) {
               const buffer = Buffer.from(
-                await ingredientImageFile.arrayBuffer()
+                await ingredientImageFile.arrayBuffer(),
               );
               const file = {
                 buffer,
@@ -236,7 +269,7 @@ export async function PUT(
               ingredientImagePath = await processImage(
                 file,
                 "public/images/ingredients",
-                `ingredient_${productId}_${index}`
+                `ingredient_${productId}_${index}`,
               );
             } else if (existingIngredientImage) {
               // Use existing ingredient image path
@@ -263,7 +296,7 @@ export async function PUT(
                 ingredient.description,
                 ingredientImagePath,
                 ingredient.display_order,
-              ]
+              ],
             );
           }
         } catch (e) {
@@ -280,7 +313,7 @@ export async function PUT(
           // Delete existing why_choose items
           await connection.query(
             "DELETE FROM why_choose WHERE product_id = $1",
-            [productId]
+            [productId],
           );
 
           // Insert new why_choose items
@@ -292,7 +325,7 @@ export async function PUT(
                 description,
                 display_order
               ) VALUES ($1, $2, $3, $4)`,
-              [productId, item.title, item.description, item.display_order]
+              [productId, item.title, item.description, item.display_order],
             );
           }
         } catch (e) {
@@ -318,7 +351,7 @@ export async function PUT(
             // Check if there's a file for this review
             const avatarFile = formData.get(`review_avatar_${index}`) as File;
             const existingAvatarPath = formData.get(
-              `review_avatar_${index}_existing`
+              `review_avatar_${index}_existing`,
             ) as string;
 
             if (avatarFile && avatarFile.size > 0) {
@@ -331,7 +364,7 @@ export async function PUT(
               avatarPath = await processImage(
                 file,
                 "public/images/avatars",
-                `avatar_${productId}_${index}`
+                `avatar_${productId}_${index}`,
               );
             } else if (existingAvatarPath) {
               // Use existing avatar path
@@ -362,7 +395,7 @@ export async function PUT(
                 review.rating,
                 review.review_text,
                 avatarPath,
-              ]
+              ],
             );
           }
         } catch (e) {
@@ -382,7 +415,7 @@ export async function PUT(
       try {
         const slugQuery = await slugResult.query(
           "SELECT slug FROM products WHERE product_id = $1",
-          [productId]
+          [productId],
         );
 
         if (slugQuery.rows.length > 0) {
@@ -410,28 +443,52 @@ export async function PUT(
     console.error("Error updating product:", error);
     return NextResponse.json(
       { error: "Failed to update product", details: (error as Error).message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
-    const productId = params.id;
+    let productId = params.id;
 
     const connection = await db.getConnection();
 
     try {
+      // First, resolve slug to product_id if necessary
+      let productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [productId],
+      );
+
+      // If not found by ID, try by slug
+      if (productResult.rows.length === 0) {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE slug = $1",
+          [productId],
+        );
+
+        if (productResult.rows.length > 0) {
+          productId = productResult.rows[0].product_id;
+        } else {
+          connection.release();
+          return NextResponse.json(
+            { error: "Product not found" },
+            { status: 404 },
+          );
+        }
+      }
+
       // Start transaction
       await connection.query("BEGIN");
 
       // Delete related records first (using correct table names)
       await connection.query(
         "DELETE FROM product_themes WHERE product_id = $1",
-        [productId]
+        [productId],
       );
       await connection.query("DELETE FROM ingredients WHERE product_id = $1", [
         productId,
@@ -463,7 +520,7 @@ export async function DELETE(
     console.error("Error deleting product:", error);
     return NextResponse.json(
       { error: "Failed to delete product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
