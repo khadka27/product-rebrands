@@ -105,7 +105,7 @@ export function cn(...inputs: ClassValue[]) {
 // Utility function to handle image paths consistently
 export function getImagePath(
   imagePath: string | null | undefined,
-  fallback: string = "/placeholder.jpg"
+  fallback: string = "/placeholder.jpg",
 ): string {
   if (!imagePath) return fallback;
 
@@ -165,10 +165,15 @@ function resolveImageByCategory(
   imagePath: string | null | undefined,
   category: "products" | "badges" | "avatars" | "ingredients",
   fallback?: string,
-  addCacheBusting: boolean = true
 ): string {
-  // Prefer DB-provided value; no hardcoded defaults here
-  if (imagePath && imagePath.startsWith("http")) return imagePath;
+  // If it's an external URL (http/https), return as is
+  if (
+    imagePath &&
+    (imagePath.startsWith("http://") || imagePath.startsWith("https://"))
+  ) {
+    return imagePath;
+  }
+
   if (imagePath && imagePath.trim() !== "") {
     // Normalize slashes and strip leading public/ if present
     const normalized = imagePath
@@ -177,55 +182,48 @@ function resolveImageByCategory(
       .replace(/^\/+/, "")
       .replace(/^public\//, "");
 
-    let resolvedPath = "";
-    if (normalized.startsWith("api/static/")) {
-      resolvedPath = `/${normalized}`;
-    } else {
-      const clean = normalized;
-      if (clean.startsWith("images/")) {
-        resolvedPath = `/api/static/${clean}`;
-      } else if (clean.includes("/")) {
-        resolvedPath = `/api/static/${clean}`;
-      } else {
-        resolvedPath = `/api/static/images/${category}/${clean}`;
-      }
+    // If path already starts with images/, just add leading slash
+    if (normalized.startsWith("images/")) {
+      return `/${normalized}`;
     }
 
-    // Add cache-busting parameter to prevent stale image caching
-    if (addCacheBusting && !resolvedPath.includes("?")) {
-      resolvedPath += `?t=${Date.now()}`;
+    // If it includes a path separator, assume it's a relative path under images/
+    if (normalized.includes("/")) {
+      return `/images/${normalized}`;
     }
 
-    return resolvedPath;
+    // Bare filename - map to category subdirectory
+    return `/images/${category}/${normalized}`;
   }
+
   // If empty, return normalized fallback or empty string
   return fallback ? getImagePath(fallback) : "";
 }
 
 export function resolveProductImagePath(
   imagePath: string | null | undefined,
-  fallback?: string
+  fallback?: string,
 ): string {
-  return resolveImageByCategory(imagePath, "products", fallback, true);
+  return resolveImageByCategory(imagePath, "products", fallback);
 }
 
 export function resolveBadgeImagePath(
   imagePath: string | null | undefined,
-  fallback?: string
+  fallback?: string,
 ): string {
-  return resolveImageByCategory(imagePath, "badges", fallback, true);
+  return resolveImageByCategory(imagePath, "badges", fallback);
 }
 
 export function resolveAvatarImagePath(
   imagePath: string | null | undefined,
-  fallback?: string
+  fallback?: string,
 ): string {
-  return resolveImageByCategory(imagePath, "avatars", fallback, true);
+  return resolveImageByCategory(imagePath, "avatars", fallback);
 }
 
 export function resolveIngredientImagePath(
   imagePath: string | null | undefined,
-  fallback?: string
+  fallback?: string,
 ): string {
-  return resolveImageByCategory(imagePath, "ingredients", fallback, true);
+  return resolveImageByCategory(imagePath, "ingredients", fallback);
 }
