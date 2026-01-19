@@ -99,6 +99,7 @@ export async function PUT(
 
     // First, resolve slug to product_id if necessary
     const resolveConnection = await db.getConnection();
+    let productNotFound = false;
     try {
       let productResult = await resolveConnection.query(
         "SELECT product_id FROM products WHERE product_id = $1",
@@ -116,17 +117,17 @@ export async function PUT(
           productId = productResult.rows[0].product_id;
         } else {
           // Product not found by ID or slug
-          resolveConnection.release();
-          return NextResponse.json(
-            { error: "Product not found" },
-            { status: 404 },
-          );
+          productNotFound = true;
         }
       }
     } catch (error) {
       console.error("Error resolving product ID:", error);
     } finally {
       resolveConnection.release();
+    }
+
+    if (productNotFound) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     const name = formData.get("name") as string;
