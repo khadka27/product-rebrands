@@ -114,12 +114,19 @@ export async function PUT(
 
         if (productResult.rows.length > 0) {
           productId = productResult.rows[0].product_id;
+        } else {
+          // Product not found by ID or slug
+          resolveConnection.release();
+          return NextResponse.json(
+            { error: "Product not found" },
+            { status: 404 },
+          );
         }
       }
-      resolveConnection.release();
     } catch (error) {
-      resolveConnection.release();
       console.error("Error resolving product ID:", error);
+    } finally {
+      resolveConnection.release();
     }
 
     const name = formData.get("name") as string;
