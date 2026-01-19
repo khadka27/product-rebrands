@@ -105,53 +105,60 @@ export function cn(...inputs: ClassValue[]) {
 // Utility function to handle image paths consistently
 export function getImagePath(
   imagePath: string | null | undefined,
-  fallback: string = "/images/placeholder.jpg",
+  fallback: string = "/placeholder.jpg",
 ): string {
   if (!imagePath) return fallback;
 
-  // If it's already a full URL (http/https), return as is
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith("http")) {
     return imagePath;
   }
 
-  // Normalize path: strip leading slashes, backslashes, and public/ prefix
+  // Normalize and route legacy filenames to correct subdirectories
+  // Strip leading slashes and any leading `public/` so URLs don’t include the build-time folder name
   const normalizedInput = imagePath
     .trim()
     .replace(/\\/g, "/")
-    .replace(/^\/+/, "")
-    .replace(/^public\//, "");
+    .replace(/^\/+/, "");
 
-  // If path already starts with images/, just add leading slash
-  if (normalizedInput.startsWith("images/")) {
+  // If the path already points to our API static endpoint, return as-is with a single leading slash
+  if (normalizedInput.startsWith("api/static/")) {
     return `/${normalizedInput}`;
   }
 
+  const cleanPath = normalizedInput.replace(/^public\//, "");
+
+  // If path already points inside images/, route through API static endpoint
+  if (cleanPath.startsWith("images/")) {
+    return `/api/static/${cleanPath}`;
+  }
+
   // If it's a bare filename (no directory), infer subdirectory by naming convention
-  if (!normalizedInput.includes("/")) {
-    const lower = normalizedInput.toLowerCase();
+  if (!cleanPath.includes("/")) {
+    const lower = cleanPath.toLowerCase();
     const isImageFile = /\.(png|jpe?g|webp|gif|svg)$/.test(lower);
     if (isImageFile) {
       if (lower.startsWith("badge_")) {
-        return `/images/badges/${normalizedInput}`;
+        return `/api/static/images/badges/${cleanPath}`;
       }
       if (lower.startsWith("product_")) {
-        return `/images/products/${normalizedInput}`;
+        return `/api/static/images/products/${cleanPath}`;
       }
       if (lower.startsWith("ingredient_")) {
-        return `/images/ingredients/${normalizedInput}`;
+        return `/api/static/images/ingredients/${cleanPath}`;
       }
       if (lower.startsWith("avatar_")) {
-        return `/images/avatars/${normalizedInput}`;
+        return `/api/static/images/avatars/${cleanPath}`;
       }
       // Unknown but valid image filename: default to products directory
-      return `/images/products/${normalizedInput}`;
+      return `/api/static/images/products/${cleanPath}`;
     }
   }
 
-  // Default: assume it's already a relative path, ensure it starts with /images/
-  return normalizedInput.startsWith("images/")
-    ? `/${normalizedInput}`
-    : `/images/${normalizedInput}`;
+  // Default: ensure leading slash
+  return cleanPath.startsWith("api/static/")
+    ? `/${cleanPath}`
+    : `/api/static/${cleanPath}`;
 }
 
 function resolveImageByCategory(
