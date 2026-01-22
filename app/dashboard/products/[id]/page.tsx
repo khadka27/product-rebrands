@@ -24,13 +24,30 @@ interface PageProps {
 }
 
 export default async function EditProductPage({ params }: PageProps) {
-  const awaitedParams = await params;
+  const productId = params?.id;
 
-  // Fetch the product and all related data
-  const product = await getProductByProductId(awaitedParams.id);
+  if (!productId) {
+    console.error("EditProductPage: missing product id param", { params });
+    throw new Error("Edit product: missing product id");
+  }
+
+  let product;
+  try {
+    product = await getProductByProductId(productId);
+  } catch (error) {
+    console.error("EditProductPage: failed to fetch product", {
+      productId,
+      error,
+    });
+    throw new Error(
+      `Edit product: failed to fetch product ${productId}. Check server logs for details.`,
+    );
+  }
 
   if (!product) {
-    notFound();
+    const message = `Edit product: product not found for id ${productId}.`;
+    console.error(message);
+    throw new Error(message);
   }
 
   // Fetch related data
@@ -76,7 +93,7 @@ export default async function EditProductPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Edit Product</h1>
-      <ProductForm productId={awaitedParams.id} initialData={initialData} />
+      <ProductForm productId={params.id} initialData={initialData} />
     </div>
   );
 }
