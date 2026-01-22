@@ -33,7 +33,14 @@ export default async function EditProductPage({ params }: PageProps) {
     requestHeaders.get("x-pathname"),
     requestHeaders.get("x-forwarded-uri"),
     requestHeaders.get("x-original-uri"),
+    requestHeaders.get("x-original-url"),
+    requestHeaders.get("x-request-uri"),
+    requestHeaders.get("x-request-url"),
+    requestHeaders.get("x-rewrite-url"),
+    requestHeaders.get("x-forwarded-path"),
     requestHeaders.get("x-invoke-path"),
+    requestHeaders.get("x-invoke-url"),
+    requestHeaders.get("x-middleware-pathname"),
     requestHeaders.get("next-url"),
     requestHeaders.get("referer"),
   ].filter(Boolean) as string[];
@@ -68,6 +75,7 @@ export default async function EditProductPage({ params }: PageProps) {
     userAgent: requestHeaders.get("user-agent") || "(unknown)",
     pathCandidates,
     derivedProductId,
+    headers: Array.from(requestHeaders.entries()),
   };
 
   const productId = derivedProductId;
