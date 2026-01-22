@@ -3,6 +3,13 @@ import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 import { processImage } from "@/lib/server-utils";
 
+// Normalize image paths to ensure they start with a leading slash
+const normalizePath = (value: string | null | undefined) => {
+  if (!value) return null;
+  const trimmed = value.replace(/^\/+/, "");
+  return `/${trimmed}`;
+};
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } },
@@ -46,6 +53,10 @@ export async function GET(
 
       const product = productResult.rows[0];
 
+      // Normalize image paths
+      product.product_image = normalizePath(product.product_image);
+      product.product_badge = normalizePath(product.product_badge);
+
       // Parse bullet_points if it's a JSON string (for backward compatibility)
       if (product.bullet_points && typeof product.bullet_points === "string") {
         try {
@@ -79,12 +90,23 @@ export async function GET(
 
       connection.release();
 
+      // Normalize ingredient and review image paths
+      const normalizedIngredients = ingredientsResult.rows.map((ing) => ({
+        ...ing,
+        image: normalizePath(ing.image),
+      }));
+
+      const normalizedReviews = reviewsResult.rows.map((rev) => ({
+        ...rev,
+        avatar: normalizePath(rev.avatar),
+      }));
+
       return NextResponse.json({
         ...product,
         theme: themeResult.rows[0] || null,
-        ingredients: ingredientsResult.rows,
+        ingredients: normalizedIngredients,
         why_choose: whyChooseResult.rows,
-        reviews: reviewsResult.rows,
+        reviews: normalizedReviews,
       });
     } catch (error) {
       connection.release();
@@ -199,7 +221,7 @@ export async function PUT(
       );
     } else if (existingImagePath) {
       // Use existing image path if no new image uploaded
-      productImagePath = existingImagePath;
+      productImagePath = normalizePath(existingImagePath);
     }
 
     if (badgeImageFile && badgeImageFile.size > 0) {
@@ -216,7 +238,7 @@ export async function PUT(
       );
     } else if (existingBadgeImagePath) {
       // Use existing badge image path if no new image uploaded
-      badgeImagePath = existingBadgeImagePath;
+      badgeImagePath = normalizePath(existingBadgeImagePath);
     }
 
     const connection = await db.getConnection();
@@ -308,13 +330,13 @@ export async function PUT(
               );
             } else if (existingIngredientImage) {
               // Use existing ingredient image path
-              ingredientImagePath = existingIngredientImage;
+              ingredientImagePath = normalizePath(existingIngredientImage);
             } else if (
               ingredient.image_preview &&
               !ingredient.image_preview.startsWith("blob:")
             ) {
               // Keep existing image (fallback)
-              ingredientImagePath = ingredient.image_preview;
+              ingredientImagePath = normalizePath(ingredient.image_preview);
             }
 
             await connection.query(
@@ -408,13 +430,13 @@ export async function PUT(
               );
             } else if (existingAvatarPath) {
               // Use existing avatar path
-              avatarPath = existingAvatarPath;
+              avatarPath = normalizePath(existingAvatarPath);
             } else if (
               review.avatar_preview &&
               !review.avatar_preview.startsWith("blob:")
             ) {
               // Keep existing avatar (fallback)
-              avatarPath = review.avatar_preview;
+              avatarPath = normalizePath(review.avatar_preview);
             }
 
             await connection.query(
