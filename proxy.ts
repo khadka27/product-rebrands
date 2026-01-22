@@ -7,8 +7,9 @@ export default async function proxy(req: NextRequest) {
 
   // Handle image requests - serve directly from public directory
   if (pathname.startsWith("/images/")) {
-    // Let Next.js serve static files directly
-    // Don't rewrite, let the default static file handler take over
+    console.log(`📸 Serving image: ${pathname}`);
+    // Let Next.js serve static files directly from /public/images
+    // This works with the mounted volume at /app/public
     return NextResponse.next();
   }
 
