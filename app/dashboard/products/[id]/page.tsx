@@ -22,12 +22,13 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function EditProductPage({ params }: PageProps) {
+  const awaitedParams = await params;
   const requestHeaders = await headers();
   const pathCandidates = [
     requestHeaders.get("x-pathname"),
@@ -67,7 +68,8 @@ export default async function EditProductPage({ params }: PageProps) {
     return segments.at(-1) || null;
   };
 
-  const derivedProductId = params?.id || deriveProductId(pathCandidates[0]);
+  const derivedProductId =
+    awaitedParams?.id || deriveProductId(pathCandidates[0]);
 
   const requestInfo = {
     url: pathCandidates[0] || "(unknown)",
@@ -182,7 +184,7 @@ export default async function EditProductPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Edit Product</h1>
-      <ProductForm productId={params.id} initialData={initialData} />
+      <ProductForm productId={awaitedParams.id} initialData={initialData} />
     </div>
   );
 }
