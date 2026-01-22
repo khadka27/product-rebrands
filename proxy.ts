@@ -5,12 +5,11 @@ import { getToken } from "next-auth/jwt";
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Handle image requests - proxy to persistent storage
+  // Handle image requests - serve directly from public directory
   if (pathname.startsWith("/images/")) {
-    // Rewrite to serve from public directory
-    const url = req.nextUrl.clone();
-    url.pathname = pathname;
-    return NextResponse.rewrite(url);
+    // Let Next.js serve static files directly
+    // Don't rewrite, let the default static file handler take over
+    return NextResponse.next();
   }
 
   // Handle API routes - allow through

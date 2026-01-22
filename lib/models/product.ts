@@ -33,7 +33,7 @@ export interface Product {
 }
 
 async function withConnection<T>(
-  operation: (connection: any) => Promise<T>
+  operation: (connection: any) => Promise<T>,
 ): Promise<T> {
   const connection = await db.getConnection();
   try {
@@ -47,7 +47,7 @@ export async function createProduct(
   product: Omit<
     Product,
     "id" | "product_id" | "slug" | "created_at" | "updated_at"
-  > & { product_id?: string }
+  > & { product_id?: string },
 ): Promise<Product> {
   return withConnection(async (connection) => {
     const productId = product.product_id || generateProductId();
@@ -65,7 +65,7 @@ export async function createProduct(
     });
 
     // Use transaction to ensure atomicity
-    await connection.query('BEGIN');
+    await connection.query("BEGIN");
 
     try {
       const result = await connection.query(
@@ -84,7 +84,7 @@ export async function createProduct(
           product.product_image,
           product.product_badge,
           product.money_back_days,
-        ]
+        ],
       );
 
       // Insert Ingredients
@@ -92,7 +92,7 @@ export async function createProduct(
         for (const ingredient of product.ingredients) {
           await createIngredient(
             { ...ingredient, product_id: productId },
-            connection
+            connection,
           );
         }
       }
@@ -102,7 +102,7 @@ export async function createProduct(
         for (const whyChooseItem of product.why_choose) {
           await createWhyChoose(
             { ...whyChooseItem, product_id: productId },
-            connection
+            connection,
           );
         }
       }
@@ -116,7 +116,7 @@ export async function createProduct(
               ...review,
               product_id: productId,
             },
-            connection
+            connection,
           );
         }
       }
@@ -128,11 +128,11 @@ export async function createProduct(
             ...product.theme,
             product_id: productId,
           },
-          connection
+          connection,
         );
       }
 
-      await connection.query('COMMIT');
+      await connection.query("COMMIT");
 
       return {
         product_id: productId,
@@ -140,7 +140,7 @@ export async function createProduct(
         ...product,
       };
     } catch (error) {
-      await connection.query('ROLLBACK');
+      await connection.query("ROLLBACK");
       console.error("Error creating product with details:", error);
       throw error;
     }
@@ -151,13 +151,13 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return withConnection(async (connection) => {
     const result = await connection.query(
       "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products WHERE slug = $1",
-      [slug]
+      [slug],
     );
-    
+
     if (result.rows.length === 0) return null;
-    
+
     const product = result.rows[0];
-    
+
     // PostgreSQL JSONB automatically parses JSON, but handle string cases for backward compatibility
     if (product.bullet_points && typeof product.bullet_points === "string") {
       try {
@@ -165,7 +165,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       } catch (e) {
         console.error(
           "Failed to parse bullet_points JSON in getProductBySlug:",
-          e
+          e,
         );
         product.bullet_points = [];
       }
@@ -175,19 +175,23 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getProductById(
-  id: string | number
+  id: string | number,
 ): Promise<Product | null> {
   return getProductByProductId(id as string);
 }
 
 export async function getProductByProductId(
-  productId: string
+  productId: string,
 ): Promise<Product | null> {
   return withConnection(async (connection) => {
     console.log("Attempting to fetch product with product_id:", productId);
+
+    // Convert productId to integer for proper comparison
+    const numericId = parseInt(productId, 10);
+
     const result = await connection.query(
       "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products WHERE product_id = $1",
-      [productId]
+      [numericId],
     );
 
     if (result.rows.length === 0) {
@@ -197,7 +201,7 @@ export async function getProductByProductId(
 
     const product = result.rows[0];
     console.log("Found product by product_id:", product);
-    
+
     // Handle bullet_points parsing for backward compatibility
     if (product.bullet_points && typeof product.bullet_points === "string") {
       try {
@@ -205,7 +209,7 @@ export async function getProductByProductId(
       } catch (e) {
         console.error(
           "Failed to parse bullet_points JSON in getProductByProductId:",
-          e
+          e,
         );
         product.bullet_points = [];
       }
@@ -218,9 +222,9 @@ export async function getProductByProductId(
 export async function getAllProducts(): Promise<Product[]> {
   return withConnection(async (connection) => {
     const result = await connection.query(
-      "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products ORDER BY created_at DESC"
+      "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products ORDER BY created_at DESC",
     );
-    
+
     const products = result.rows.map((row: any) => {
       // Handle bullet_points parsing for backward compatibility
       if (row.bullet_points && typeof row.bullet_points === "string") {
@@ -229,7 +233,7 @@ export async function getAllProducts(): Promise<Product[]> {
         } catch (e) {
           console.error(
             "Failed to parse bullet_points JSON in getAllProducts:",
-            e
+            e,
           );
           row.bullet_points = [];
         }
@@ -244,10 +248,10 @@ export async function updateProduct(
   productId: string,
   product: Partial<
     Omit<Product, "id" | "product_id" | "slug" | "created_at" | "updated_at">
-  >
+  >,
 ): Promise<boolean> {
   return withConnection(async (connection) => {
-    await connection.query('BEGIN');
+    await connection.query("BEGIN");
 
     try {
       // Update Products table
@@ -303,7 +307,7 @@ export async function updateProduct(
         updateValues.push(productId);
         await connection.query(
           `UPDATE products SET ${updateFields.join(", ")} WHERE product_id = $${paramCount}`,
-          updateValues
+          updateValues,
         );
       }
 
@@ -314,7 +318,7 @@ export async function updateProduct(
           for (const ingredient of product.ingredients) {
             await createIngredient(
               { ...ingredient, product_id: productId },
-              connection
+              connection,
             );
           }
         }
@@ -327,7 +331,7 @@ export async function updateProduct(
           for (const whyChooseItem of product.why_choose) {
             await createWhyChoose(
               { ...whyChooseItem, product_id: productId },
-              connection
+              connection,
             );
           }
         }
@@ -335,9 +339,8 @@ export async function updateProduct(
 
       // Update Reviews (Delete existing and insert new)
       if (product.reviews !== undefined) {
-        const { deleteReviewsByProductId, createReview } = await import(
-          "./review"
-        );
+        const { deleteReviewsByProductId, createReview } =
+          await import("./review");
         await deleteReviewsByProductId(productId, connection);
         if (product.reviews && product.reviews.length > 0) {
           for (const review of product.reviews) {
@@ -346,7 +349,7 @@ export async function updateProduct(
                 ...review,
                 product_id: productId,
               },
-              connection
+              connection,
             );
           }
         }
@@ -359,17 +362,17 @@ export async function updateProduct(
             ...product.theme,
             product_id: productId,
           },
-          connection
+          connection,
         );
       } else {
         await deleteProductThemeByProductId(productId, connection);
       }
 
-      await connection.query('COMMIT');
+      await connection.query("COMMIT");
 
       return true;
     } catch (error) {
-      await connection.query('ROLLBACK');
+      await connection.query("ROLLBACK");
       console.error("Error updating product with details:", error);
       throw error;
     }
@@ -378,7 +381,7 @@ export async function updateProduct(
 
 export async function deleteProduct(productId: string): Promise<boolean> {
   return withConnection(async (connection) => {
-    await connection.query('BEGIN');
+    await connection.query("BEGIN");
     try {
       await deleteProductThemeByProductId(productId, connection);
       await deleteIngredientByProductId(productId, connection);
@@ -386,12 +389,12 @@ export async function deleteProduct(productId: string): Promise<boolean> {
 
       const result = await connection.query(
         "DELETE FROM products WHERE product_id = $1",
-        [productId]
+        [productId],
       );
-      await connection.query('COMMIT');
+      await connection.query("COMMIT");
       return result.rowCount > 0;
     } catch (error) {
-      await connection.query('ROLLBACK');
+      await connection.query("ROLLBACK");
       console.error("Error deleting product:", error);
       throw error;
     }
@@ -399,7 +402,7 @@ export async function deleteProduct(productId: string): Promise<boolean> {
 }
 
 export async function getProductWithDetails(
-  slug: string
+  slug: string,
 ): Promise<Product | null> {
   return withConnection(async (connection) => {
     try {
@@ -454,7 +457,7 @@ export async function getProductWithDetails(
        FROM products p 
          LEFT JOIN product_themes t ON p.product_id = t.product_id 
        WHERE p.slug = $1`,
-        [slug]
+        [slug],
       );
 
       if (!productResult.rows || productResult.rows.length === 0) {
@@ -470,9 +473,7 @@ export async function getProductWithDetails(
       });
 
       if (!product.product_id) {
-        console.error(
-          `Product found with slug ${slug} has a null product_id.`
-        );
+        console.error(`Product found with slug ${slug} has a null product_id.`);
         return null;
       }
 
@@ -481,7 +482,7 @@ export async function getProductWithDetails(
          FROM ingredients 
          WHERE product_id = $1 
          ORDER BY display_order ASC`,
-        [product.product_id]
+        [product.product_id],
       );
 
       const whyChooseResult = await connection.query(
@@ -489,7 +490,7 @@ export async function getProductWithDetails(
          FROM why_choose 
          WHERE product_id = $1 
          ORDER BY display_order ASC`,
-        [product.product_id]
+        [product.product_id],
       );
 
       // Fetch reviews for the product
@@ -612,12 +613,12 @@ export async function recordVisit(
   productId: string,
   ipAddress?: string,
   userAgent?: string,
-  referrer?: string
+  referrer?: string,
 ): Promise<void> {
   return withConnection(async (connection) => {
     await connection.query(
       `INSERT INTO visits (product_id, ip_address, user_agent, referrer) VALUES ($1, $2, $3, $4)`,
-      [productId, ipAddress, userAgent, referrer]
+      [productId, ipAddress, userAgent, referrer],
     );
   });
 }
@@ -628,7 +629,7 @@ export async function getProductStats(): Promise<any> {
       console.log("Getting total number of products...");
       // Get total number of products
       const productCountResult = await connection.query(
-        "SELECT COUNT(*) as total FROM products"
+        "SELECT COUNT(*) as total FROM products",
       );
       const totalProducts = productCountResult.rows[0]?.total || 0;
       console.log("Total products:", totalProducts);
@@ -636,7 +637,7 @@ export async function getProductStats(): Promise<any> {
       console.log("Getting total visits...");
       // Get total visits
       const totalVisitsResult = await connection.query(
-        "SELECT COUNT(*) as total FROM visits"
+        "SELECT COUNT(*) as total FROM visits",
       );
       const totalVisits = totalVisitsResult.rows[0]?.total || 0;
       console.log("Total visits:", totalVisits);

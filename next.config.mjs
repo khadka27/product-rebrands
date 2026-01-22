@@ -6,13 +6,19 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Configure static file serving
+  staticPageGenerationTimeout: 60,
+
+  // Ensure images directory is served as static files
   async rewrites() {
-    return [
-      {
-        source: '/images/:path*',
-        destination: '/images/:path*',
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: '/images/:path*',
+          destination: '/images/:path*',
+        },
+      ],
+    };
   },
 
   images: {
