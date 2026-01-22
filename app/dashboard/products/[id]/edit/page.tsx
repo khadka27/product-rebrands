@@ -117,7 +117,7 @@ export default function EditProductPage({
           const errorText = await response.text();
           console.error("API error:", errorText);
           throw new Error(
-            `Failed to fetch product: ${response.status} ${errorText}`
+            `Failed to fetch product: ${response.status} ${errorText}`,
           );
         }
 
@@ -125,11 +125,25 @@ export default function EditProductPage({
         console.log("Fetched product data:", data);
 
         // Format the data
+        const productImageSafe =
+          data.product_image && !`${data.product_image}`.includes("undefined")
+            ? data.product_image
+            : null;
+        const productBadgeSafe =
+          data.product_badge && !`${data.product_badge}`.includes("undefined")
+            ? data.product_badge
+            : null;
+
         const formattedData: Product = {
           ...data,
           id: data.product_id, // Map product_id to id for frontend compatibility
           product_id: data.product_id, // Keep original product_id
-          slug: data.slug || data.name.replace(/\s+/g, "-").toLowerCase(), // Ensure slug exists
+          slug: data.slug || data.name.replaceAll(/\s+/g, "-").toLowerCase(), // Ensure slug exists
+          image: getImagePath(productImageSafe, "/images/placeholder.jpg"),
+          badge_image: getImagePath(
+            productBadgeSafe,
+            "/images/placeholder-badge.jpg",
+          ),
           theme: data.theme || {
             theme_id: "",
             product_id: data.product_id,
@@ -277,7 +291,10 @@ export default function EditProductPage({
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="secondary">{product.name}</Badge>
-              <Link href={`/preview/${product.slug || product.name.replace(/\s+/g, "-").toLowerCase()}`} target="_blank">
+              <Link
+                href={`/preview/${product.slug || product.name.replace(/\s+/g, "-").toLowerCase()}`}
+                target="_blank"
+              >
                 <Button variant="outline" size="sm">
                   <Eye className="mr-2 h-4 w-4" />
                   Preview
@@ -290,210 +307,214 @@ export default function EditProductPage({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Current Product Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Product Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold">Product Details</h2>
-              <p>Product ID: {product.product_id}</p>
-              <p>Name: {product.name}</p>
-              <p>Slug: {product.name.replace(/\s+/g, "-").toLowerCase()}</p>
-              <p>Redirect Link: {product.redirect_link}</p>
-              <p>Generated Link: {product.generated_link}</p>
-              <p>Money Back Days: {product.money_back_days}</p>
-              {product.image && (
-                <div className="mt-4">
-                  <p>Product Image:</p>
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-32 h-32 object-cover rounded-md"
-                  />
-                </div>
-              )}
-              {product.badge_image && (
-                <div className="mt-4">
-                  <p>Product Badge:</p>
-                  <img
-                    src={product.badge_image}
-                    alt={`${product.name} badge`}
-                    className="w-16 h-16 object-cover rounded-md"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold">Description</h3>
-              {product.paragraph && <p>{product.paragraph}</p>}
-              {product.bullet_points && product.bullet_points.length > 0 && (
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  {product.bullet_points.map((point, index) => (
-                    <li key={index}>{point}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Ingredients Section */}
-            {product.ingredients && product.ingredients.length > 0 && (
+        {/* Current Product Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Product Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Ingredients</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                  {product.ingredients.map((ingredient) => (
-                    <div key={ingredient.id} className="border p-3 rounded-md">
-                      <p>Title: {ingredient.title}</p>
-                      <p>Description: {ingredient.description}</p>
-                      {ingredient.image && (
-                        <img
-                          src={getImagePath(
-                            ingredient.image,
-                            "/placeholder.svg"
-                          )}
-                          alt={ingredient.title}
-                          className="w-16 h-16 object-cover rounded-md mt-2"
-                        />
-                      )}
-                      <p>Display Order: {ingredient.display_order}</p>
-                    </div>
-                  ))}
-                </div>
+                <h2 className="text-xl font-semibold">Product Details</h2>
+                <p>Product ID: {product.product_id}</p>
+                <p>Name: {product.name}</p>
+                <p>Slug: {product.name.replace(/\s+/g, "-").toLowerCase()}</p>
+                <p>Redirect Link: {product.redirect_link}</p>
+                <p>Generated Link: {product.generated_link}</p>
+                <p>Money Back Days: {product.money_back_days}</p>
+                {product.image && (
+                  <div className="mt-4">
+                    <p>Product Image:</p>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                {product.badge_image && (
+                  <div className="mt-4">
+                    <p>Product Badge:</p>
+                    <img
+                      src={product.badge_image}
+                      alt={`${product.name} badge`}
+                      className="w-16 h-16 object-cover rounded-md"
+                    />
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Why Choose Section */}
-            {product.why_choose && product.why_choose.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold">Why Choose Us</h3>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  {product.why_choose.map((item) => (
-                    <li key={item.id}>
-                      <strong>{item.title}:</strong> {item.description} (Order:{" "}
-                      {item.display_order})
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-lg font-semibold">Description</h3>
+                {product.paragraph && <p>{product.paragraph}</p>}
+                {product.bullet_points && product.bullet_points.length > 0 && (
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    {product.bullet_points.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            )}
 
-            {/* Customer Reviews Section */}
-            {product.reviews && product.reviews.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold">Customer Reviews</h3>
-                <div className="grid gap-4 mt-2">
-                  {product.reviews.map((review) => (
-                    <div key={review.id} className="p-3 border rounded-md">
-                      <div className="flex items-start gap-3">
-                        {review.avatar && (
+              {/* Ingredients Section */}
+              {product.ingredients && product.ingredients.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold">Ingredients</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                    {product.ingredients.map((ingredient) => (
+                      <div
+                        key={ingredient.id}
+                        className="border p-3 rounded-md"
+                      >
+                        <p>Title: {ingredient.title}</p>
+                        <p>Description: {ingredient.description}</p>
+                        {ingredient.image && (
                           <img
-                            src={`/images/avatars/${review.avatar}`}
+                            src={getImagePath(
+                              ingredient.image,
+                              "/placeholder.svg",
+                            )}
+                            alt={ingredient.title}
+                            className="w-16 h-16 object-cover rounded-md mt-2"
+                          />
+                        )}
+                        <p>Display Order: {ingredient.display_order}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Why Choose Section */}
+              {product.why_choose && product.why_choose.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold">Why Choose Us</h3>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    {product.why_choose.map((item) => (
+                      <li key={item.id}>
+                        <strong>{item.title}:</strong> {item.description}{" "}
+                        (Order: {item.display_order})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Customer Reviews Section */}
+              {product.reviews && product.reviews.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold">Customer Reviews</h3>
+                  <div className="grid gap-4 mt-2">
+                    {product.reviews.map((review) => (
+                      <div key={review.id} className="p-3 border rounded-md">
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={getImagePath(
+                              review.avatar,
+                              "/images/placeholder-user.jpg",
+                            )}
                             alt={`${review.name}'s avatar`}
                             className="w-10 h-10 rounded-full object-cover"
                           />
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{review.name}</span>
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <span
-                                  key={i}
-                                  className={
-                                    i < review.rating
-                                      ? "text-yellow-400"
-                                      : "text-gray-300"
-                                  }
-                                >
-                                  ★
-                                </span>
-                              ))}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{review.name}</span>
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={
+                                      i < review.rating
+                                        ? "text-yellow-400"
+                                        : "text-gray-300"
+                                    }
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
                             </div>
+                            <p className="text-gray-600 text-sm mb-2">
+                              {review.review_text}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {review.address}
+                            </p>
                           </div>
-                          <p className="text-gray-600 text-sm mb-2">
-                            {review.review_text}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {review.address}
-                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Theme Settings Summary */}
+              {product.theme && (
+                <div>
+                  <h3 className="text-lg font-semibold">Theme Settings</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                    <div className="p-3 border rounded-md">
+                      <p className="font-medium">Colors</p>
+                      <div className="space-y-2 mt-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              backgroundColor: product.theme.primary_bg_color,
+                            }}
+                          />
+                          <span>Primary BG</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              backgroundColor: product.theme.secondary_bg_color,
+                            }}
+                          />
+                          <span>Secondary BG</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{
+                              backgroundColor: product.theme.accent_bg_color,
+                            }}
+                          />
+                          <span>Accent BG</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Theme Settings Summary */}
-            {product.theme && (
-              <div>
-                <h3 className="text-lg font-semibold">Theme Settings</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Colors</p>
-                    <div className="space-y-2 mt-2">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{
-                            backgroundColor: product.theme.primary_bg_color,
-                          }}
-                        />
-                        <span>Primary BG</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{
-                            backgroundColor: product.theme.secondary_bg_color,
-                          }}
-                        />
-                        <span>Secondary BG</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{
-                            backgroundColor: product.theme.accent_bg_color,
-                          }}
-                        />
-                        <span>Accent BG</span>
+                    <div className="p-3 border rounded-md">
+                      <p className="font-medium">Typography</p>
+                      <div className="space-y-2 mt-2">
+                        <p>Font: {product.theme.font_family}</p>
+                        <p>H1: {product.theme.h1_font_size}</p>
+                        <p>Body: {product.theme.body_font_size}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Typography</p>
-                    <div className="space-y-2 mt-2">
-                      <p>Font: {product.theme.font_family}</p>
-                      <p>H1: {product.theme.h1_font_size}</p>
-                      <p>Body: {product.theme.body_font_size}</p>
-                    </div>
-                  </div>
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Layout</p>
-                    <div className="space-y-2 mt-2">
-                      <p>Max Width: {product.theme.max_width}</p>
-                      <p>Border Radius: {product.theme.border_radius_md}</p>
-                      <p>Padding: {product.theme.section_padding}</p>
+                    <div className="p-3 border rounded-md">
+                      <p className="font-medium">Layout</p>
+                      <div className="space-y-2 mt-2">
+                        <p>Max Width: {product.theme.max_width}</p>
+                        <p>Border Radius: {product.theme.border_radius_md}</p>
+                        <p>Padding: {product.theme.section_padding}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <Separator className="my-8" />
+        <Separator className="my-8" />
 
-      {/* Edit Form */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">Edit Product</h2>
-        <ProductForm productId={product.product_id} initialData={product} />
-      </div>
+        {/* Edit Form */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">Edit Product</h2>
+          <ProductForm productId={product.product_id} initialData={product} />
+        </div>
       </div>
     </div>
   );

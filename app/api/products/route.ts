@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     console.log(
       "Request URL params:",
-      Object.fromEntries(searchParams.entries())
+      Object.fromEntries(searchParams.entries()),
     );
 
     // Handle stats query
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
         });
         return NextResponse.json(
           { error: "Failed to fetch product stats", details: error.message },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -86,7 +86,10 @@ export async function GET(req: NextRequest) {
         FROM information_schema.tables 
         WHERE table_schema = 'public'
       `);
-      console.log("Available tables:", tablesResult.rows.map(row => row.table_name));
+      console.log(
+        "Available tables:",
+        tablesResult.rows.map((row) => row.table_name),
+      );
 
       // Modified query to use PostgreSQL syntax
       const result = await connection.query(`
@@ -176,7 +179,7 @@ export async function GET(req: NextRequest) {
 
       console.log(
         "Query executed successfully, rows returned:",
-        result.rows.length
+        result.rows.length,
       );
 
       if (result.rows.length === 0) {
@@ -189,7 +192,10 @@ export async function GET(req: NextRequest) {
         const product: any = { ...row };
 
         // Parse bullet_points if it's a JSON string (for backward compatibility)
-        if (product.bullet_points && typeof product.bullet_points === "string") {
+        if (
+          product.bullet_points &&
+          typeof product.bullet_points === "string"
+        ) {
           try {
             product.bullet_points = JSON.parse(product.bullet_points);
           } catch (e) {
@@ -199,7 +205,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Parse ingredients
-        if (product.ingredients && typeof product.ingredients === 'string') {
+        if (product.ingredients && typeof product.ingredients === "string") {
           const ingredientsArray = product.ingredients
             .split(",")
             .filter((item: string) => item.trim())
@@ -216,14 +222,16 @@ export async function GET(req: NextRequest) {
               }
               return null;
             })
-            .filter((item: any): item is NonNullable<typeof item> => item !== null);
+            .filter(
+              (item: any): item is NonNullable<typeof item> => item !== null,
+            );
           product.ingredients = ingredientsArray;
         } else {
           product.ingredients = [];
         }
 
         // Parse why_choose
-        if (product.why_choose && typeof product.why_choose === 'string') {
+        if (product.why_choose && typeof product.why_choose === "string") {
           const whyChooseArray = product.why_choose
             .split(",")
             .filter((item: string) => item.trim())
@@ -239,7 +247,9 @@ export async function GET(req: NextRequest) {
               }
               return null;
             })
-            .filter((item: any): item is NonNullable<typeof item> => item !== null);
+            .filter(
+              (item: any): item is NonNullable<typeof item> => item !== null,
+            );
           product.why_choose = whyChooseArray;
         } else {
           product.why_choose = [];
@@ -360,14 +370,14 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json(
         { error: "Failed to fetch products", details: error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error: any) {
     console.error("Error in GET /api/products:", error);
     return NextResponse.json(
       { error: "Internal Server Error", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (connection) {
@@ -505,25 +515,41 @@ export async function POST(req: NextRequest) {
     console.log("Attempting to create new product...");
     console.log("Request headers:", Object.fromEntries(req.headers.entries()));
     console.log("Request method:", req.method);
-    console.log("Content-Type:", req.headers.get('content-type'));
-    
+    console.log("Content-Type:", req.headers.get("content-type"));
+
+    const normalizePath = (value: string | null | undefined) => {
+      if (!value) return null;
+      const trimmed = `${value}`.replace(/^\/+/, "");
+      return `/${trimmed}`;
+    };
+
     // Check if this is FormData (multipart/form-data) or JSON
-    const contentType = req.headers.get('content-type') || '';
+    const contentType = req.headers.get("content-type") || "";
     console.log("Detected content type:", contentType);
 
     let body: any = {};
 
-    if (contentType.includes('multipart/form-data')) {
+    if (contentType.includes("multipart/form-data")) {
       // Handle FormData for file uploads
       console.log("Processing FormData request...");
       const formData = await req.formData();
-      
+
       // Convert FormData to a regular object
       for (const [key, value] of formData.entries()) {
-        if (key.startsWith('ingredient_image_') || key.startsWith('review_avatar_') || key === 'image' || key === 'badge_image') {
+        if (
+          key.startsWith("ingredient_image_") ||
+          key.startsWith("review_avatar_") ||
+          key === "image" ||
+          key === "badge_image"
+        ) {
           // Handle file fields
           body[key] = value;
-        } else if (key === 'bullet_points' || key === 'ingredients' || key === 'why_choose' || key === 'reviews') {
+        } else if (
+          key === "bullet_points" ||
+          key === "ingredients" ||
+          key === "why_choose" ||
+          key === "reviews"
+        ) {
           // Parse JSON strings
           try {
             body[key] = JSON.parse(value as string);
@@ -544,7 +570,7 @@ export async function POST(req: NextRequest) {
         console.error("JSON parsing error:", jsonError.message);
         return NextResponse.json(
           { error: "Invalid JSON in request body", details: jsonError.message },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -552,15 +578,23 @@ export async function POST(req: NextRequest) {
     console.log("Received product data:", {
       ...body,
       // Don't log file objects, just their presence
-      image: (body.image && typeof body.image === 'object' && body.image.name) ? `[File: ${body.image.name}]` : body.image,
-      badge_image: (body.badge_image && typeof body.badge_image === 'object' && body.badge_image.name) ? `[File: ${body.badge_image.name}]` : body.badge_image
+      image:
+        body.image && typeof body.image === "object" && body.image.name
+          ? `[File: ${body.image.name}]`
+          : body.image,
+      badge_image:
+        body.badge_image &&
+        typeof body.badge_image === "object" &&
+        body.badge_image.name
+          ? `[File: ${body.badge_image.name}]`
+          : body.badge_image,
     });
 
     // Validate required fields
     if (!body.name || !body.paragraph || !body.redirect_link) {
       return NextResponse.json(
         { error: "Missing required fields: name, paragraph, redirect_link" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -569,11 +603,15 @@ export async function POST(req: NextRequest) {
     console.log("Generated product_id for image processing:", productId);
 
     // Process uploaded images and store file paths
-    let productImagePath = '';
-    let badgeImagePath = '';
+    let productImagePath: string | null = null;
+    let badgeImagePath: string | null = null;
 
     // Process main product image
-    if (body.image && typeof body.image === 'object' && body.image.arrayBuffer) {
+    if (
+      body.image &&
+      typeof body.image === "object" &&
+      body.image.arrayBuffer
+    ) {
       console.log("Processing product image...");
       const buffer = Buffer.from(await body.image.arrayBuffer());
       const file = {
@@ -584,13 +622,19 @@ export async function POST(req: NextRequest) {
       productImagePath = await processImage(
         file,
         "public/images/products",
-        `${productId}`
+        `${productId}`,
       );
       console.log("Product image saved to:", productImagePath);
+    } else if (typeof body.image === "string" && body.image.trim()) {
+      productImagePath = normalizePath(body.image.trim());
     }
 
     // Process badge image
-    if (body.badge_image && typeof body.badge_image === 'object' && body.badge_image.arrayBuffer) {
+    if (
+      body.badge_image &&
+      typeof body.badge_image === "object" &&
+      body.badge_image.arrayBuffer
+    ) {
       console.log("Processing badge image...");
       const buffer = Buffer.from(await body.badge_image.arrayBuffer());
       const file = {
@@ -601,22 +645,37 @@ export async function POST(req: NextRequest) {
       badgeImagePath = await processImage(
         file,
         "public/images/badges",
-        `badge_${productId}`
+        `badge_${productId}`,
       );
       console.log("Badge image saved to:", badgeImagePath);
+    } else if (
+      typeof body.badge_image === "string" &&
+      body.badge_image.trim()
+    ) {
+      badgeImagePath = normalizePath(body.badge_image.trim());
     }
 
     // Process ingredient images
     const processedIngredients = [];
     if (body.ingredients && Array.isArray(body.ingredients)) {
       for (const [index, ingredient] of body.ingredients.entries()) {
-        let ingredientImagePath = '';
-        
+        let ingredientImagePath: string | null = null;
+
+        if (ingredient.image && typeof ingredient.image === "string") {
+          ingredientImagePath = normalizePath(ingredient.image);
+        }
+
         // Check for ingredient image file
         const ingredientImageKey = `ingredient_image_${index}`;
-        if (body[ingredientImageKey] && typeof body[ingredientImageKey] === 'object' && body[ingredientImageKey].arrayBuffer) {
+        if (
+          body[ingredientImageKey] &&
+          typeof body[ingredientImageKey] === "object" &&
+          body[ingredientImageKey].arrayBuffer
+        ) {
           console.log(`Processing ingredient ${index} image...`);
-          const buffer = Buffer.from(await body[ingredientImageKey].arrayBuffer());
+          const buffer = Buffer.from(
+            await body[ingredientImageKey].arrayBuffer(),
+          );
           const file = {
             buffer,
             originalname: body[ingredientImageKey].name,
@@ -625,9 +684,12 @@ export async function POST(req: NextRequest) {
           ingredientImagePath = await processImage(
             file,
             "public/images/ingredients",
-            `${productId}_ingredient_${index}`
+            `${productId}_ingredient_${index}`,
           );
-          console.log(`Ingredient ${index} image saved to:`, ingredientImagePath);
+          console.log(
+            `Ingredient ${index} image saved to:`,
+            ingredientImagePath,
+          );
         }
 
         processedIngredients.push({
@@ -641,11 +703,19 @@ export async function POST(req: NextRequest) {
     const processedReviews = [];
     if (body.reviews && Array.isArray(body.reviews)) {
       for (const [index, review] of body.reviews.entries()) {
-        let avatarPath = '';
-        
+        let avatarPath: string | null = null;
+
+        if (review.avatar && typeof review.avatar === "string") {
+          avatarPath = normalizePath(review.avatar);
+        }
+
         // Check for review avatar file
         const avatarKey = `review_avatar_${index}`;
-        if (body[avatarKey] && typeof body[avatarKey] === 'object' && body[avatarKey].arrayBuffer) {
+        if (
+          body[avatarKey] &&
+          typeof body[avatarKey] === "object" &&
+          body[avatarKey].arrayBuffer
+        ) {
           console.log(`Processing review ${index} avatar...`);
           const buffer = Buffer.from(await body[avatarKey].arrayBuffer());
           const file = {
@@ -656,7 +726,7 @@ export async function POST(req: NextRequest) {
           avatarPath = await processImage(
             file,
             "public/images/avatars",
-            `avatar_${productId}_${index}`
+            `avatar_${productId}_${index}`,
           );
           console.log(`Review ${index} avatar saved to:`, avatarPath);
         }
@@ -672,8 +742,8 @@ export async function POST(req: NextRequest) {
     const productData = {
       ...body,
       product_id: productId, // Use the same ID we used for image processing
-      product_image: productImagePath,
-      product_badge: badgeImagePath,
+      product_image: productImagePath ?? null,
+      product_badge: badgeImagePath ?? null,
       ingredients: processedIngredients,
       reviews: processedReviews,
       // Remove file objects and temp keys
@@ -682,16 +752,21 @@ export async function POST(req: NextRequest) {
     };
 
     // Remove all temporary file keys
-    Object.keys(productData).forEach(key => {
-      if (key.startsWith('ingredient_image_') || key.startsWith('review_avatar_')) {
+    Object.keys(productData).forEach((key) => {
+      if (
+        key.startsWith("ingredient_image_") ||
+        key.startsWith("review_avatar_") ||
+        key === "image_existing" ||
+        key === "badge_image_existing"
+      ) {
         delete productData[key];
       }
     });
 
     console.log("Creating product with processed data:", {
       ...productData,
-      ingredients: productData.ingredients?.length + ' ingredients',
-      reviews: productData.reviews?.length + ' reviews'
+      ingredients: productData.ingredients?.length + " ingredients",
+      reviews: productData.reviews?.length + " reviews",
     });
 
     const product = await createProduct(productData);
@@ -702,7 +777,7 @@ export async function POST(req: NextRequest) {
     console.error("Error creating product:", error);
     return NextResponse.json(
       { error: "Failed to create product", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
