@@ -7,8 +7,18 @@ import { Toaster } from "sonner";
 import { NextAuthProvider } from "@/components/providers/next-auth-provider";
 import { SessionTimeout } from "@/components/session-timeout";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { initializeStorage } from "@/lib/server-utils";
 
 const inter = Inter({ subsets: ["latin"] });
+
+// Initialize storage on server startup
+if (typeof window === "undefined") {
+  try {
+    initializeStorage();
+  } catch (error) {
+    console.error("Failed to initialize storage:", error);
+  }
+}
 
 export const metadata: Metadata = {
   title: "Verified Supplements Store - Premium Rebranded Supplements",
