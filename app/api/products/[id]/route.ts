@@ -12,10 +12,11 @@ const normalizePath = (value: string | null | undefined) => {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
+  const awaitedParams = await context.params;
   try {
-    const productId = params.id;
+    const productId = awaitedParams.id;
     const connection = await db.getConnection();
 
     try {
@@ -116,14 +117,17 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
+  const awaitedParams = await context.params;
   try {
-    let productId = params.id;
+    let productId = awaitedParams.id;
     const formData = await request.formData();
 
     // Debug: log incoming params and formData keys
-    console.log("[PUT /api/products/[id]] Incoming params:", params);
+    console.log("[PUT /api/products/[id]] Incoming params:", awaitedParams);
+      console.log("[PUT /api/products/[id]] Incoming params:", awaitedParams);
+      console.error("[PUT /api/products/[id]] Product not found for id:", productId, "params:", awaitedParams);
     console.log("[PUT /api/products/[id]] productId:", productId);
     console.log(
       "[PUT /api/products/[id]] formData keys:",
@@ -183,10 +187,10 @@ export async function PUT(
         "[PUT /api/products/[id]] Product not found for id:",
         productId,
         "params:",
-        params,
+        awaitedParams,
       );
       return NextResponse.json(
-        { error: "Product not found", debug: { productId, params } },
+        { error: "Product not found", debug: { productId, awaitedParams } },
         { status: 404 },
       );
     }
@@ -522,10 +526,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
+  const awaitedParams = await context.params;
   try {
-    let productId = params.id;
+    let productId = awaitedParams.id;
 
     const connection = await db.getConnection();
 
