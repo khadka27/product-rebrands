@@ -6,7 +6,7 @@ import {
 } from "@/lib/models/ingredient";
 import { validateIngredient } from "@/lib/utils";
 import { processImage, ensureDirectoryExists } from "@/lib/server-utils";
-import path from "path";
+import path from "node:path";
 
 export async function GET(
   req: NextRequest,
@@ -18,17 +18,13 @@ export async function GET(
     let productId: string;
 
     try {
-      const numericId = !isNaN(Number(params.id))
-        ? parseInt(params.id, 10)
-        : null;
-      let productResult;
+      // Try by product_id first (as string), then by slug
+      let productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [params.id],
+      );
 
-      if (numericId !== null) {
-        productResult = await connection.query(
-          "SELECT product_id FROM products WHERE product_id = $1",
-          [numericId],
-        );
-      } else {
+      if (productResult.rows.length === 0) {
         productResult = await connection.query(
           "SELECT product_id FROM products WHERE slug = $1",
           [params.id],
@@ -70,17 +66,13 @@ export async function POST(
     let productId: string;
 
     try {
-      const numericId = !isNaN(Number(params.id))
-        ? parseInt(params.id, 10)
-        : null;
-      let productResult;
+      // Try by product_id first (as string), then by slug
+      let productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [params.id],
+      );
 
-      if (numericId !== null) {
-        productResult = await connection.query(
-          "SELECT product_id FROM products WHERE product_id = $1",
-          [numericId],
-        );
-      } else {
+      if (productResult.rows.length === 0) {
         productResult = await connection.query(
           "SELECT product_id FROM products WHERE slug = $1",
           [params.id],
@@ -174,17 +166,13 @@ export async function DELETE(
     let productId: string;
 
     try {
-      const numericId = !isNaN(Number(params.id))
-        ? parseInt(params.id, 10)
-        : null;
-      let productResult;
+      // Try by product_id first (as string), then by slug
+      let productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [params.id],
+      );
 
-      if (numericId !== null) {
-        productResult = await connection.query(
-          "SELECT product_id FROM products WHERE product_id = $1",
-          [numericId],
-        );
-      } else {
+      if (productResult.rows.length === 0) {
         productResult = await connection.query(
           "SELECT product_id FROM products WHERE slug = $1",
           [params.id],
@@ -204,7 +192,7 @@ export async function DELETE(
       connection.release();
     }
 
-    const deleted = await deleteIngredientByProductId(productId);
+    await deleteIngredientByProductId(productId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting ingredients:", error);

@@ -19,21 +19,11 @@ export async function GET(
     const connection = await db.getConnection();
 
     try {
-      // Convert to integer if it's a numeric ID
-      const numericId = !isNaN(Number(productId))
-        ? parseInt(productId, 10)
-        : null;
-
-      // Fetch product - try by product_id first (if numeric), then by slug
-      let productResult;
-      if (numericId !== null) {
-        productResult = await connection.query(
-          "SELECT * FROM products WHERE product_id = $1",
-          [numericId],
-        );
-      } else {
-        productResult = { rows: [] };
-      }
+      // Fetch product - try by product_id first (as string), then by slug
+      let productResult = await connection.query(
+        "SELECT * FROM products WHERE product_id = $1",
+        [productId],
+      );
 
       // If not found by ID, try by slug
       if (productResult.rows.length === 0) {
@@ -135,35 +125,28 @@ export async function PUT(
     // First, resolve slug to product_id if necessary
     const resolveConnection = await db.getConnection();
     let productNotFound = false;
-    let numericProductId: number | null = null;
+    let actualProductId: string | null = null;
 
     try {
-      // Convert to integer if it's a numeric ID
-      const numericId = !isNaN(Number(productId))
-        ? parseInt(productId, 10)
-        : null;
+      // Try by product_id first (as string)
+      let productResult = await resolveConnection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [productId],
+      );
 
-      let productResult;
-      if (numericId !== null) {
-        productResult = await resolveConnection.query(
-          "SELECT product_id FROM products WHERE product_id = $1",
-          [numericId],
-        );
-
-        if (productResult.rows.length > 0) {
-          numericProductId = productResult.rows[0].product_id;
-        }
+      if (productResult.rows.length > 0) {
+        actualProductId = productResult.rows[0].product_id;
       }
 
-      // If not found by ID, try by slug
-      if (!numericProductId) {
+      // If not found by product_id, try by slug
+      if (!actualProductId) {
         productResult = await resolveConnection.query(
           "SELECT product_id FROM products WHERE slug = $1",
           [productId],
         );
 
         if (productResult.rows.length > 0) {
-          numericProductId = productResult.rows[0].product_id;
+          actualProductId = productResult.rows[0].product_id;
         } else {
           // Product not found by ID or slug
           productNotFound = true;
@@ -175,12 +158,12 @@ export async function PUT(
       resolveConnection.release();
     }
 
-    if (productNotFound || !numericProductId) {
+    if (productNotFound || !actualProductId) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Use the numeric product ID for all subsequent operations
-    productId = numericProductId.toString();
+    // Use the resolved product ID for all subsequent operations
+    productId = actualProductId;
 
     const name = formData.get("name") as string;
     const paragraph = formData.get("paragraph") as string;
@@ -253,7 +236,7 @@ export async function PUT(
       // Get current product to preserve existing images if no new ones uploaded
       const currentProductResult = await connection.query(
         "SELECT product_image, product_badge FROM products WHERE product_id = $1",
-        [numericProductId],
+        [productId],
       );
 
       if (currentProductResult.rows.length === 0) {
@@ -289,7 +272,7 @@ export async function PUT(
           money_back_days,
           productImagePath || currentProduct.product_image,
           badgeImagePath || currentProduct.product_badge,
-          numericProductId,
+          productId,
         ],
       );
 
@@ -302,7 +285,7 @@ export async function PUT(
           // Delete existing ingredients
           await connection.query(
             "DELETE FROM ingredients WHERE product_id = $1",
-            [numericProductId],
+            [productId],
           );
 
           // Insert new ingredients
@@ -329,7 +312,7 @@ export async function PUT(
               ingredientImagePath = await processImage(
                 file,
                 "public/images/ingredients",
-                `ingredient_${numericProductId}_${index}`,
+                `ingredient_${productId}_${index}`,
               );
             } else if (existingIngredientImage) {
               // Use existing ingredient image path
@@ -351,7 +334,7 @@ export async function PUT(
                 display_order
               ) VALUES ($1, $2, $3, $4, $5)`,
               [
-                numericProductId,
+                productId,
                 ingredient.title,
                 ingredient.description,
                 ingredientImagePath,
@@ -373,7 +356,7 @@ export async function PUT(
           // Delete existing why_choose items
           await connection.query(
             "DELETE FROM why_choose WHERE product_id = $1",
-            [numericProductId],
+            [productId],
           );
 
           // Insert new why_choose items
@@ -385,12 +368,7 @@ export async function PUT(
                 description,
                 display_order
               ) VALUES ($1, $2, $3, $4)`,
-              [
-                numericProductId,
-                item.title,
-                item.description,
-                item.display_order,
-              ],
+              [productId, item.title, item.description, item.display_order],
             );
           }
         } catch (e) {
@@ -406,7 +384,7 @@ export async function PUT(
 
           // Delete existing reviews
           await connection.query("DELETE FROM reviews WHERE product_id = $1", [
-            numericProductId,
+            productId,
           ]);
 
           // Insert new reviews
@@ -429,7 +407,7 @@ export async function PUT(
               avatarPath = await processImage(
                 file,
                 "public/images/avatars",
-                `avatar_${numericProductId}_${index}`,
+                `avatar_${productId}_${index}`,
               );
             } else if (existingAvatarPath) {
               // Use existing avatar path
@@ -454,7 +432,7 @@ export async function PUT(
                 updated_at
               ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
               [
-                numericProductId,
+                productId,
                 review.name,
                 review.address,
                 review.rating,
@@ -523,34 +501,27 @@ export async function DELETE(
     const connection = await db.getConnection();
 
     try {
-      // Convert to integer if it's a numeric ID
-      const numericId = !isNaN(Number(productId))
-        ? parseInt(productId, 10)
-        : null;
-      let numericProductId: number | null = null;
+      let actualProductId: string | null = null;
 
       // First, resolve slug to product_id if necessary
-      let productResult;
-      if (numericId !== null) {
-        productResult = await connection.query(
-          "SELECT product_id FROM products WHERE product_id = $1",
-          [numericId],
-        );
+      let productResult = await connection.query(
+        "SELECT product_id FROM products WHERE product_id = $1",
+        [productId],
+      );
 
-        if (productResult.rows.length > 0) {
-          numericProductId = productResult.rows[0].product_id;
-        }
+      if (productResult.rows.length > 0) {
+        actualProductId = productResult.rows[0].product_id;
       }
 
       // If not found by ID, try by slug
-      if (!numericProductId) {
+      if (!actualProductId) {
         productResult = await connection.query(
           "SELECT product_id FROM products WHERE slug = $1",
           [productId],
         );
 
         if (productResult.rows.length > 0) {
-          numericProductId = productResult.rows[0].product_id;
+          actualProductId = productResult.rows[0].product_id;
         } else {
           connection.release();
           return NextResponse.json(
@@ -566,21 +537,21 @@ export async function DELETE(
       // Delete related records first (using correct table names)
       await connection.query(
         "DELETE FROM product_themes WHERE product_id = $1",
-        [numericProductId],
+        [actualProductId],
       );
       await connection.query("DELETE FROM ingredients WHERE product_id = $1", [
-        numericProductId,
+        actualProductId,
       ]);
       await connection.query("DELETE FROM why_choose WHERE product_id = $1", [
-        numericProductId,
+        actualProductId,
       ]);
       await connection.query("DELETE FROM reviews WHERE product_id = $1", [
-        numericProductId,
+        actualProductId,
       ]);
 
       // Delete the product
       await connection.query("DELETE FROM products WHERE product_id = $1", [
-        numericProductId,
+        actualProductId,
       ]);
 
       // Commit the transaction

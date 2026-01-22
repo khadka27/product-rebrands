@@ -186,12 +186,9 @@ export async function getProductByProductId(
   return withConnection(async (connection) => {
     console.log("Attempting to fetch product with product_id:", productId);
 
-    // Convert productId to integer for proper comparison
-    const numericId = parseInt(productId, 10);
-
     const result = await connection.query(
       "SELECT product_id, name, slug, paragraph, bullet_points, redirect_link, generated_link, product_image, product_badge, money_back_days, created_at, updated_at FROM products WHERE product_id = $1",
-      [numericId],
+      [productId],
     );
 
     if (result.rows.length === 0) {
