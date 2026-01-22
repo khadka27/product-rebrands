@@ -1,5 +1,6 @@
 import { ProductForm } from "../components/product-form";
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import { getProductByProductId } from "@/lib/models/product";
 import { getIngredientsByProductId } from "@/lib/models/ingredient";
 import { getWhyChooseByProductId } from "@/lib/models/why-choose";
@@ -24,11 +25,37 @@ interface PageProps {
 }
 
 export default async function EditProductPage({ params }: PageProps) {
+  const requestHeaders = await headers();
+  const requestInfo = {
+    url:
+      requestHeaders.get("x-invoke-path") ||
+      requestHeaders.get("next-url") ||
+      requestHeaders.get("referer") ||
+      "(unknown)",
+    host: requestHeaders.get("host") || "(unknown)",
+    userAgent: requestHeaders.get("user-agent") || "(unknown)",
+  };
+
   const productId = params?.id;
 
   if (!productId) {
-    console.error("EditProductPage: missing product id param", { params });
-    throw new Error("Edit product: missing product id");
+    console.error("EditProductPage: missing product id param", {
+      params,
+      requestInfo,
+    });
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded border border-red-200 bg-red-50 p-4 text-red-700">
+          <p className="font-semibold">Edit product: missing product id</p>
+          <p className="mt-2 text-sm">
+            Check server logs for the request details.
+          </p>
+          <pre className="mt-4 overflow-auto rounded bg-white p-3 text-xs text-gray-700">
+            {JSON.stringify({ params, requestInfo }, null, 2)}
+          </pre>
+        </div>
+      </div>
+    );
   }
 
   let product;
@@ -38,16 +65,36 @@ export default async function EditProductPage({ params }: PageProps) {
     console.error("EditProductPage: failed to fetch product", {
       productId,
       error,
+      requestInfo,
     });
-    throw new Error(
-      `Edit product: failed to fetch product ${productId}. Check server logs for details.`,
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded border border-red-200 bg-red-50 p-4 text-red-700">
+          <p className="font-semibold">Edit product: failed to fetch product</p>
+          <p className="text-sm">Product ID: {productId}</p>
+          <p className="mt-2 text-sm">Check server logs for details.</p>
+          <pre className="mt-4 overflow-auto rounded bg-white p-3 text-xs text-gray-700">
+            {JSON.stringify({ productId, requestInfo }, null, 2)}
+          </pre>
+        </div>
+      </div>
     );
   }
 
   if (!product) {
     const message = `Edit product: product not found for id ${productId}.`;
-    console.error(message);
-    throw new Error(message);
+    console.error(message, { requestInfo });
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded border border-amber-200 bg-amber-50 p-4 text-amber-800">
+          <p className="font-semibold">{message}</p>
+          <p className="mt-2 text-sm">Check the ID and try again.</p>
+          <pre className="mt-4 overflow-auto rounded bg-white p-3 text-xs text-gray-700">
+            {JSON.stringify({ productId, requestInfo }, null, 2)}
+          </pre>
+        </div>
+      </div>
+    );
   }
 
   // Fetch related data
