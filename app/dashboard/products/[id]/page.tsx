@@ -13,6 +13,9 @@ export const viewport = {
   maximumScale: 1,
 };
 
+// Force per-request rendering; avoids static optimization that might drop params in some hosts
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Edit Product",
   description: "Edit product details and settings",
@@ -26,17 +29,48 @@ interface PageProps {
 
 export default async function EditProductPage({ params }: PageProps) {
   const requestHeaders = await headers();
-  const requestInfo = {
-    url:
-      requestHeaders.get("x-invoke-path") ||
-      requestHeaders.get("next-url") ||
-      requestHeaders.get("referer") ||
-      "(unknown)",
-    host: requestHeaders.get("host") || "(unknown)",
-    userAgent: requestHeaders.get("user-agent") || "(unknown)",
+  const pathCandidates = [
+    requestHeaders.get("x-pathname"),
+    requestHeaders.get("x-forwarded-uri"),
+    requestHeaders.get("x-original-uri"),
+    requestHeaders.get("x-invoke-path"),
+    requestHeaders.get("next-url"),
+    requestHeaders.get("referer"),
+  ].filter(Boolean) as string[];
+
+  const deriveProductId = (rawPath?: string | null) => {
+    if (!rawPath) return null;
+    let pathname = rawPath;
+    try {
+      // If rawPath is absolute, URL will normalize it; otherwise keep as-is
+      const url = new URL(
+        rawPath,
+        `https://${requestHeaders.get("host") || "localhost"}`,
+      );
+      pathname = url.pathname;
+    } catch {
+      // swallow
+    }
+
+    const segments = pathname.split("/").filter(Boolean);
+    const productsIndex = segments.lastIndexOf("products");
+    if (productsIndex >= 0 && segments[productsIndex + 1]) {
+      return segments[productsIndex + 1];
+    }
+    return segments.at(-1) || null;
   };
 
-  const productId = params?.id;
+  const derivedProductId = params?.id || deriveProductId(pathCandidates[0]);
+
+  const requestInfo = {
+    url: pathCandidates[0] || "(unknown)",
+    host: requestHeaders.get("host") || "(unknown)",
+    userAgent: requestHeaders.get("user-agent") || "(unknown)",
+    pathCandidates,
+    derivedProductId,
+  };
+
+  const productId = derivedProductId;
 
   if (!productId) {
     console.error("EditProductPage: missing product id param", {
