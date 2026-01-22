@@ -53,6 +53,9 @@ export async function GET(
 
       const product = productResult.rows[0];
 
+      // Use the actual product_id from the database for all subsequent queries
+      const actualProductId = product.product_id;
+
       // Normalize image paths
       product.product_image = normalizePath(product.product_image);
       product.product_badge = normalizePath(product.product_badge);
@@ -67,25 +70,25 @@ export async function GET(
         }
       }
 
-      // Fetch related data
+      // Fetch related data using the actual product_id from database
       const themeResult = await connection.query(
         "SELECT * FROM product_themes WHERE product_id = $1",
-        [productId],
+        [actualProductId],
       );
 
       const ingredientsResult = await connection.query(
         "SELECT * FROM ingredients WHERE product_id = $1 ORDER BY display_order",
-        [productId],
+        [actualProductId],
       );
 
       const whyChooseResult = await connection.query(
         "SELECT * FROM why_choose WHERE product_id = $1 ORDER BY display_order",
-        [productId],
+        [actualProductId],
       );
 
       const reviewsResult = await connection.query(
         "SELECT * FROM reviews WHERE product_id = $1 ORDER BY id",
-        [productId],
+        [actualProductId],
       );
 
       connection.release();

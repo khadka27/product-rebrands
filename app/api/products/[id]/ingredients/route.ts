@@ -10,25 +10,96 @@ import path from "path";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
-    const ingredients = await getIngredientsByProductId(params.id);
+    // Resolve product_id from params.id (could be numeric ID or slug)
+    const connection = await (await import("@/lib/db")).default.getConnection();
+    let productId: string;
+
+    try {
+      const numericId = !isNaN(Number(params.id))
+        ? parseInt(params.id, 10)
+        : null;
+      let productResult;
+
+      if (numericId !== null) {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE product_id = $1",
+          [numericId],
+        );
+      } else {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE slug = $1",
+          [params.id],
+        );
+      }
+
+      if (productResult.rows.length === 0) {
+        connection.release();
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 },
+        );
+      }
+
+      productId = productResult.rows[0].product_id.toString();
+    } finally {
+      connection.release();
+    }
+
+    const ingredients = await getIngredientsByProductId(productId);
     return NextResponse.json(ingredients);
   } catch (error) {
     console.error("Error fetching ingredients:", error);
     return NextResponse.json(
       { error: "Failed to fetch ingredients" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
+    // Resolve product_id from params.id (could be numeric ID or slug)
+    const db = (await import("@/lib/db")).default;
+    const connection = await db.getConnection();
+    let productId: string;
+
+    try {
+      const numericId = !isNaN(Number(params.id))
+        ? parseInt(params.id, 10)
+        : null;
+      let productResult;
+
+      if (numericId !== null) {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE product_id = $1",
+          [numericId],
+        );
+      } else {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE slug = $1",
+          [params.id],
+        );
+      }
+
+      if (productResult.rows.length === 0) {
+        connection.release();
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 },
+        );
+      }
+
+      productId = productResult.rows[0].product_id.toString();
+    } finally {
+      connection.release();
+    }
+
     // Parse the form data
     const formData = await req.formData();
 
@@ -36,7 +107,7 @@ export async function POST(
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const display_order = Number.parseInt(
-      (formData.get("display_order") as string) || "0"
+      (formData.get("display_order") as string) || "0",
     );
 
     // Validate ingredient data
@@ -59,50 +130,87 @@ export async function POST(
         process.cwd(),
         "public",
         "images",
-        "ingredients"
+        "ingredients",
       );
 
       ensureDirectoryExists(targetDir);
       image = await processImage(
         { buffer, originalname: imageFile.name } as Express.Multer.File,
         targetDir,
-        filename
+        filename,
       );
     }
 
     // Add the ingredient
-    const ingredient = await createIngredient({
-      product_id: params.id,
-      title,
-      description,
-      image,
-      display_order,
-    }, null);
+    const ingredient = await createIngredient(
+      {
+        product_id: productId,
+        title,
+        description,
+        image,
+        display_order,
+      },
+      null,
+    );
 
     return NextResponse.json(ingredient, { status: 201 });
   } catch (error) {
     console.error("Error adding ingredient:", error);
     return NextResponse.json(
       { error: "Failed to add ingredient" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
-    const deleted = await deleteIngredientByProductId(
-      params.id
-    );
+    // Resolve product_id from params.id (could be numeric ID or slug)
+    const db = (await import("@/lib/db")).default;
+    const connection = await db.getConnection();
+    let productId: string;
+
+    try {
+      const numericId = !isNaN(Number(params.id))
+        ? parseInt(params.id, 10)
+        : null;
+      let productResult;
+
+      if (numericId !== null) {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE product_id = $1",
+          [numericId],
+        );
+      } else {
+        productResult = await connection.query(
+          "SELECT product_id FROM products WHERE slug = $1",
+          [params.id],
+        );
+      }
+
+      if (productResult.rows.length === 0) {
+        connection.release();
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 },
+        );
+      }
+
+      productId = productResult.rows[0].product_id.toString();
+    } finally {
+      connection.release();
+    }
+
+    const deleted = await deleteIngredientByProductId(productId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting ingredients:", error);
     return NextResponse.json(
       { error: "Failed to delete ingredients" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

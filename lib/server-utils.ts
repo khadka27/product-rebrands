@@ -10,6 +10,10 @@ export function initializeStorage(): void {
   const imagesDir = path.join(baseDir, "images");
   const categories = ["products", "badges", "avatars", "ingredients"];
 
+  // Tiny 1x1 jpg placeholder (white pixel)
+  const placeholderJpgBase64 =
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGBYZGCIfJSQlJigrLy8xNTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTX/2wBDARESEhgVGCIVGiQlNTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTX/wAARCABkAGQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwT/xAAVEQEBAAAAAAAAAAAAAAAAAAABAP/aAAwDAQACEQMRAD8Akf8A/9k=";
+
   console.log(`🚀 Initializing storage in: ${baseDir}`);
 
   try {
@@ -33,6 +37,16 @@ export function initializeStorage(): void {
         console.log(`✅ Created category directory: ${categoryDir}`);
       }
     });
+
+    // Ensure placeholder exists in images root
+    const placeholderPath = path.join(imagesDir, "placeholder-user.jpg");
+    if (!fs.existsSync(placeholderPath)) {
+      fs.writeFileSync(
+        placeholderPath,
+        Buffer.from(placeholderJpgBase64, "base64"),
+      );
+      console.log(`✅ Created placeholder image: ${placeholderPath}`);
+    }
 
     // Verify write permissions
     fs.accessSync(baseDir, fs.constants.W_OK);
