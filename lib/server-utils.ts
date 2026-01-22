@@ -6,105 +6,118 @@ import type { Express } from "express";
 
 // Ensure directory exists
 export function ensureDirectoryExists(directory: string): void {
-  if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true });
+  try {
+    if (!fs.existsSync(directory)) {
+      console.log(`📁 Creating directory: ${directory}`);
+      fs.mkdirSync(directory, { recursive: true });
+      console.log(`✅ Directory created successfully: ${directory}`);
+    } else {
+      console.log(`✅ Directory already exists: ${directory}`);
+    }
+
+    // Verify directory is writable
+    fs.accessSync(directory, fs.constants.W_OK);
+    console.log(`✅ Directory is writable: ${directory}`);
+  } catch (error) {
+    console.error(`❌ Error with directory ${directory}:`, error);
+    throw new Error(`Cannot create or write to directory: ${directory}`);
   }
 }
 
-  // Process and resize image
-  export async function processImage(
-    file: Express.Multer.File,
-    targetDir: string,
-    filename: string
-  ): Promise<string> {
-    try {
-      console.log(`🖼️ Processing image: ${filename}, targetDir: ${targetDir}`);
-      
-      // Normalize target directory to always write under public/images/<category>
-      const normalizedDir = (() => {
-        const td = targetDir.replace(/\\/g, "/").replace(/^\/+/, "");
-        // If already starts with public/
-        if (td.startsWith("public/")) return td;
-        // If starts with images/
-        if (td.startsWith("images/")) return `public/${td}`;
-        // If is a bare category (products|badges|avatars|ingredients)
-        if (["products", "badges", "avatars", "ingredients"].includes(td)) {
-          return `public/images/${td}`;
-        }
-        // Default: place under public/images/<td>
+// Process and resize image
+export async function processImage(
+  file: Express.Multer.File,
+  targetDir: string,
+  filename: string,
+): Promise<string> {
+  try {
+    console.log(`🖼️ Processing image: ${filename}, targetDir: ${targetDir}`);
+
+    // Normalize target directory to always write under public/images/<category>
+    const normalizedDir = (() => {
+      const td = targetDir.replace(/\\/g, "/").replace(/^\/+/, "");
+      // If already starts with public/
+      if (td.startsWith("public/")) return td;
+      // If starts with images/
+      if (td.startsWith("images/")) return `public/${td}`;
+      // If is a bare category (products|badges|avatars|ingredients)
+      if (["products", "badges", "avatars", "ingredients"].includes(td)) {
         return `public/images/${td}`;
-      })();
-  
-      // Use absolute path for file operations to ensure we hit the mounted volume in Docker/Coolify
-      // process.cwd() is usually /app in Docker
-      const absoluteTargetDir = path.join(process.cwd(), normalizedDir);
-  
-      console.log(`📁 Normalized directory: ${normalizedDir}`);
-      console.log(`📂 Absolute processing path: ${absoluteTargetDir}`);
-  
-      // Ensure directory exists
-      ensureDirectoryExists(absoluteTargetDir);
-      console.log(`✅ Directory ensured: ${absoluteTargetDir}`);
-  
-      const ext = path.extname(file.originalname).toLowerCase();
-      const fullFilename = `${filename}${ext}`;
-      // Use absolute path for saving
-      const outputPath = path.join(absoluteTargetDir, fullFilename);
-      
-      console.log(`💾 Saving file to: ${outputPath}`);
-  
-      // If it's a PNG, resize to 500x500
-      if (ext === ".png") {
-        await sharp(file.buffer)
-          .resize(500, 500, {
-            fit: "contain",
-            background: { r: 255, g: 255, b: 255, alpha: 0 },
-          })
-          .png()
-          .toFile(outputPath);
-        console.log(`🖼️ PNG processed and saved: ${outputPath}`);
-      } else {
-        // For other formats, just save the file
-        fs.writeFileSync(outputPath, file.buffer);
-        console.log(`📄 File saved directly: ${outputPath}`);
       }
-  
-      // Verify file was created
-      if (fs.existsSync(outputPath)) {
-        const stats = fs.statSync(outputPath);
-        console.log(`✅ File verified: ${outputPath} (${stats.size} bytes)`);
-      } else {
-        console.error(`❌ File NOT created: ${outputPath}`);
-      }
-  
-      // Return the relative public path for serving (images/<category>/filename)
-      const publicRelativeDir = normalizedDir.replace(/^public\/?/, "");
-      const relativePath = path
-        .join(publicRelativeDir, fullFilename)
-        .replace(/\\/g, "/");
-      
-      // Ensure leading slash for correct URL resolution
-      const finalPath = relativePath.startsWith("/")
-        ? relativePath
-        : `/${relativePath}`;
-      
-      console.log(`🔗 Returning absolute URL path: ${finalPath}`);
-      return finalPath;
-    } catch (error) {
-      console.error(`❌ Error processing image ${filename}:`, error);
-      console.error(`🚨 This is likely a production deployment issue:`);
-      console.error(`   - File system may be read-only (Vercel, Netlify, etc.)`);
-      console.error(`   - Missing write permissions`);
-      console.error(`   - Docker volume not mounted`);
-      console.error(`   - Consider using cloud storage (S3, Cloudinary, etc.)`);
-      
-      // Return a placeholder path so the app doesn't crash
-      const ext = path.extname(file.originalname).toLowerCase();
-      const placeholderPath = `/placeholder${ext}`; // Ensure leading slash here too
-      console.log(`🔄 Returning placeholder path: ${placeholderPath}`);
-      return placeholderPath;
+      // Default: place under public/images/<td>
+      return `public/images/${td}`;
+    })();
+
+    // Use absolute path for file operations to ensure we hit the mounted volume in Docker/Coolify
+    // process.cwd() is usually /app in Docker
+    const absoluteTargetDir = path.join(process.cwd(), normalizedDir);
+
+    console.log(`📁 Normalized directory: ${normalizedDir}`);
+    console.log(`📂 Absolute processing path: ${absoluteTargetDir}`);
+
+    // Ensure directory exists
+    ensureDirectoryExists(absoluteTargetDir);
+    console.log(`✅ Directory ensured: ${absoluteTargetDir}`);
+
+    const ext = path.extname(file.originalname).toLowerCase();
+    const fullFilename = `${filename}${ext}`;
+    // Use absolute path for saving
+    const outputPath = path.join(absoluteTargetDir, fullFilename);
+
+    console.log(`💾 Saving file to: ${outputPath}`);
+
+    // If it's a PNG, resize to 500x500
+    if (ext === ".png") {
+      await sharp(file.buffer)
+        .resize(500, 500, {
+          fit: "contain",
+          background: { r: 255, g: 255, b: 255, alpha: 0 },
+        })
+        .png()
+        .toFile(outputPath);
+      console.log(`🖼️ PNG processed and saved: ${outputPath}`);
+    } else {
+      // For other formats, just save the file
+      fs.writeFileSync(outputPath, file.buffer);
+      console.log(`📄 File saved directly: ${outputPath}`);
     }
+
+    // Verify file was created
+    if (fs.existsSync(outputPath)) {
+      const stats = fs.statSync(outputPath);
+      console.log(`✅ File verified: ${outputPath} (${stats.size} bytes)`);
+    } else {
+      console.error(`❌ File NOT created: ${outputPath}`);
+    }
+
+    // Return the relative public path for serving (images/<category>/filename)
+    const publicRelativeDir = normalizedDir.replace(/^public\/?/, "");
+    const relativePath = path
+      .join(publicRelativeDir, fullFilename)
+      .replace(/\\/g, "/");
+
+    // Ensure leading slash for correct URL resolution
+    const finalPath = relativePath.startsWith("/")
+      ? relativePath
+      : `/${relativePath}`;
+
+    console.log(`🔗 Returning absolute URL path: ${finalPath}`);
+    return finalPath;
+  } catch (error) {
+    console.error(`❌ Error processing image ${filename}:`, error);
+    console.error(`🚨 This is likely a production deployment issue:`);
+    console.error(`   - File system may be read-only (Vercel, Netlify, etc.)`);
+    console.error(`   - Missing write permissions`);
+    console.error(`   - Docker volume not mounted`);
+    console.error(`   - Consider using cloud storage (S3, Cloudinary, etc.)`);
+
+    // Return a placeholder path so the app doesn't crash
+    const ext = path.extname(file.originalname).toLowerCase();
+    const placeholderPath = `/placeholder${ext}`; // Ensure leading slash here too
+    console.log(`🔄 Returning placeholder path: ${placeholderPath}`);
+    return placeholderPath;
   }
+}
 
 // Generate a random product ID (3-6 digits)
 export function generateProductId(): string {
