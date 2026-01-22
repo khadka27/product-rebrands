@@ -122,6 +122,14 @@ export async function PUT(
     let productId = params.id;
     const formData = await request.formData();
 
+    // Debug: log incoming params and formData keys
+    console.log("[PUT /api/products/[id]] Incoming params:", params);
+    console.log("[PUT /api/products/[id]] productId:", productId);
+    console.log(
+      "[PUT /api/products/[id]] formData keys:",
+      Array.from(formData.keys()),
+    );
+
     // First, resolve slug to product_id if necessary
     const resolveConnection = await db.getConnection();
     let productNotFound = false;
@@ -132,6 +140,10 @@ export async function PUT(
       let productResult = await resolveConnection.query(
         "SELECT product_id FROM products WHERE product_id = $1",
         [productId],
+      );
+      console.log(
+        "[PUT /api/products/[id]] Lookup by product_id result:",
+        productResult.rows,
       );
 
       if (productResult.rows.length > 0) {
@@ -144,6 +156,10 @@ export async function PUT(
           "SELECT product_id FROM products WHERE slug = $1",
           [productId],
         );
+        console.log(
+          "[PUT /api/products/[id]] Lookup by slug result:",
+          productResult.rows,
+        );
 
         if (productResult.rows.length > 0) {
           actualProductId = productResult.rows[0].product_id;
@@ -152,6 +168,10 @@ export async function PUT(
           productNotFound = true;
         }
       }
+      console.log(
+        "[PUT /api/products/[id]] Resolved actualProductId:",
+        actualProductId,
+      );
     } catch (error) {
       console.error("Error resolving product ID:", error);
     } finally {
@@ -159,7 +179,16 @@ export async function PUT(
     }
 
     if (productNotFound || !actualProductId) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      console.error(
+        "[PUT /api/products/[id]] Product not found for id:",
+        productId,
+        "params:",
+        params,
+      );
+      return NextResponse.json(
+        { error: "Product not found", debug: { productId, params } },
+        { status: 404 },
+      );
     }
 
     // Use the resolved product ID for all subsequent operations
